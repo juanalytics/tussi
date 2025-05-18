@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build:
+      context: ./services/auth-service
+    container_name: auth-service
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://authuser:supersecret@auth-db:5432/auth
+    depends_on:
+      - auth-db
+
+  auth-db:
+    image: postgres:15
+    container_name: auth-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: supersecret
+      POSTGRES_DB: auth
+    ports:
+      - "5432:5432"
+    volumes:
+      - authdata:/var/lib/postgresql/data
+
+volumes:
+  authdata:
