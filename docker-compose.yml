@@ -12,6 +12,16 @@ services:
     depends_on:
       - auth-db
 
+  products-api:
+    build:
+      context: ./services/products-api
+    container_name: products-api
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://user:password@products-db:5432/products
+    depends_on:
+      - products-db
   auth-db:
     image: postgres:15
     container_name: auth-db
@@ -25,5 +35,19 @@ services:
     volumes:
       - authdata:/var/lib/postgresql/data
 
+  products-db:
+    image: postgres:15
+    container_name: products-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: products
+    ports:
+      - "5432:5432"
+    volumes:
+      - productsdata:/var/lib/postgresql/data
+
 volumes:
   authdata:
+  productsdata:
