@@ -9,6 +9,8 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://authuser:supersecret@auth-db:5432/auth
+      - JWT_SECRET=supersecretkey
+      - JWT_EXPIRATION=36000
     depends_on:
       - auth-db
 
