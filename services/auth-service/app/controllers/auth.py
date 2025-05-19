@@ -15,9 +15,9 @@ router = APIRouter(
 )
 
 # ─── JWT CONFIG ─────────────────────────────────────────────────────────────────
-SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME")
+SECRET_KEY = os.getenv("JWT_SECRET", "CHANGE_ME")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRATION", "30"))
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
