@@ -1,4 +1,55 @@
+version: '3.8'
+
 services:
+  auth-service:
+    build:
+      context: ./services/auth-service
+    container_name: auth-service
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://authuser:supersecret@auth-db:5432/auth
+      - JWT_SECRET=supersecretkey
+      - JWT_EXPIRATION=36000
+    depends_on:
+      - auth-db
+
+  products-api:
+    build:
+      context: ./services/products-api
+    container_name: products-api
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@products-db:5432/products
+    depends_on:
+      - products-db
+  auth-db:
+    image: postgres:15
+    container_name: auth-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: supersecret
+      POSTGRES_DB: auth
+    ports:
+      - "5432:5432"
+    volumes:
+      - authdata:/var/lib/postgresql/data
+
+  products-db:
+    image: postgres:15
+    container_name: products-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: products
+    ports:
+      - "5433:5432"
+    volumes:
+      - productsdata:/var/lib/postgresql/data
+
   mongodb:
     image: mongo:latest
     container_name: mongodb
@@ -43,5 +94,8 @@ networks:
   microservices_network:
     driver: bridge
 
+
 volumes:
+  authdata:
+  productsdata:
   mongo_data:

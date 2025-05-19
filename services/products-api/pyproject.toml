@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "products-api"
+version = "0.1.0"
+description = "API for managing products"
+authors = ["Your Name <you@example.com>"] # Please change this
+readme = "README.md" # You might want to create this file
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.100.0" # Specify versions as needed
+uvicorn = {extras = ["standard"], version = "^0.23.2"}
+sqlalchemy = "^1.4.0" # Or ^2.0
+psycopg2-binary = "^2.9.0"
+alembic = "^1.10.0"
+pydantic = {extras = ["email"], version = "^2.0.0"}
+python-dotenv = "^1.0.0"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.0" # For running tests
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api" 
