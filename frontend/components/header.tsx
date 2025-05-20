@@ -9,6 +9,7 @@ import { useCart } from "./cart-provider"
 import { useState, useRef, useEffect } from "react"
 import ThreeExplosion from "./three-explosion"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/app/context/AuthContext"
 
 export default function Header() {
   const { cart } = useCart()
@@ -17,25 +18,31 @@ export default function Header() {
   const [explosionOrigin, setExplosionOrigin] = useState({ x: 0, y: 0 })
   const logoRef = useRef<HTMLAnchorElement>(null)
   const router = useRouter()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { user, loading } = useAuth();
+  const { setUser } = useAuth()      // ← clear auth state
+  const { clearCart } = useCart()    // ← clear cart state
 
-  useEffect(() => {
-    const token = localStorage.getItem("token")
-    setIsAuthenticated(!!token)
 
-    // Optional: Listen to storage changes to update auth state across tabs
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === "token") {
-        setIsAuthenticated(!!event.newValue)
-      }
-    }
-    window.addEventListener("storage", handleStorageChange)
-    return () => {
-      window.removeEventListener("storage", handleStorageChange)
-    }
-  }, [])
+  if (loading) return null; // or a spinner
+  const isAuthenticated = Boolean(user);
 
-  const totalItems = cart.reduce((total, item) => total + item.quantity, 0)
+  interface CartItem {
+    id: string
+    name: string
+    price: number
+    quantity: number
+    // Add other properties as needed
+  }
+
+  interface ExplosionOrigin {
+    x: number
+    y: number
+  }
+
+  const totalItems: number = cart.reduce(
+    (total: number, item: CartItem) => total + item.quantity,
+    0
+  )
 
   const handleLogoClick = (e: React.MouseEvent) => {
     // Only trigger animation if we're not already on the home page
@@ -71,13 +78,20 @@ export default function Header() {
     }, 100)
   }
 
+
   const handleLogout = () => {
+    // 1. Remove the token so /auth/me will fail
     localStorage.removeItem("token")
-    setIsAuthenticated(false)
-    // Potentially clear cart for the logged-out user from UI perspective or refetch as guest.
-    // For now, just redirecting.
+
+    // 2. Clear global contexts
+    setUser(null)
+    clearCart()
+
+    // 3. Redirect to login (or home)
     router.push("/login")
   }
+
+
 
   return (
     <>
