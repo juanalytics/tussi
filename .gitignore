@@ -81,3 +81,15 @@ Dockerfile\*
 
 \*.bak
 \*.tmp
+
+# Next.js build output
+.next/
+
+# node_modules
+node_modules/
+
+# Next.js build output
+.next/
+
+# package-lock.json
+package-lock.json
