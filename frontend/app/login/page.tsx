@@ -35,16 +35,34 @@ export default function LoginPage() {
       return
     }
 
+    setIsLoading(true)
     try {
-      setIsLoading(true)
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          username: email,
+          password: password,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        setError(errorData.detail || "Invalid email or password")
+        return
+      }
+
+      const data = await response.json()
+      localStorage.setItem("token", data.access_token) // Store the token
 
       // In a real app, you would authenticate with a backend here
       // For now, we'll just redirect to the home page
       router.push("/")
     } catch (err) {
-      setError("Invalid email or password")
+      console.error(err)
+      setError("An error occurred during login. Please try again.")
     } finally {
       setIsLoading(false)
     }

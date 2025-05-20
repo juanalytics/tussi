@@ -3,10 +3,10 @@
 import type React from "react"
 
 import Link from "next/link"
-import { ShoppingCart, Menu, X, User } from "lucide-react"
+import { ShoppingCart, Menu, X, User, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useCart } from "./cart-provider"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import ThreeExplosion from "./three-explosion"
 import { useRouter } from "next/navigation"
 
@@ -17,6 +17,23 @@ export default function Header() {
   const [explosionOrigin, setExplosionOrigin] = useState({ x: 0, y: 0 })
   const logoRef = useRef<HTMLAnchorElement>(null)
   const router = useRouter()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    setIsAuthenticated(!!token)
+
+    // Optional: Listen to storage changes to update auth state across tabs
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "token") {
+        setIsAuthenticated(!!event.newValue)
+      }
+    }
+    window.addEventListener("storage", handleStorageChange)
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+    }
+  }, [])
 
   const totalItems = cart.reduce((total, item) => total + item.quantity, 0)
 
@@ -54,6 +71,14 @@ export default function Header() {
     }, 100)
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    setIsAuthenticated(false)
+    // Potentially clear cart for the logged-out user from UI perspective or refetch as guest.
+    // For now, just redirecting.
+    router.push("/login")
+  }
+
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -69,14 +94,22 @@ export default function Header() {
             <Link href="/products" className="text-sm font-medium hover:text-pink-500 transition-colors">
               Products
             </Link>
-            <Link href="/login" className="text-sm font-medium hover:text-pink-500 transition-colors">
-              Login
-            </Link>
-            <Link href="/register">
-              <Button variant="outline" size="sm" className="border-pink-500 text-pink-500 hover:bg-pink-50">
-                Sign Up
+            {isAuthenticated ? (
+              <Button variant="ghost" onClick={handleLogout} className="text-sm font-medium hover:text-pink-500 transition-colors">
+                <LogOut className="mr-2 h-4 w-4" /> Logout
               </Button>
-            </Link>
+            ) : (
+              <>
+                <Link href="/login" className="text-sm font-medium hover:text-pink-500 transition-colors">
+                  Login
+                </Link>
+                <Link href="/register">
+                  <Button variant="outline" size="sm" className="border-pink-500 text-pink-500 hover:bg-pink-50">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
             <Link href="/cart" className="relative">
               <Button variant="ghost" size="icon">
                 <ShoppingCart className="h-5 w-5" />
@@ -91,12 +124,19 @@ export default function Header() {
           </nav>
 
           <div className="md:hidden flex items-center">
-            <Link href="/login" className="mr-2">
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-                <span className="sr-only">Login</span>
+            {isAuthenticated ? (
+              <Button variant="ghost" size="icon" onClick={handleLogout} className="mr-2">
+                <LogOut className="h-5 w-5" />
+                <span className="sr-only">Logout</span>
               </Button>
-            </Link>
+            ) : (
+              <Link href="/login" className="mr-2">
+                <Button variant="ghost" size="icon">
+                  <User className="h-5 w-5" />
+                  <span className="sr-only">Login</span>
+                </Button>
+              </Link>
+            )}
             <Link href="/cart" className="relative mr-2">
               <Button variant="ghost" size="icon">
                 <ShoppingCart className="h-5 w-5" />
@@ -132,20 +172,32 @@ export default function Header() {
               >
                 Products
               </Link>
-              <Link
-                href="/login"
-                className="text-sm font-medium hover:text-pink-500 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Login
-              </Link>
-              <Link
-                href="/register"
-                className="text-sm font-medium hover:text-pink-500 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Sign Up
-              </Link>
+              {isAuthenticated ? (
+                 <Button
+                    variant="ghost"
+                    onClick={() => { handleLogout(); setIsMenuOpen(false); }}
+                    className="text-sm font-medium hover:text-pink-500 transition-colors w-full justify-start p-0"
+                  >
+                   <LogOut className="mr-2 h-4 w-4" /> Logout
+                 </Button>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="text-sm font-medium hover:text-pink-500 transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="text-sm font-medium hover:text-pink-500 transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </nav>
           </div>
         )}

@@ -28,6 +28,10 @@ export default function RegisterPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    // Clear error related to this field on change
+    if (error && (name === "password" || name === "confirmPassword" || name === "email")) {
+      setError("");
+    }
   }
 
   // Password strength requirements
@@ -62,16 +66,35 @@ export default function RegisterPage() {
       return
     }
 
+    setIsLoading(true)
     try {
-      setIsLoading(true)
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_API_URL}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          first_name: formData.firstName,
+          // lastName is not part of the UserCreate schema in auth-service
+          // locale and timezone are optional, not collected here
+          // marketing_consent is optional, not collected here
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        setError(errorData.detail || "Registration failed")
+        return
+      }
 
       // In a real app, you would register with a backend here
       // For now, we'll just redirect to the login page
       router.push("/login?registered=true")
     } catch (err) {
-      setError("An error occurred during registration")
+      console.error(err)
+      setError("An error occurred during registration. Please try again.")
     } finally {
       setIsLoading(false)
     }

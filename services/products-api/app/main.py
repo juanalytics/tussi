@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from app.db.database import engine, Base
 from app.routers import products_router
 from app.models import product 
-
+from fastapi.middleware.cors import CORSMiddleware
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -12,6 +12,15 @@ app = FastAPI(
 )
 
 app.include_router(products_router.router)
+
+#cors 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def read_root():

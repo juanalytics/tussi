@@ -6,9 +6,10 @@ import { Pagination } from "@/components/pagination"
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: { page?: string }
+  searchParams: Promise<{ page?: string }>
 }) {
-  const currentPage =  Number(searchParams.page) || 1
+  const { page } = await searchParams
+  const currentPage =  Number(page) || 1
 
 
   return (

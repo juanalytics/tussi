@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.controllers import auth
 from app.database import Base, engine
-
+from fastapi.middleware.cors import CORSMiddleware
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -16,6 +16,15 @@ app = FastAPI(
 )
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+
+#cors
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/", summary="Root Endpoint", description="Health check for the Auth Service")
 def root():
