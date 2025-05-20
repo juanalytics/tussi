@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { fetchUserProfile } from "@/services/auth"
+import { useAuth } from "@/app/context/AuthContext"    // ← import your auth hook
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { setUser } = useAuth() // ← get the setUser function from your auth context
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,21 +57,21 @@ export default function LoginPage() {
         return
       }
 
-      const data = await response.json()
-      localStorage.setItem("token", data.access_token) // Store the token
+      const { access_token } = await response.json()
+      localStorage.setItem("token", access_token)
 
-      // In a real app, you would authenticate with a backend here
+      // **Fetch the user profile and update global state**
+      let profile
       try {
-        const profile = await fetchUserProfile()
-        console.log("Logged in as:", profile)
-        // optionally: store profile in a global state (e.g., context, Redux, etc.)
+        profile = await fetchUserProfile()
+        setUser(profile)              // ← tell AuthContext who’s logged in
       } catch (err) {
         console.error("Failed to fetch profile:", err)
         setError("Login succeeded but fetching profile failed.")
         return
       }
 
-      // For now, we'll just redirect to the home page
+      // finally navigate
       router.push("/")
     } catch (err) {
       console.error(err)
