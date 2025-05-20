@@ -25,3 +25,23 @@ export async function registerUser(data: UserCreate) {
   }
   return payload
 }
+
+export async function fetchUserProfile(): Promise<any> {
+  const token = localStorage.getItem("token")
+
+  if (!token) throw new Error("No token found")
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_AUTH_API_URL}/auth/me`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+    },
+  })
+
+  if (!res.ok) {
+    const error = await res.json()
+    throw new Error(error.detail || "Failed to fetch user profile")
+  }
+
+  return res.json()
+}

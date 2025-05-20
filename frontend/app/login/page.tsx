@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { fetchUserProfile } from "@/services/auth"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -58,6 +59,16 @@ export default function LoginPage() {
       localStorage.setItem("token", data.access_token) // Store the token
 
       // In a real app, you would authenticate with a backend here
+      try {
+        const profile = await fetchUserProfile()
+        console.log("Logged in as:", profile)
+        // optionally: store profile in a global state (e.g., context, Redux, etc.)
+      } catch (err) {
+        console.error("Failed to fetch profile:", err)
+        setError("Login succeeded but fetching profile failed.")
+        return
+      }
+
       // For now, we'll just redirect to the home page
       router.push("/")
     } catch (err) {
