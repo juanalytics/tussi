@@ -20,6 +20,12 @@ app.use(cors()); // Habilitar CORS
 app.use(express.json()); // Parsear JSON
 app.use(morgan('dev')); // Logging de peticiones
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    message: 'Welcome to Cart API'
+  });
+});
+
 // Configurar rutas
 app.use('/api/cart', require('./routes/cartRoutes'));
 
@@ -43,7 +49,7 @@ app.use('*', (req, res) => {
 // Middleware para manejo de errores
 app.use((err, req, res, next) => {
   console.error(`Error: ${err.message}`);
-  
+
   res.status(err.statusCode || 500).json({
     success: false,
     message: err.message || 'Error interno del servidor'
