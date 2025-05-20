@@ -9,7 +9,6 @@ from app import schemas, deps, models
 from app.services import auth_service as services
 
 router = APIRouter(
-    prefix="/auth",
     tags=["auth"],
     responses={404: {"description": "Not found"}}
 )
@@ -46,17 +45,20 @@ def register(
     user_in: schemas.UserCreate,
     db: Session = Depends(deps.get_db),
 ):
-    existing = services.get_user_by_email(db, user_in.email)
-    if existing:
+    # 1) Check for existing email
+    if services.get_user_by_email(db, user_in.email):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Email already registered"
         )
+
+    # 2) Pass last_name through to the service
     return services.create_user(
-        db,
+        db=db,
         email=user_in.email,
         password=user_in.password,
         first_name=user_in.first_name,
+        last_name=user_in.last_name,               # ← new
         locale=user_in.locale,
         timezone=user_in.timezone,
         marketing_consent=user_in.marketing_consent

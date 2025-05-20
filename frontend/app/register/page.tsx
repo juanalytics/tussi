@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { registerUser, UserCreate } from "@/services/auth"
+
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -30,12 +32,13 @@ export default function RegisterPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // Password strength requirements
+  // Password rules…
   const hasMinLength = formData.password.length >= 8
   const hasUpperCase = /[A-Z]/.test(formData.password)
   const hasLowerCase = /[a-z]/.test(formData.password)
   const hasNumber = /[0-9]/.test(formData.password)
   const passwordsMatch = formData.password === formData.confirmPassword
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,17 +49,14 @@ export default function RegisterPage() {
       setError("Please fill in all fields")
       return
     }
-
     if (!formData.email.includes("@")) {
       setError("Please enter a valid email address")
       return
     }
-
     if (!hasMinLength || !hasUpperCase || !hasLowerCase || !hasNumber) {
       setError("Password does not meet the requirements")
       return
     }
-
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match")
       return
@@ -64,17 +64,33 @@ export default function RegisterPage() {
 
     try {
       setIsLoading(true)
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // In a real app, you would register with a backend here
-      // For now, we'll just redirect to the login page
+      const payload: UserCreate = {
+        email: formData.email,
+        password: formData.password,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        // Optional extras – grab from browser or default:
+        locale: navigator.language,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        marketing_consent: false,
+      }
+      console.log("Register payload:", payload)
+
+      
+      await registerUser(payload)
       router.push("/login?registered=true")
-    } catch (err) {
-      setError("An error occurred during registration")
+    } catch (err: any) {
+      // look for the exact backend detail
+      if (err.message === "Email already registered") {
+        setError("This email is already registered. Try logging in instead.")
+      } else {
+        setError(err.message)
+      }
     } finally {
       setIsLoading(false)
     }
+
   }
 
   return (

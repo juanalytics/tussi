@@ -1,3 +1,4 @@
+from typing import Optional
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from app.models import user as user_model
@@ -19,10 +20,34 @@ def authenticate_user(db: Session, email: str, password: str):
         return None
     return user_obj
 
-def create_user(db: Session, email: str, password: str):
+def create_user(
+    db: Session,
+    *,
+    email: str,
+    password: str,
+    first_name: str,
+    last_name: Optional[str] = None,
+    locale: Optional[str] = None,
+    timezone: Optional[str] = None,
+    marketing_consent: bool = False
+) -> user_model.User:
+    # 1) Hash the incoming password
     hashed = hash_password(password)
-    new_user = user_model.User(email=email, hashed_password=hashed)
+
+    # 2) Create the User model instance with all fields
+    new_user = user_model.User(
+        email=email,
+        hashed_password=hashed,
+        first_name=first_name,
+        last_name=last_name,
+        locale=locale,
+        timezone=timezone,
+        marketing_consent=marketing_consent
+    )
+
+    # 3) Persist to DB
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
     return new_user
