@@ -1,77 +1,149 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import type { Product } from "@/lib/types"
+import type React from "react"
+import { createContext, useContext, useState, useEffect, useCallback } from "react"
 
-export interface CartItem extends Product {
+interface CartItem {
+  id: string // Assuming product ID is string, adjust if it is number from product service
+  productId: string // From cart service perspective
+  name: string
+  price: number
   quantity: number
+  image?: string
+  description?: string
 }
 
 interface CartContextType {
   cart: CartItem[]
-  addToCart: (product: Product) => void
-  removeFromCart: (productId: string) => void
-  clearCart: () => void
+  addToCart: (item: Omit<CartItem, "quantity" | "id" | "productId"> & { id: string; productId: string }) => Promise<void>
+  removeFromCart: (productId: string) => Promise<void>
+  updateItemQuantity: (productId: string, quantity: number) => Promise<void>
+  clearCart: () => Promise<void>
+  isLoading: boolean
+  error: string | null
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
-export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([])
+const USER_ID = "guestUser" // Placeholder User ID, replace with actual user ID from auth
 
-  // Load cart from localStorage on initial render
-  useEffect(() => {
-    const savedCart = localStorage.getItem("cart")
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart))
-      } catch (error) {
-        console.error("Failed to parse cart from localStorage:", error)
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const [cart, setCart] = useState<CartItem[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchCart = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_CART_API_URL}/cart/${USER_ID}`)
+      if (!response.ok) {
+        if (response.status === 404) { // Cart might not exist for a new user
+          setCart([])
+        } else {
+          throw new Error(`Failed to fetch cart: ${response.status}`)
+        }
+      } else {
+        const data = await response.json()
+        setCart(data.items || []) // Assuming the cart API returns { items: [...] }
       }
+    } catch (e: any) {
+      console.error(e)
+      setError(e.message || "Failed to load cart.")
+      setCart([]) // Clear cart on error
+    } finally {
+      setIsLoading(false)
     }
   }, [])
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart))
-  }, [cart])
+    fetchCart()
+  }, [fetchCart])
 
-  const addToCart = (product: Product) => {
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === product.id)
-
-      if (existingItem) {
-        // Increment quantity if item already exists
-        return prevCart.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item))
-      } else {
-        // Add new item with quantity 1
-        return [...prevCart, { ...product, quantity: 1 }]
-      }
-    })
+  const addToCart = async (item: Omit<CartItem, "quantity" | "id" | "productId"> & { id: string; productId: string }) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_CART_API_URL}/cart/${USER_ID}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: item.productId, quantity: 1, name: item.name, price: item.price, image: item.image, description: item.description }), // Send necessary details
+      })
+      if (!response.ok) throw new Error("Failed to add item to cart")
+      await fetchCart() // Refresh cart from backend
+    } catch (e: any) {
+      console.error(e)
+      setError(e.message || "Failed to add item.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const removeFromCart = (productId: string) => {
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === productId)
-
-      if (existingItem && existingItem.quantity > 1) {
-        // Decrement quantity if more than 1
-        return prevCart.map((item) => (item.id === productId ? { ...item, quantity: item.quantity - 1 } : item))
-      } else {
-        // Remove item completely if quantity is 1
-        return prevCart.filter((item) => item.id !== productId)
-      }
-    })
+  const removeFromCart = async (productId: string) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_CART_API_URL}/cart/${USER_ID}/items/${productId}`, {
+        method: "DELETE",
+      })
+      if (!response.ok) throw new Error("Failed to remove item from cart")
+      await fetchCart() // Refresh cart
+    } catch (e: any) {
+      console.error(e)
+      setError(e.message || "Failed to remove item.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const clearCart = () => {
-    setCart([])
+  const updateItemQuantity = async (productId: string, quantity: number) => {
+    if (quantity <= 0) {
+      await removeFromCart(productId)
+      return
+    }
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_CART_API_URL}/cart/${USER_ID}/items/${productId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity }),
+      })
+      if (!response.ok) throw new Error("Failed to update item quantity")
+      await fetchCart() // Refresh cart
+    } catch (e: any) {
+      console.error(e)
+      setError(e.message || "Failed to update quantity.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  return <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart }}>{children}</CartContext.Provider>
+  const clearCart = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_CART_API_URL}/cart/${USER_ID}`, {
+        method: "DELETE",
+      })
+      if (!response.ok) throw new Error("Failed to clear cart")
+      setCart([]) // Optimistically clear cart, or fetchCart()
+    } catch (e: any) {
+      console.error(e)
+      setError(e.message || "Failed to clear cart.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateItemQuantity, clearCart, isLoading, error }}>
+      {children}
+    </CartContext.Provider>
+  )
 }
 
-export function useCart() {
+export const useCart = () => {
   const context = useContext(CartContext)
   if (context === undefined) {
     throw new Error("useCart must be used within a CartProvider")
