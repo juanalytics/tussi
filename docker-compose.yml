@@ -50,6 +50,52 @@ services:
     volumes:
       - productsdata:/var/lib/postgresql/data
 
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - microservices_network
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=rootpassword
+    healthcheck:
+      test: ["CMD", "mongo", "admin", "-u", "root", "-p", "rootpassword", "--eval", "db.runCommand('ping')"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  cart-api:
+    build:
+      context: ./services/cart-api
+      dockerfile: Dockerfile
+    container_name: cart-api
+    restart: always
+    networks:
+      - microservices_network
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGO_URI=mongodb://mongodb:27017/cart-service
+      - MONGO_USER=root
+      - MONGO_PASSWORD=rootpassword
+      - MONGO_DB=cart-service
+      - AUTH_SERVICE_URL=http://auth-api:3010
+    depends_on:
+      - mongodb
+
+networks:
+  microservices_network:
+    driver: bridge
+
+
 volumes:
   authdata:
   productsdata:
+  mongo_data:

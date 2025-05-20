@@ -1,3 +1,9 @@
+node_modules
+.env
+*.log
+npm-debug.log*
+coverage
+.DS_Store
 # Byte-compiled / optimized / DLL files
 
 **pycache**/
@@ -81,3 +87,15 @@ Dockerfile\*
 
 \*.bak
 \*.tmp
+
+# Next.js build output
+.next/
+
+# node_modules
+node_modules/
+
+# Next.js build output
+.next/
+
+# package-lock.json
+package-lock.json
