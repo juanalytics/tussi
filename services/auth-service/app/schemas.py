@@ -6,6 +6,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     first_name: str
+    last_name: Optional[str] = None
     # Optional extras for user profile:
     locale: Optional[str] = None
     timezone: Optional[str] = None
@@ -17,6 +18,7 @@ class UserCreate(BaseModel):
                 "email": "jane.doe@example.com",
                 "password": "strongPassword123",
                 "first_name": "Jane",
+                "last_name": "Doe",
                 "locale": "en-US",
                 "timezone": "America/New_York",
                 "marketing_consent": True
