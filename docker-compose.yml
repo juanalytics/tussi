@@ -1,6 +1,13 @@
 version: '3.8'
 
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:3000"
   auth-service:
     build:
       context: ./services/auth-service
@@ -78,10 +85,10 @@ services:
     networks:
       - microservices_network
     ports:
-      - "3000:3000"
+      - "8002:8000"
     environment:
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=8000
       - MONGO_URI=mongodb://mongodb:27017/cart-service
       - MONGO_USER=root
       - MONGO_PASSWORD=rootpassword
