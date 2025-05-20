@@ -30,6 +30,10 @@ export default function RegisterPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    // Clear error related to this field on change
+    if (error && (name === "password" || name === "confirmPassword" || name === "email")) {
+      setError("");
+    }
   }
 
   // Password rules…
