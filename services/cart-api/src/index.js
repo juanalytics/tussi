@@ -20,14 +20,24 @@ app.use(cors()); // Habilitar CORS
 app.use(express.json()); // Parsear JSON
 app.use(morgan('dev')); // Logging de peticiones
 
+
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+
+
+
 app.get('/', (req, res) => {
   res.status(200).json({
     message: 'Welcome to Cart API'
   });
 });
 
-// Configurar rutas
-app.use('/api/cart', require('./routes/cartRoutes'));
+app.get('/api/cart/test', (req, res) => {
+  res.status(200).json({ message: 'Ruta de prueba accesible' });
+});
 
 // Endpoint de salud (health check)
 app.get('/health', (req, res) => {
@@ -38,11 +48,27 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Ruta de fallback para endpoints no encontrados
+
+const cartRoutes = require('./routes/cartRoutes');
+
+// Configurar rutas
+app.use('/api/cart', cartRoutes);
+
+
+
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
-    message: `Ruta no encontrada: ${req.originalUrl}`
+    message: `Ruta no encontrada: ${req.originalUrl}`,
+    availableEndpoints: [
+      'GET /',
+      'GET /health',
+      'GET /api/cart',
+      'POST /api/cart/items',
+      'PUT /api/cart/items/:productId',
+      'DELETE /api/cart/items/:productId',
+      'DELETE /api/cart'
+    ]
   });
 });
 
@@ -57,7 +83,7 @@ app.use((err, req, res, next) => {
 });
 
 // Configurar el puerto
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8002;
 
 // Iniciar servidor
 const server = app.listen(PORT, () => {

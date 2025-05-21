@@ -1,15 +1,20 @@
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 
-/**
- * Middleware para autenticar usuarios mediante JWT
- * Utiliza un servicio de autenticación externo
- */
-exports.authenticate = async (req, res, next) => {
-  // Obtener token del header
+exports.authenticate = async (req, res, next) => {  
+  console.log('=== MIDDLEWARE AUTH INICIADO ===');
+  
+  // Excluir rutas públicas
+  if (req.originalUrl === '/health' || req.originalUrl === '/' || req.originalUrl === '/api/cart/test') {
+    console.log('Ruta pública, omitiendo autenticación');
+    return next();
+  }
+
   const authHeader = req.header('Authorization');
+  console.log('Token recibido:', authHeader);
   
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log('Error: Falta token de autenticación');
     return res.status(401).json({
       success: false,
       message: 'Acceso denegado. No se proporcionó token de autenticación'
@@ -17,38 +22,31 @@ exports.authenticate = async (req, res, next) => {
   }
 
   try {
-    // Extraer el token
     const token = authHeader.split(' ')[1];
+    console.log('Verificando token con servicio de autenticación...');
     
-    // URL del servicio de autenticación
-    const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://auth-api:3010';
+    const response = await axios.get(`${process.env.AUTH_SERVICE_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     
-    // Verificar el token con el servicio de autenticación
-    const response = await axios.post(
-      `${authServiceUrl}/api/auth/verify-token`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
-    
-    if (response.status !== 200 || !response.data.success) {
+    if (response.status !== 200 || !response.data) {
+      console.log('Token inválido o expirado');
       return res.status(401).json({
         success: false,
         message: 'Token inválido o expirado'
       });
     }
+
+    req.user = {
+      id: response.data.id.toString(),
+      email: response.data.email
+    };
     
-    // Si el token es válido, extraer la información del usuario
-    req.user = response.data.user;
-    
+    console.log('Autenticación exitosa para usuario:', req.user.id);
     next();
   } catch (error) {
-    console.error('Error de autenticación:', error.message);
+    console.error('Error de autenticación:', error);
     
-    // Error de conexión con el servicio de autenticación
     if (error.code === 'ECONNREFUSED') {
       return res.status(503).json({
         success: false,
@@ -56,18 +54,14 @@ exports.authenticate = async (req, res, next) => {
       });
     }
     
-    // Respuesta de error del servicio de autenticación
     if (error.response) {
-      const status = error.response.status;
-      const message = error.response.data?.message || 'Error de autenticación';
-      
-      return res.status(status).json({
+      const message = error.response.data?.detail || 'Error de autenticación';
+      return res.status(error.response.status).json({
         success: false,
         message
       });
     }
     
-    // Error desconocido
     res.status(500).json({
       success: false,
       message: 'Error en la autenticación'
