@@ -16,6 +16,9 @@ services:
       - auth-service
       - products-api
       - cart-api
+    networks: # <--- ¡AÑADIDO!
+      - microservices_network
+
   auth-service:
     build:
       context: ./services/auth-service
@@ -28,6 +31,8 @@ services:
       - JWT_EXPIRATION=36000
     depends_on:
       - auth-db
+    networks: # <--- AÑADIDO
+      - microservices_network 
 
   products-api:
     build:
@@ -39,6 +44,8 @@ services:
       - DATABASE_URL=postgresql://user:password@products-db:5432/products
     depends_on:
       - products-db
+    networks: # <--- ¡AÑADIDO!
+      - microservices_network
   auth-db:
     image: postgres:15
     container_name: auth-db
@@ -51,6 +58,8 @@ services:
       - "5432:5432"
     volumes:
       - authdata:/var/lib/postgresql/data
+    networks: # <--- ¡AÑADIDO!
+      - microservices_network
 
   products-db:
     image: postgres:15
@@ -64,6 +73,8 @@ services:
       - "5433:5432"
     volumes:
       - productsdata:/var/lib/postgresql/data
+    networks: # <--- ¡AÑADIDO!
+      - microservices_network
 
   mongodb:
     image: mongo:latest
@@ -101,9 +112,11 @@ services:
       - MONGO_USER=root
       - MONGO_PASSWORD=rootpassword
       - MONGO_DB=cart-service
-      - AUTH_SERVICE_URL=http://auth-api:3010
+      - AUTH_SERVICE_URL=http://auth-service:8000
     depends_on:
       - mongodb
+      - auth-service 
+
 
 networks:
   microservices_network:

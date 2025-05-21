@@ -43,7 +43,7 @@ export default function CartPage() {
             </div>
             <div className="flex-grow">
               <h3 className="font-semibold">{item.name}</h3>
-              <p className="text-sm text-gray-500 line-clamp-1">{item.description}</p>
+              #<p className="text-sm text-gray-500 line-clamp-1">{item.description}</p>
               <div className="flex items-center justify-between mt-2">
                 <p className="font-medium">
                   ${item.price.toFixed(2)} × {item.quantity}
@@ -52,7 +52,7 @@ export default function CartPage() {
                   variant="ghost"
                   size="sm"
                   className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => removeFromCart(item.id)}
+                  onClick={() => removeFromCart(item.productId)} 
                 >
                   <Trash2 className="h-4 w-4" />
                   <span className="sr-only">Remove</span>
