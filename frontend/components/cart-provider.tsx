@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { usePathname } from 'next/navigation';
+import { usePathname,useRouter } from 'next/navigation';
 
 interface CartItem {
     id: string; // ID del producto en el frontend (ej. un slug, o el mismo productId)
@@ -31,6 +31,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const pathname = usePathname();
+    const router = useRouter();
 
     // Función para obtener el token de localStorage de forma segura en el cliente
     const getToken = useCallback(() => {
@@ -39,6 +40,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
         return null;
     }, []);
+
+    const redirectToLogin = useCallback(() => {
+      // Solo redirige si no estamos ya en la página de login
+      if (pathname !== '/login') {
+          router.push('/login');
+      }
+  }, [router, pathname]);
+
 
     // Función para obtener el carrito del backend
     const fetchCart = useCallback(async () => {
