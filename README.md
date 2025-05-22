@@ -86,30 +86,56 @@ The provocative name and design generate immediate impact and memorability, faci
 
 ### Architectural Elements and Relations
 
-**Connectors and Protocols:**
+## Connectors and Protocols
 
 - **REST-HTTP/JSON (TLS + JWT)**
-  - Web Client → Auth Service (`POST /auth/register, POST /auth/login, GET /auth/me`)
-  - Web Client → Products API (`GET /products, GET /products/{id}`)
-  - Web Client → Cart Service (`GET /cart, POST /cart/add, POST /cart/checkout`)
+  - **Web Client → Auth Service**  
+    - Endpoints: `POST /auth/register`, `POST /auth/login`, `GET /auth/me`  
+    - *Auth Service*: Microservicio en Python + FastAPI que gestiona registro, emisión y validación de JWT, y recuperación de perfil.
+  - **Web Client → Products API**  
+    - Endpoints: `GET /products`, `GET /products/{id}`  
+    - *Products API*: Microservicio en Python + FastAPI para CRUD y consultas de catálogo.
+  - **Web Client → Cart Service**  
+    - Endpoints: `GET /cart`, `POST /cart/add`, `POST /cart/checkout`  
+    - *Cart Service*: Microservicio en Node.js + Express que administra el carrito y el flujo de checkout simulado.
 
-- **SQL (TCP/5432)**
-  - Auth Service → auth-db (PostgreSQL) for user operations
-  - Products API → products-db (PostgreSQL) for product operations
+- **SQL (TCP / 5432)**
+  - **Auth Service → auth-db (PostgreSQL)**  
+    - Persistencia de usuarios, contraseñas hasheadas, roles y auditoría.
+  - **Products API → products-db (PostgreSQL)**  
+    - Almacenamiento relacional de productos, inventario e imágenes.
 
-- **MongoDB Driver (TCP/27017)**
-  - Cart Service → MongoDB for cart data management
+- **MongoDB Driver (TCP / 27017)**
+  - **Cart Service → MongoDB**  
+    - Documentos de carrito `{ userId, items: [{ productId, quantity }] }` para esquemas flexibles y operaciones frecuentes.
 
 - **Internal REST (JSON + JWT)**
-  - Cart Service → Auth Service to validate JWT tokens and authorize checkout
-  - Cart Service → Products API to decrease stock after successful checkout
+  - **Cart Service → Auth Service**  
+    - Validación de la validez del JWT y autorización de usuario antes del checkout.
+  - **Cart Service → Products API**  
+    - Decremento de stock tras checkout exitoso para mantener consistencia de inventario.
 
-**Critical Flows:**
+## Critical Flows
 
-- **Authentication:** Client sends credentials to Auth Service, receives JWT, and includes it in `Authorization: Bearer <token>` headers.
-- **Session Validation:** Client queries `/auth/me` endpoint with JWT for user profile and state.
-- **Product Catalog:** Client requests product lists/details from Products API, which queries PostgreSQL.
-- **Cart Management & Checkout:** Client manages cart via Cart Service (MongoDB). During checkout, Cart Service validates JWT via Auth Service, checks stock via Products API, simulates payment processing, updates MongoDB, and adjusts stock via Products API.
+1. **Authentication**  
+   El Web Client envía credenciales al Auth Service, que valida la contraseña, genera un JWT firmado y lo devuelve.  
+   El cliente incluye el JWT en el header `Authorization: Bearer <token>` de todas las llamadas protegidas.
+
+2. **Session Validation**  
+   El cliente hace `GET /auth/me` al Auth Service usando el JWT para obtener datos del perfil (ID, email, roles, preferencias).
+
+3. **Product Catalog**  
+   El cliente solicita `GET /products` o `GET /products/{id}` al Products API, que consulta PostgreSQL y retorna la información en JSON.
+
+4. **Cart Management & Checkout**  
+   - El cliente añade/elimina ítems mediante llamadas al Cart Service, que actualiza documentos en MongoDB.  
+   - En `POST /cart/checkout`, el Cart Service:
+     1. Valida el JWT con el Auth Service.
+     2. Verifica stock via llamada interna al Products API.
+     3. Simula pago (mock).
+     4. Si el pago es exitoso, actualiza MongoDB y llama al Products API para decrementar el stock.
+
+> **Nota**: Todas las conexiones REST usan TLS para cifrado y JWT para autenticación, asegurando confidencialidad e integridad de los datos.
 
 ## 4. Prototype
 
