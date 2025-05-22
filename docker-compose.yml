@@ -76,11 +76,11 @@ services:
     networks: # <--- ¡AÑADIDO!
       - microservices_network
 
-  mongodb:
+  carts-db:
     image: mongo:latest
-    container_name: mongodb
+    container_name: carts-db
     volumes:
-      - mongo_data:/data/db
+      - cartsdata:/data/db
     networks:
       - microservices_network
     ports:
@@ -114,7 +114,7 @@ services:
       - MONGO_DB=cart-service
       - AUTH_SERVICE_URL=http://auth-service:8000
     depends_on:
-      - mongodb
+      - carts-db
       - auth-service 
 
 
@@ -126,4 +126,4 @@ networks:
 volumes:
   authdata:
   productsdata:
-  mongo_data:
+  cartsdata:
