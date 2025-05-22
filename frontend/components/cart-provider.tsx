@@ -106,6 +106,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         if (!token) {
             setError("User not authenticated. Please log in to add items to cart.");
             setIsLoading(false);
+            redirectToLogin();
             return;
         }
 
@@ -133,7 +134,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         } finally {
             setIsLoading(false);
         }
-    }, [getToken, fetchCart]); // Dependencias de getToken y fetchCart
+    }, [getToken, fetchCart, redirectToLogin]); // Dependencias de getToken y fetchCart
 
     // Función para eliminar un ítem del carrito
     const removeFromCart = useCallback(async (productId: string) => {
