@@ -5,7 +5,8 @@ This is the mobile application for the Tussi platform, built with Expo, React Na
 ## ✨ Features
 
 - **Product Listing**: View products from the Tussi catalog.
-- **Mock & Live Data**: Toggle between mock data for UI testing and live data from the backend API.
+- **Automatic Fallback**: Fetches live data from the API and automatically falls back to mock data if the API is unreachable or returns no products.
+- **Manual Refresh**: A refresh button to manually reload product data.
 - **Modern Stack**: Built with a modern, type-safe stack.
 - **Styled with Tailwind**: Consistent UI with the web frontend.
 
@@ -34,7 +35,7 @@ Follow these instructions to get the mobile app running on your local machine fo
 
 3.  **Start the development server:**
     ```bash
-    npm start
+    npm start -- --clear
     ```
     This will start the Metro bundler and show a QR code in your terminal.
 
@@ -61,12 +62,15 @@ By default, it's set to `http://localhost:8001`, which works for the iOS Simulat
 -   **For Android Emulator:** You need to change `API_URL` to `http://10.0.2.2:8001`.
 -   **For running on a physical device:** You must change `localhost` to your computer's local network IP address (e.g., `http://192.168.1.10:8001`). Your phone and computer must be on the same Wi-Fi network.
 
-### Testing with Mock Data
+## 🔀 Data Fetching & Fallback
 
-The application provides a button on the main screen to toggle between fetching live data from the API and using a local mock dataset. This is useful for UI development and testing without needing a running backend.
+The application is designed to be resilient. It follows this data-fetching logic:
 
--   **Mock Data**: Defined in `tussi-mobile/constants/mocks.ts`.
--   **Toggle**: The "Load Mock Data" / "Load Live Data" button on the product list screen.
+1.  It attempts to fetch the product list from the live API.
+2.  If the API call is successful and returns products, they are displayed.
+3.  If the API call fails (e.g., network error, server is down) or returns no products, the app automatically loads a local mock dataset and displays a status banner to inform the user.
+
+-   **Mock Data**: Defined in `tussi-mobile/constants/mocks.ts`. This data is used for the fallback scenario.
 
 ## 🎨 Styling
 

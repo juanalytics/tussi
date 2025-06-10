@@ -19,7 +19,11 @@
 
 ## Description
 
-**Tussi** is an ecommerce platform built upon a distributed, modern architecture, connecting buyers and sellers in a highly scalable, modular, and secure environment. It includes decoupled microservices for authentication, product catalog management, and shopping cart management, backed by PostgreSQL and MongoDB databases, with a frontend built using React and Tailwind CSS.
+**Tussi** is an ecommerce platform built upon a distributed, modern architecture, connecting buyers and sellers in a highly scalable, modular, and secure environment. It includes decoupled microservices for authentication, product catalog management, and shopping cart management, backed by PostgreSQL and MongoDB databases.
+
+The platform features two distinct clients:
+- A full-featured **web application** built with Next.js.
+- A lightweight **native mobile application** for iOS and Android built with React Native (Expo) for a streamlined product stock browsing experience.
 
 ### Prototype Objective
 
@@ -31,7 +35,7 @@ The first deliverable demonstrates a functional vertical flow, covering:
 
 Each service is developed, documented, and containerized with Docker, orchestrated by Docker Compose, adhering to maintainability, scalability, and portability.
 
-### Justification for Tussi’s Name and Design
+### Justification for Tussi's Name and Design
 
 The name **Tussi** is intentionally provocative and disruptive—a metaphor to positively alter shopping experiences, creating emotional, sensory, and memorable interactions.
 
@@ -141,22 +145,36 @@ The provocative name and design generate immediate impact and memorability, faci
 
 ### Instructions for Deploying the Software System Locally
 
+The Tussi platform consists of a backend infrastructure (services and databases) and two separate frontends (a web app and a mobile app).
+
+#### Running the Backend Services
+
+The backend services are orchestrated with Docker Compose. This is the foundation for both the web and mobile applications.
+
 **Run Command:**
 ```bash
 docker compose up --build
 ```
+This command will build and start all the necessary services (auth, products, cart) and their databases.
 
-**Accessing the Database:**
-```bash
-docker exec -it products-db psql -U user -d products
-```
+#### Running the Web Application
 
-**Populating the Database:**
-Copy and run queries from `products_dump.sql` to populate the database with sample products.
-
-**Using the Application:**
-Frontend accessible through your browser at:
-
+The web frontend is also started via Docker Compose as part of the command above. It is accessible through your browser at:
 ```
 http://localhost:3000/
 ```
+
+#### Running the Mobile Application
+
+The mobile app runs as a separate process on your local machine and connects to the same Docker-based backend.
+
+1.  **Ensure the backend is running** using the `docker compose up --build` command above.
+2.  Navigate to the mobile app's directory in a separate terminal:
+    ```bash
+    cd tussi-mobile
+    ```
+3.  For detailed instructions on running the mobile app on a simulator or physical device, please refer to the dedicated README inside its directory:
+    - **[`tussi-mobile/README.md`](./tussi-mobile/README.md)**
+
+**Populating the Database:**
+Copy and run queries from `products_dump.sql` to populate the database with sample products.
