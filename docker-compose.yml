@@ -1,6 +1,37 @@
 version: '3.8'
 
 services:
+  # ===== API GATEWAY =====
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "9000:9000"  # Gateway en puerto 9000
+    environment:
+      - NODE_ENV=production
+      - PORT=9000
+      - JWT_SECRET=supersecretkey
+      - AUTH_SERVICE_URL=http://auth-service:8000
+      - PRODUCTS_SERVICE_URL=http://products-api:8000
+      - CART_SERVICE_URL=http://cart-api:8000
+      - FRONTEND_URL=http://localhost:3000
+    depends_on:
+      - auth-service
+      - products-api
+      - cart-api
+    networks:
+      - microservices_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ===== FRONTEND =====
   frontend:
     build:
       context: ./frontend
@@ -9,43 +40,88 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_AUTH_API_URL=http://localhost:8000
-      - NEXT_PUBLIC_PRODUCTS_API_URL=http://localhost:8001
-      - NEXT_PUBLIC_CART_API_URL=http://localhost:8002
+      # Ahora el frontend se comunica solo con el API Gateway
+      - NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:9000
+      # Mantener las URLs originales para compatibilidad (opcional)
+      - NEXT_PUBLIC_AUTH_API_URL=http://localhost:9000/api/auth
+      - NEXT_PUBLIC_PRODUCTS_API_URL=http://localhost:9000/api/products
+      - NEXT_PUBLIC_CART_API_URL=http://localhost:9000/api/cart
     depends_on:
-      - auth-service
-      - products-api
-      - cart-api
-    networks: # <--- ¡AÑADIDO!
+      - api-gateway
+    networks:
       - microservices_network
 
+  # ===== AUTH SERVICE =====
   auth-service:
     build:
       context: ./services/auth-service
     container_name: auth-service
     ports:
-      - "8000:8000"
+      - "8000:8000"  # Mantener puerto para desarrollo/debug
     environment:
       - DATABASE_URL=postgresql://authuser:supersecret@auth-db:5432/auth
       - JWT_SECRET=supersecretkey
       - JWT_EXPIRATION=36000
+      - NODE_ENV=production
     depends_on:
       - auth-db
-    networks: # <--- AÑADIDO
-      - microservices_network 
+    networks:
+      - microservices_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
+  # ===== PRODUCTS API =====
   products-api:
     build:
       context: ./services/products-api
     container_name: products-api
     ports:
-      - "8001:8000"
+      - "8001:8000"  # Mantener puerto para desarrollo/debug
     environment:
       - DATABASE_URL=postgresql://user:password@products-db:5432/products
+      - NODE_ENV=production
     depends_on:
       - products-db
-    networks: # <--- ¡AÑADIDO!
+    networks:
       - microservices_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===== CART API =====
+  cart-api:
+    build:
+      context: ./services/cart-api
+      dockerfile: Dockerfile
+    container_name: cart-api
+    restart: always
+    networks:
+      - microservices_network
+    ports:
+      - "8002:8000"  # Mantener puerto para desarrollo/debug
+    environment:
+      - NODE_ENV=production
+      - PORT=8000
+      - MONGO_URI=mongodb://root:rootpassword@carts-db:27017/cart-service?authSource=admin
+      - MONGO_USER=root
+      - MONGO_PASSWORD=rootpassword
+      - MONGO_DB=cart-service
+      - AUTH_SERVICE_URL=http://auth-service:8000
+    depends_on:
+      - carts-db
+      - auth-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===== DATABASES =====
   auth-db:
     image: postgres:15
     container_name: auth-db
@@ -58,8 +134,13 @@ services:
       - "5432:5432"
     volumes:
       - authdata:/var/lib/postgresql/data
-    networks: # <--- ¡AÑADIDO!
+    networks:
       - microservices_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authuser -d auth"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   products-db:
     image: postgres:15
@@ -73,8 +154,13 @@ services:
       - "5433:5432"
     volumes:
       - productsdata:/var/lib/postgresql/data
-    networks: # <--- ¡AÑADIDO!
+    networks:
       - microservices_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d products"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   carts-db:
     image: mongo:latest
@@ -89,39 +175,29 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=rootpassword
     healthcheck:
-      test: ["CMD", "mongo", "admin", "-u", "root", "-p", "rootpassword", "--eval", "db.runCommand('ping')"]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 10s
       retries: 5
       start_period: 40s
 
-  cart-api:
-    build:
-      context: ./services/cart-api
-      dockerfile: Dockerfile
-    container_name: cart-api
-    restart: always
+  # ===== MONITORING (Opcional) =====
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-lb
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api-gateway
     networks:
       - microservices_network
-    ports:
-      - "8002:8000"
-    environment:
-      - NODE_ENV=production
-      - PORT=8000
-      - MONGO_URI=mongodb://mongodb:27017/cart-service
-      - MONGO_USER=root
-      - MONGO_PASSWORD=rootpassword
-      - MONGO_DB=cart-service
-      - AUTH_SERVICE_URL=http://auth-service:8000
-    depends_on:
-      - carts-db
-      - auth-service 
-
+    restart: unless-stopped
 
 networks:
   microservices_network:
     driver: bridge
-
 
 volumes:
   authdata:
