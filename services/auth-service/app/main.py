@@ -25,6 +25,11 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 
+
+@app.get("/health", summary="Health Check", description="Health check for the Auth Service")
+def health_check_root():
+    return {"status": "ok", "message": "Auth service alive"}
+    
 #cors
 app.add_middleware(
     CORSMiddleware,

@@ -19,7 +19,7 @@ async function getProducts(page: number = 1, limit: number = 10): Promise<Produc
   try {
     console.log(process.env.NEXT_PUBLIC_PRODUCTS_API_URL)
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_PRODUCTS_API_URL}/products`
+      `${process.env.NEXT_PUBLIC_PRODUCTS_API_URL}/products/`
     )
     console.log(response)
     if (!response.ok) {

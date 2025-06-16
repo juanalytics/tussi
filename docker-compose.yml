@@ -14,8 +14,8 @@ services:
       - PORT=9000
       - JWT_SECRET=supersecretkey
       - AUTH_SERVICE_URL=http://auth-service:8000
-      - PRODUCTS_SERVICE_URL=http://products-api:8001
-      - CART_SERVICE_URL=http://cart-api:8002
+      - PRODUCTS_SERVICE_URL=http://products-api:8000
+      - CART_SERVICE_URL=http://cart-api:8000
       - FRONTEND_URL=http://localhost:3000
     depends_on:
       - auth-service

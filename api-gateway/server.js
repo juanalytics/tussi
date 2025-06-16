@@ -33,8 +33,8 @@ const authLimiter = rateLimit({
 // Configuración de microservicios
 const SERVICES = {
   AUTH_SERVICE: process.env.AUTH_SERVICE_URL || 'http://auth-service:8000',
-  PRODUCTS_SERVICE: process.env.PRODUCTS_SERVICE_URL || 'http://products-api:8001',
-  CART_SERVICE: process.env.CART_SERVICE_URL || 'http://cart-api:8002'
+  PRODUCTS_SERVICE: process.env.PRODUCTS_SERVICE_URL || 'http://products-api:8000',
+  CART_SERVICE: process.env.CART_SERVICE_URL || 'http://cart-api:8000'
 };
 
 // JWT Secret (debe coincidir con tu auth service)
@@ -142,37 +142,54 @@ app.use('/api/auth', generalLimiter, createProxyMiddleware({
 }));
 
 // ===== SERVICIO DE PRODUCTOS =====
-app.use('/api/products', generalLimiter, (req, res, next) => {
-  // Solo GET es público, otras operaciones requieren auth
-  if (req.method === 'GET') {
-    return next();
-  }
-  return authenticateToken(req, res, next);
-}, createProxyMiddleware({
-  target: SERVICES.PRODUCTS_SERVICE,
-  changeOrigin: true,
-  pathRewrite: {
-    '^/api/products': '/'
-  },
-  onProxyReq: (proxyReq, req, res) => {
-    if (req.user) {
-      proxyReq.setHeader('x-user-id', req.user.sub);
-    }
-    proxyReq.setHeader('x-client-ip', req.ip);
-  },
-  onProxyRes: (proxyRes, req, res) => {
-    proxyRes.headers['x-service'] = 'products-service';
-  },
-  onError: (err, req, res) => {
-    console.error('Error en Products Service:', err.message);
-    res.status(503).json({
-      error: 'Servicio de productos temporalmente no disponible',
-      code: 'PRODUCTS_SERVICE_DOWN',
-      timestamp: new Date().toISOString()
-    });
-  }
-}));
+app.use('/api/products',
+  // 1. Aplicar el limitador de tasa a TODOS los requests que lleguen a /api/products
+  generalLimiter,
 
+  // 2. Middleware condicional para la autenticación:
+  // Solo los métodos que no sean GET requieren autenticación.
+  (req, res, next) => {
+    if (req.method === 'GET') {
+      // Para requests GET, simplemente pasamos al siguiente middleware (el proxy)
+      return next();
+    }
+    // Para otros métodos (POST, PUT, DELETE, etc.), aplicar authenticateToken
+    return authenticateToken(req, res, next);
+  },
+
+  // 3. El middleware de proxy:
+  // Este middleware ahora será alcanzado por TODOS los requests (GET y no-GET)
+  // que pasaron las etapas anteriores, asegurando que pathRewrite siempre se aplique.
+  createProxyMiddleware({
+    target: SERVICES.PRODUCTS_SERVICE,
+    changeOrigin: true,
+    // Esta configuración reescribe '/api/products' a '/' en el servicio de destino.
+    // Por ejemplo:
+    //   - Request a gateway.com/api/products -> products-service.com/
+    //   - Request a gateway.com/api/products/123 -> products-service.com/123
+    pathRewrite: {
+      '^/api/products': ''
+    },
+    onProxyReq: (proxyReq, req, res) => {
+      // Si el usuario está autenticado (de authenticateToken), se añade el header
+      if (req.user) {
+        proxyReq.setHeader('x-user-id', req.user.sub);
+      }
+      proxyReq.setHeader('x-client-ip', req.ip);
+    },
+    onProxyRes: (proxyRes, req, res) => {
+      proxyRes.headers['x-service'] = 'products-service';
+    },
+    onError: (err, req, res) => {
+      console.error('Error en Products Service:', err.message);
+      res.status(503).json({
+        error: 'Servicio de productos temporalmente no disponible',
+        code: 'PRODUCTS_SERVICE_DOWN',
+        timestamp: new Date().toISOString()
+      });
+    }
+  })
+);
 // ===== SERVICIO DE CARRITO ===== 
 // Todas las rutas del carrito requieren autenticación
 app.use('/api/cart', generalLimiter, authenticateToken, createProxyMiddleware({
