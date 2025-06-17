@@ -42,7 +42,45 @@ The name **Tussi** is intentionally provocative and disruptive—a metaphor to p
 ### Component-and-Connector (C&C) Structure
 
 #### C&C View
-![Architecture Diagram](ArquitectureC&C.png)
+```mermaid
+graph TD
+    subgraph "Presentation Layer"
+        Frontend[/"Frontend"/]
+        MobileApp[/"Mobile App"/]
+    end
+
+    subgraph "Gateway Layer"
+        APIGateway["API Gateway"]
+    end
+
+    subgraph "Business Logic Layer"
+        AuthService["Auth Service"]
+        ProductsAPI["Products API"]
+        CartAPI["Cart API"]
+    end
+
+    subgraph "Data Layer"
+        AuthDB[(Auth Database<br>PostgreSQL)]
+        ProductsDB[(Products Database<br>PostgreSQL)]
+        CartDB[(Cart Database<br>MongoDB)]
+        MobileLocalStorage[("Mobile Local<br>Storage")]
+    end
+
+    Frontend -- "HTTP REST API" --> APIGateway
+    MobileApp -- "HTTP REST API" --> APIGateway
+
+    APIGateway -- "Routes to" --> AuthService
+    APIGateway -- "Routes to" --> ProductsAPI
+    APIGateway -- "Routes to" --> CartAPI
+
+    AuthService -- "Connects to" --> AuthDB
+    ProductsAPI -- "Connects to" --> ProductsDB
+    CartAPI -- "Connects to" --> CartDB
+    MobileApp -- "Uses" --> MobileLocalStorage
+
+    CartAPI -- "Validates User via" --> APIGateway
+    CartAPI -- "Validates Stock via" --> APIGateway
+```
 
 #### Description of Architectural Styles and Patterns Used
 
@@ -185,6 +223,57 @@ The name **Tussi** is intentionally provocative and disruptive—a metaphor to p
 
 #### Layered View
 The system implements an N-Tier Layered Architecture with microservices distribution:
+```mermaid
+graph TD
+    subgraph "User Interface"
+        A[Web Browser]
+        B[Mobile Device]
+    end
+
+    subgraph "Presentation Layer"
+        C["Frontend"]
+        D["Mobile App"]
+    end
+
+    subgraph "API Gateway Layer"
+        E["API Gateway"]
+    end
+
+    subgraph "Business Logic Layer"
+        F["Auth Service"]
+        G["Products API"]
+        H["Cart API"]
+    end
+
+    subgraph "Data Access Layer"
+        I["SQLAlchemy (Auth, Products)"]
+        J["Mongoose (Cart)"]
+        K["AsyncStorage (Mobile)"]
+    end
+
+    subgraph "Data Layer"
+        L["Auth DB (PostgreSQL)"]
+        M["Products DB (PostgreSQL)"]
+        N["Cart DB (MongoDB)"]
+        O["Mobile Local Storage"]
+    end
+
+    A --> C
+    B --> D
+    C --> E
+    D --> E
+    E --> F
+    E --> G
+    E --> H
+    F --> I
+    G --> I
+    H --> J
+    D --> K
+    I --> L
+    I --> M
+    J --> N
+    K --> O
+```
 
 **Layers:**
 1. **Presentation Layer**
@@ -216,6 +305,44 @@ The system implements an N-Tier Layered Architecture with microservices distribu
 
 #### Deployment View
 Container Orchestration Pattern with Docker Compose for backend services and native mobile app distribution.
+```mermaid
+graph TD
+    subgraph "Docker Host"
+        subgraph "Docker Network (microservices_network)"
+            FrontendContainer["Frontend Container<br>(Port 3000)"]
+            APIGatewayContainer["API Gateway Container<br>(Port 9000)"]
+            AuthServiceContainer["Auth Service Container<br>(Port 8000)"]
+            ProductsAPIContainer["Products API Container<br>(Port 8001)"]
+            CartAPIContainer["Cart API Container<br>(Port 8002)"]
+            AuthDBContainer["Auth DB Container<br>(PostgreSQL, Port 5432)"]
+            ProductsDBContainer["Products DB Container<br>(PostgreSQL, Port 5433)"]
+            CartDBContainer["Cart DB Container<br>(MongoDB, Port 27017)"]
+        end
+
+        FrontendContainer -- "Depends on" --> APIGatewayContainer
+        APIGatewayContainer -- "Depends on" --> AuthServiceContainer
+        APIGatewayContainer -- "Depends on" --> ProductsAPIContainer
+        APIGatewayContainer -- "Depends on" --> CartAPIContainer
+        AuthServiceContainer -- "Depends on" --> AuthDBContainer
+        ProductsAPIContainer -- "Depends on" --> ProductsDBContainer
+        CartAPIContainer -- "Depends on" --> CartDBContainer
+    end
+
+    subgraph "Client Devices"
+        UserDevice["User Device<br>(Browser)"]
+        MobileDevice["Mobile Device<br>(iOS/Android)"]
+    end
+
+    UserDevice -- "HTTP/S" --> FrontendContainer
+    UserDevice -- "HTTP/S" --> APIGatewayContainer
+    MobileDevice -- "HTTP/S" --> APIGatewayContainer
+
+    subgraph "App Stores"
+        AppStore["App Store / Google Play"]
+    end
+
+    MobileDevice -- "Installs from" --> AppStore
+```
 
 **Deployment Units:**
 
@@ -282,57 +409,58 @@ Container Orchestration Pattern with Docker Compose for backend services and nat
 ### Decomposition Structure
 
 #### Decomposition View
-```
-Tussi E-Commerce Platform
-├── Presentation Module
-│   ├── Frontend (Next.js SSR)
-│   │   ├── React Components & Hooks
-│   │   ├── API Service Integrations
-│   │   ├── Tailwind CSS Styling
-│   │   └── SSR Optimization
-│   └── Mobile App (React Native) ⭐ NEW
-│       ├── Native Components & Navigation
-│       ├── API Service Integrations
-│       ├── Offline Data Management
-│       ├── Push Notifications
-│       └── Platform-Specific Implementations
-├── Gateway Module ⭐ NEW
-│   └── API Gateway (Node.js)
-│       ├── Request Routing Logic
-│       ├── Authentication Middleware
-│       ├── Service Discovery
-│       ├── Load Balancing
-│       └── Cross-Platform Support
-├── Business Services Module
-│   ├── Auth Service (FastAPI + Poetry)
-│   │   ├── JWT Token Management
-│   │   ├── User Registration/Login
-│   │   ├── Cross-Platform Authentication
-│   │   └── SQLAlchemy Models
-│   ├── Products API (FastAPI + Poetry)
-│   │   ├── Catalog Management
-│   │   ├── Inventory Tracking
-│   │   ├── Search & Filtering
-│   │   └── PostgreSQL Integration
-│   └── Cart API (Node.js TypeScript)
-│       ├── Shopping Cart Operations
-│       ├── Cross-Platform Cart Sync
-│       ├── MongoDB Document Management
-│       └── Checkout Processing
-├── Data Module
-│   ├── Auth Database (PostgreSQL 15)
-│   │   └── User Credentials & Sessions
-│   ├── Products Database (PostgreSQL 15)
-│   │   └── Product Catalog & Inventory
-│   ├── Cart Database (MongoDB)
-│   │   └── Cart Documents & Sessions
-│   └── Mobile Local Storage (AsyncStorage) ⭐ NEW
-│       └── Offline Cache & User Preferences
-└── Infrastructure Module
-    ├── Docker Compose Orchestration
-    ├── Microservices Network Bridge
-    ├── Persistent Volume Management
-    └── Mobile App Store Distribution ⭐ NEW
+```mermaid
+mindmap
+  root("Tussi E-Commerce Platform")
+    ("Presentation Module")
+      ("Frontend (Next.js SSR)")
+        ("React Components & Hooks")
+        ("API Service Integrations")
+        ("Tailwind CSS Styling")
+        ("SSR Optimization")
+      ("Mobile App (React Native) ⭐ NEW")
+        ("Native Components & Navigation")
+        ("API Service Integrations")
+        ("Offline Data Management")
+        ("Push Notifications")
+        ("Platform-Specific Implementations")
+    ("Gateway Module ⭐ NEW")
+      ("API Gateway (Node.js)")
+        ("Request Routing Logic")
+        ("Authentication Middleware")
+        ("Service Discovery")
+        ("Load Balancing")
+        ("Cross-Platform Support")
+    ("Business Services Module")
+      ("Auth Service (FastAPI + Poetry)")
+        ("JWT Token Management")
+        ("User Registration/Login")
+        ("Cross-Platform Authentication")
+        ("SQLAlchemy Models")
+      ("Products API (FastAPI + Poetry)")
+        ("Catalog Management")
+        ("Inventory Tracking")
+        ("Search & Filtering")
+        ("PostgreSQL Integration")
+      ("Cart API (Node.js TypeScript)")
+        ("Shopping Cart Operations")
+        ("Cross-Platform Cart Sync")
+        ("MongoDB Document Management")
+        ("Checkout Processing")
+    ("Data Module")
+      ("Auth Database (PostgreSQL 15)")
+        ("User Credentials & Sessions")
+      ("Products Database (PostgreSQL 15)")
+        ("Product Catalog & Inventory")
+      ("Cart Database (MongoDB)")
+        ("Cart Documents & Sessions")
+      ("Mobile Local Storage (AsyncStorage) ⭐ NEW")
+        ("Offline Cache & User Preferences")
+    ("Infrastructure Module")
+      ("Docker Compose Orchestration")
+      ("Microservices Network Bridge")
+      ("Persistent Volume Management")
+      ("Mobile App Store Distribution ⭐ NEW")
 ```
 
 **Module Descriptions:**
