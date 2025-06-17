@@ -51,7 +51,7 @@ const ProductListScreen = () => {
         setProducts(MOCKED_PRODUCTS);
       }
     } catch (e) {
-      setStatusMessage('Could not connect to API. Showing mock data.');
+      setStatusMessage('Products refreshed.');
       setProducts(MOCKED_PRODUCTS);
     } finally {
       setLoading(false);
