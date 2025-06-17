@@ -4,6 +4,7 @@ node_modules
 npm-debug.log*
 coverage
 .DS_Store
+nginx
 # Byte-compiled / optimized / DLL files
 
 **pycache**/

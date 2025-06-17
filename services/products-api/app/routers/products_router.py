@@ -12,6 +12,10 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+@router.get("/health", summary="Health check endpoint")
+def health_check():
+    return {"status": "ok"}
+
 @router.post("/", response_model=product_schema.Product)
 def create_product_endpoint(product: product_schema.ProductCreate, db: Session = Depends(get_db)):
     return products_service.create_product(db=db, product=product)

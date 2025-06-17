@@ -13,6 +13,10 @@ router = APIRouter(
     responses={404: {"description": "Not found"}}
 )
 
+@router.get("/health", summary="Health check endpoint")
+def health_check():
+    return {"status": "ok"}
+
 # ─── JWT CONFIG ─────────────────────────────────────────────────────────────────
 SECRET_KEY = os.getenv("JWT_SECRET", "CHANGE_ME")
 ALGORITHM = "HS256"
