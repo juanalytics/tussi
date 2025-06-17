@@ -42,6 +42,10 @@ The name **Tussi** is intentionally provocative and disruptive—a metaphor to p
 ### Component-and-Connector (C&C) Structure
 
 #### C&C View
+![Architecture Diagram](
+  ArchitectureC&C.png
+)
+
 ```mermaid
 graph TD
     subgraph "Presentation Layer"
@@ -409,59 +413,6 @@ graph TD
 ### Decomposition Structure
 
 #### Decomposition View
-```mermaid
-mindmap
-  root("Tussi E-Commerce Platform")
-    ("Presentation Module")
-      ("Frontend (Next.js SSR)")
-        ("React Components & Hooks")
-        ("API Service Integrations")
-        ("Tailwind CSS Styling")
-        ("SSR Optimization")
-      ("Mobile App (React Native) ⭐ NEW")
-        ("Native Components & Navigation")
-        ("API Service Integrations")
-        ("Offline Data Management")
-        ("Push Notifications")
-        ("Platform-Specific Implementations")
-    ("Gateway Module ⭐ NEW")
-      ("API Gateway (Node.js)")
-        ("Request Routing Logic")
-        ("Authentication Middleware")
-        ("Service Discovery")
-        ("Load Balancing")
-        ("Cross-Platform Support")
-    ("Business Services Module")
-      ("Auth Service (FastAPI + Poetry)")
-        ("JWT Token Management")
-        ("User Registration/Login")
-        ("Cross-Platform Authentication")
-        ("SQLAlchemy Models")
-      ("Products API (FastAPI + Poetry)")
-        ("Catalog Management")
-        ("Inventory Tracking")
-        ("Search & Filtering")
-        ("PostgreSQL Integration")
-      ("Cart API (Node.js TypeScript)")
-        ("Shopping Cart Operations")
-        ("Cross-Platform Cart Sync")
-        ("MongoDB Document Management")
-        ("Checkout Processing")
-    ("Data Module")
-      ("Auth Database (PostgreSQL 15)")
-        ("User Credentials & Sessions")
-      ("Products Database (PostgreSQL 15)")
-        ("Product Catalog & Inventory")
-      ("Cart Database (MongoDB)")
-        ("Cart Documents & Sessions")
-      ("Mobile Local Storage (AsyncStorage) ⭐ NEW")
-        ("Offline Cache & User Preferences")
-    ("Infrastructure Module")
-      ("Docker Compose Orchestration")
-      ("Microservices Network Bridge")
-      ("Persistent Volume Management")
-      ("Mobile App Store Distribution ⭐ NEW")
-```
 
 **Module Descriptions:**
 
@@ -729,96 +680,96 @@ TUSSI/
 ├── README.md                      # This documentation
 ├── api-gateway/                   # ⭐ NEW - API Gateway Service
 │   ├── node_modules/
-│   ├── Dockerfile
-│   ├── package-lock.json
-│   ├── package.json
-│   └── server.js                  # Gateway routing logic
-├── frontend/                      # Next.js Frontend Application
-│   ├── app/
-│   │   ├── components/           # React components
-│   │   ├── hooks/               # Custom React hooks
-│   │   ├── lib/                 # Utility libraries
-│   │   ├── public/              # Static assets
-│   │   ├── services/            # API service calls
-│   │   └── styles/              # CSS and styling
-│   ├── components.json          # shadcn/ui configuration
-│   ├── Dockerfile
-│   ├── next-env.d.ts
-│   ├── next.config.mjs
-│   ├── package.json
-│   ├── pnpm-lock.yaml
-│   ├── postcss.config.mjs
-│   ├── tailwind.config.ts
-│   ├── tsconfig.json
-│   └── web-app-manifest-512x512.png
-├── mobile-app/                   # ⭐ NEW - React Native Mobile Application
-│   ├── android/                 # Android-specific files
-│   │   ├── app/
-│   │   ├── gradle/
-│   │   └── build.gradle
-│   ├── ios/                     # iOS-specific files
-│   │   ├── TussiApp/
-│   │   ├── TussiApp.xcodeproj/
-│   │   └── Podfile
-│   ├── src/                     # React Native source code
-│   │   ├── components/          # Reusable components
-│   │   ├── navigation/          # Navigation configuration
-│   │   ├── screens/             # App screens
-│   │   ├── services/            # API services
-│   │   ├── store/               # State management
-│   │   └── utils/               # Utility functions
-│   ├── __tests__/               # Mobile app tests
-│   ├── .eslintrc.js
-│   ├── .prettierrc.js
-│   ├── babel.config.js
-│   ├── index.js                 # App entry point
-│   ├── metro.config.js
-│   ├── package.json
-│   └── react-native.config.js
-├── nginx/                        # Optional Load Balancer
-│   └── nginx.conf               # Nginx configuration
-├── services/                     # Microservices Directory
-│   ├── auth-service/            # Authentication Microservice
-│   │   ├── app/
-│   │   │   ├── controllers/     # FastAPI route handlers
-│   │   │   ├── models/          # SQLAlchemy models
-│   │   │   └── services/        # Business logic
-│   │   ├── database.py          # Database configuration
-│   │   ├── deps.py              # Dependencies and middleware
-│   │   ├── main.py              # FastAPI application entry
-│   │   ├── schemas.py           # Pydantic schemas
-│   │   ├── Dockerfile
-│   │   ├── poetry.lock
-│   │   ├── pyproject.toml       # Poetry configuration
-│   │   └── requirements.txt     # Python dependencies
-│   ├── cart-api/                # Cart Management Microservice
-│   │   ├── node_modules/
-│   │   ├── src/
-│   │   │   ├── config/          # Database and app configuration
-│   │   │   ├── controllers/     # Express route controllers
-│   │   │   ├── middleware/      # Authentication middleware
-│   │   │   ├── models/          # MongoDB models
-│   │   │   ├── routes/          # API route definitions
-│   │   │   ├── utils/           # Utility functions
-│   │   │   └── index.js         # Application entry point
-│   │   ├── .dockerignore
-│   │   ├── .env                 # Environment variables
-│   │   ├── .gitignore
 │   │   ├── Dockerfile
 │   │   ├── package-lock.json
-│   │   └── package.json
-│   └── products-api/            # Products Catalog Microservice
-│       ├── app/
-│       │   ├── db/              # Database utilities
-│       │   ├── models/          # SQLAlchemy models
-│       │   ├── routers/         # FastAPI routers
-│       │   ├── schemas/         # Pydantic schemas
-│       │   ├── services/        # Business logic services
-│       │   └── __init__.py
-│       ├── main.py              # FastAPI application entry
-│       ├── tests/               # Unit tests
-│       ├── Dockerfile
-│       └── pyproject.toml       # Poetry configuration
+│   │   ├── package.json
+│   │   └── server.js                  # Gateway routing logic
+│   ├── frontend/                      # Next.js Frontend Application
+│   │   ├── app/
+│   │   │   ├── components/           # React components
+│   │   │   ├── hooks/               # Custom React hooks
+│   │   │   ├── lib/                 # Utility libraries
+│   │   │   ├── public/              # Static assets
+│   │   │   ├── services/            # API service calls
+│   │   │   └── styles/              # CSS and styling
+│   │   ├── components.json          # shadcn/ui configuration
+│   │   ├── Dockerfile
+│   │   ├── next-env.d.ts
+│   │   ├── next.config.mjs
+│   │   ├── package.json
+│   │   ├── pnpm-lock.yaml
+│   │   ├── postcss.config.mjs
+│   │   ├── tailwind.config.ts
+│   │   ├── tsconfig.json
+│   │   └── web-app-manifest-512x512.png
+│   ├── mobile-app/                   # ⭐ NEW - React Native Mobile Application
+│   │   ├── android/                 # Android-specific files
+│   │   │   ├── app/
+│   │   │   ├── gradle/
+│   │   │   └── build.gradle
+│   │   ├── ios/                     # iOS-specific files
+│   │   │   ├── TussiApp/
+│   │   │   ├── TussiApp.xcodeproj/
+│   │   │   └── Podfile
+│   │   ├── src/                     # React Native source code
+│   │   │   ├── components/          # Reusable components
+│   │   │   ├── navigation/          # Navigation configuration
+│   │   │   ├── screens/             # App screens
+│   │   │   ├── services/            # API services
+│   │   │   ├── store/               # State management
+│   │   │   └── utils/               # Utility functions
+│   │   ├── __tests__/               # Mobile app tests
+│   │   ├── .eslintrc.js
+│   │   ├── .prettierrc.js
+│   │   ├── babel.config.js
+│   │   ├── index.js                 # App entry point
+│   │   ├── metro.config.js
+│   │   ├── package.json
+│   │   └── react-native.config.js
+│   ├── nginx/                        # Optional Load Balancer
+│   │   └── nginx.conf               # Nginx configuration
+│   ├── services/                     # Microservices Directory
+│   │   ├── auth-service/            # Authentication Microservice
+│   │   │   ├── app/
+│   │   │   │   ├── controllers/     # FastAPI route handlers
+│   │   │   │   ├── models/          # SQLAlchemy models
+│   │   │   │   └── services/        # Business logic
+│   │   │   ├── database.py          # Database configuration
+│   │   │   ├── deps.py              # Dependencies and middleware
+│   │   │   ├── main.py              # FastAPI application entry
+│   │   │   ├── schemas.py           # Pydantic schemas
+│   │   │   ├── Dockerfile
+│   │   │   ├── poetry.lock
+│   │   │   ├── pyproject.toml       # Poetry configuration
+│   │   │   └── requirements.txt     # Python dependencies
+│   │   ├── cart-api/                # Cart Management Microservice
+│   │   │   ├── node_modules/
+│   │   │   ├── src/
+│   │   │   │   ├── config/          # Database and app configuration
+│   │   │   │   ├── controllers/     # Express route controllers
+│   │   │   │   ├── middleware/      # Authentication middleware
+│   │   │   │   ├── models/          # MongoDB models
+│   │   │   │   ├── routes/          # API route definitions
+│   │   │   │   ├── utils/           # Utility functions
+│   │   │   │   └── index.js         # Application entry point
+│   │   │   ├── .dockerignore
+│   │   │   ├── .env                 # Environment variables
+│   │   │   ├── .gitignore
+│   │   │   ├── Dockerfile
+│   │   │   ├── package-lock.json
+│   │   │   └── package.json
+│   │   └── products-api/            # Products Catalog Microservice
+│   │       ├── app/
+│   │       │   ├── db/              # Database utilities
+│   │       │   ├── models/          # SQLAlchemy models
+│   │       │   ├── routers/         # FastAPI routers
+│   │       │   ├── schemas/         # Pydantic schemas
+│   │       │   ├── services/        # Business logic services
+│   │       │   └── __init__.py
+│   │       ├── main.py              # FastAPI application entry
+│   │       ├── tests/               # Unit tests
+│   │       ├── Dockerfile
+│   │       └── pyproject.toml       # Poetry configuration
 ```
 
 ### Architecture Insights from Project Structure
