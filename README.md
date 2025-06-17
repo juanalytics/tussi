@@ -20,7 +20,7 @@ Tussi
 ### Description
 **Tussi** is a distributed e-commerce platform built with modern microservices architecture that provides user authentication, product catalog management, and shopping cart functionality. The system is designed to handle high traffic loads through distributed services and uses modern web technologies for optimal performance and scalability.
 
-The platform connects buyers and sellers in a highly scalable, modular, and secure environment, featuring decoupled microservices backed by PostgreSQL and MongoDB databases, with a frontend built using Next.js, React, and Tailwind CSS.
+The platform connects buyers and sellers in a highly scalable, modular, and secure environment, featuring decoupled microservices backed by PostgreSQL and MongoDB databases, with a frontend built using Next.js, React, and Tailwind CSS, plus a native mobile application for iOS and Android.
 
 #### Key Features of Second Prototype
 - **API Gateway Integration**: Centralized entry point for all client requests
@@ -28,6 +28,7 @@ The platform connects buyers and sellers in a highly scalable, modular, and secu
 - **Service Orchestration**: Improved service-to-service communication
 - **Load Balancing**: Request distribution across microservices
 - **Monitoring**: Health checks and centralized logging
+- **Multi-Platform Support**: Web application and native mobile app for iOS/Android
 
 #### Justification for Tussi's Name and Design
 The name **Tussi** is intentionally provocative and disruptive—a metaphor to positively alter shopping experiences, creating emotional, sensory, and memorable interactions.
@@ -64,11 +65,16 @@ The name **Tussi** is intentionally provocative and disruptive—a metaphor to p
    - Each microservice has its own dedicated database
    - **Advantages:** Data isolation, technology diversity, independent scaling
 
+5. **Multi-Platform Client Architecture**
+   - Web and mobile clients consuming the same backend services
+   - **Advantages:** Code reuse, consistent user experience, unified API
+
 **Patterns:**
 - **Server-Side Rendering (SSR)**: Next.js frontend with SSR capabilities
 - **Circuit Breaker**: Implemented in API Gateway for fault tolerance
 - **Health Check Pattern**: All services expose health endpoints
 - **JWT Authentication**: Secure token-based authentication across services
+- **Cross-Platform Data Synchronization**: Shared state management between web and mobile
 
 #### Description of Architectural Elements and Relations
 
@@ -81,6 +87,12 @@ The name **Tussi** is intentionally provocative and disruptive—a metaphor to p
   - Responsibilities: Server-side rendering, user interface, client-side interactions
   - **NEW:** Enhanced integration with API Gateway
 
+- **Mobile App (React Native)** ⭐ **NEW IN PROTOTYPE 2**
+  - Type: Presentation
+  - Technology: React Native, TypeScript, Native Navigation
+  - Responsibilities: Native mobile experience, offline capabilities, push notifications
+  - Platform Support: iOS and Android
+
 **Gateway Layer:**
 - **API Gateway** ⭐ **NEW IN PROTOTYPE 2**
   - Type: Logic/Communication
@@ -91,6 +103,7 @@ The name **Tussi** is intentionally provocative and disruptive—a metaphor to p
     - Rate limiting and CORS handling
     - Service discovery and health monitoring
     - Centralized logging and error handling
+    - Cross-platform client support
 
 **Business Logic Layer:**
 - **Auth Service**
@@ -124,11 +137,17 @@ The name **Tussi** is intentionally provocative and disruptive—a metaphor to p
   - Technology: MongoDB
   - Responsibilities: Shopping cart data, session storage
 
+- **Mobile Local Storage** ⭐ **NEW**
+  - Type: Data
+  - Technology: AsyncStorage (React Native)
+  - Responsibilities: Offline data caching, user preferences, session persistence
+
 **Connectors and Communication:**
 
 **External Communications:**
 - **HTTP REST API (TLS + JWT)**
-  - **Frontend → API Gateway**: All client requests now go through the gateway
+  - **Web Frontend → API Gateway**: Browser-based client requests
+  - **Mobile App → API Gateway**: Native mobile client requests
   - **API Gateway → Microservices**: Internal service communication via bridge network
 
 **Internal Communications:**
@@ -141,22 +160,26 @@ The name **Tussi** is intentionally provocative and disruptive—a metaphor to p
 **Database Connections:**
 - **SQL (TCP/5432)**: PostgreSQL drivers for auth/products services
 - **MongoDB Driver (TCP/27017)**: MongoDB driver for cart service
+- **AsyncStorage**: Local mobile data persistence
 
 **Critical Flows:**
 
 1. **Authentication Flow (Enhanced)**
-   - Client → API Gateway → Auth Service
+   - Web/Mobile Client → API Gateway → Auth Service
    - API Gateway validates and caches JWT tokens
    - Enhanced security with rate limiting and request validation
+   - Cross-platform session synchronization
 
 2. **Product Catalog Flow**
-   - Client → API Gateway → Products API
+   - Web/Mobile Client → API Gateway → Products API
    - Gateway handles load balancing and caching
+   - Mobile offline caching capabilities
 
 3. **Cart Management & Checkout Flow**
-   - Client → API Gateway → Cart Service
+   - Web/Mobile Client → API Gateway → Cart Service
    - Gateway orchestrates calls to Auth Service and Products API
    - Improved error handling and transaction management
+   - Cross-platform cart synchronization
 
 ### Layered Structure
 
@@ -165,14 +188,14 @@ The system implements an N-Tier Layered Architecture with microservices distribu
 
 **Layers:**
 1. **Presentation Layer**
-   - Components: Next.js Frontend
-   - Technologies: Next.js 14 (SSR), React, TypeScript, Tailwind CSS
-   - Responsibilities: User interface rendering, client-side logic, SSR optimization
+   - Components: Next.js Frontend, React Native Mobile App
+   - Technologies: Next.js 14 (SSR), React, React Native, TypeScript, Tailwind CSS
+   - Responsibilities: User interface rendering, client-side logic, SSR optimization, native mobile experience
 
 2. **API Gateway Layer** ⭐ **NEW**
    - Components: API Gateway Service
    - Technologies: Node.js, Express
-   - Responsibilities: Request routing, authentication, rate limiting, service orchestration
+   - Responsibilities: Request routing, authentication, rate limiting, service orchestration, cross-platform support
 
 3. **Business Logic Layer**
    - Components: Auth Service, Products API, Cart API
@@ -180,19 +203,19 @@ The system implements an N-Tier Layered Architecture with microservices distribu
    - Responsibilities: Core business logic, validation, processing rules
 
 4. **Data Access Layer**
-   - Components: Database connectors within each service
-   - Technologies: SQLAlchemy (Python), Mongoose (Node.js), PostgreSQL drivers
-   - Responsibilities: Data persistence, query optimization, transaction management
+   - Components: Database connectors within each service, Mobile local storage adapters
+   - Technologies: SQLAlchemy (Python), Mongoose (Node.js), PostgreSQL drivers, AsyncStorage
+   - Responsibilities: Data persistence, query optimization, transaction management, offline caching
 
 5. **Data Layer**
-   - Components: PostgreSQL databases, MongoDB database
-   - Technologies: PostgreSQL 15, MongoDB
-   - Responsibilities: Data storage, backup, indexing, data integrity
+   - Components: PostgreSQL databases, MongoDB database, Mobile local storage
+   - Technologies: PostgreSQL 15, MongoDB, AsyncStorage (React Native)
+   - Responsibilities: Data storage, backup, indexing, data integrity, offline data management
 
 ### Deployment Structure
 
 #### Deployment View
-Container Orchestration Pattern with Docker Compose for local development and testing.
+Container Orchestration Pattern with Docker Compose for backend services and native mobile app distribution.
 
 **Deployment Units:**
 
@@ -201,6 +224,13 @@ Container Orchestration Pattern with Docker Compose for local development and te
   - Ports: `3000:3000`
   - Dependencies: `api-gateway`
   - Environment: `NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:9000`
+
+- **Mobile Application:** ⭐ **NEW**
+  - Platform: iOS/Android Native
+  - Distribution: App Store/Google Play Store
+  - Dependencies: API Gateway (remote)
+  - Environment: `API_GATEWAY_URL=https://api.tussi.com` (production)
+  - Local Storage: AsyncStorage for offline capabilities
 
 - **API Gateway Container:** ⭐ **NEW**
   - Image: Custom Node.js build
@@ -213,6 +243,7 @@ Container Orchestration Pattern with Docker Compose for local development and te
     - `AUTH_SERVICE_URL=http://auth-service:8000`
     - `PRODUCTS_SERVICE_URL=http://products-api:8000`
     - `CART_SERVICE_URL=http://cart-api:8000`
+    - `MOBILE_CLIENT_SUPPORT=true`
   - Health Check: `curl -f http://localhost:9000/health`
 
 - **Auth Service Container:**
@@ -246,6 +277,7 @@ Container Orchestration Pattern with Docker Compose for local development and te
 - **Storage**: Docker volumes for database persistence
 - **Monitoring**: Health checks for all services
 - **Load Balancing**: API Gateway handles service routing and load distribution
+- **Mobile Distribution**: Native app stores for iOS/Android deployment
 
 ### Decomposition Structure
 
@@ -253,28 +285,38 @@ Container Orchestration Pattern with Docker Compose for local development and te
 ```
 Tussi E-Commerce Platform
 ├── Presentation Module
-│   └── Frontend (Next.js SSR)
-│       ├── React Components & Hooks
+│   ├── Frontend (Next.js SSR)
+│   │   ├── React Components & Hooks
+│   │   ├── API Service Integrations
+│   │   ├── Tailwind CSS Styling
+│   │   └── SSR Optimization
+│   └── Mobile App (React Native) ⭐ NEW
+│       ├── Native Components & Navigation
 │       ├── API Service Integrations
-│       ├── Tailwind CSS Styling
-│       └── SSR Optimization
+│       ├── Offline Data Management
+│       ├── Push Notifications
+│       └── Platform-Specific Implementations
 ├── Gateway Module ⭐ NEW
 │   └── API Gateway (Node.js)
 │       ├── Request Routing Logic
 │       ├── Authentication Middleware
 │       ├── Service Discovery
-│       └── Load Balancing
+│       ├── Load Balancing
+│       └── Cross-Platform Support
 ├── Business Services Module
 │   ├── Auth Service (FastAPI + Poetry)
 │   │   ├── JWT Token Management
 │   │   ├── User Registration/Login
+│   │   ├── Cross-Platform Authentication
 │   │   └── SQLAlchemy Models
 │   ├── Products API (FastAPI + Poetry)
 │   │   ├── Catalog Management
 │   │   ├── Inventory Tracking
+│   │   ├── Search & Filtering
 │   │   └── PostgreSQL Integration
 │   └── Cart API (Node.js TypeScript)
 │       ├── Shopping Cart Operations
+│       ├── Cross-Platform Cart Sync
 │       ├── MongoDB Document Management
 │       └── Checkout Processing
 ├── Data Module
@@ -282,30 +324,33 @@ Tussi E-Commerce Platform
 │   │   └── User Credentials & Sessions
 │   ├── Products Database (PostgreSQL 15)
 │   │   └── Product Catalog & Inventory
-│   └── Cart Database (MongoDB)
-│       └── Cart Documents & Sessions
+│   ├── Cart Database (MongoDB)
+│   │   └── Cart Documents & Sessions
+│   └── Mobile Local Storage (AsyncStorage) ⭐ NEW
+│       └── Offline Cache & User Preferences
 └── Infrastructure Module
     ├── Docker Compose Orchestration
     ├── Microservices Network Bridge
     ├── Persistent Volume Management
-    └── Optional Nginx Load Balancer
+    └── Mobile App Store Distribution ⭐ NEW
 ```
 
 **Module Descriptions:**
 
-* **Presentation Module**: Next.js-based frontend with SSR capabilities, React components, custom hooks, and Tailwind CSS styling
-* **Gateway Module**: ⭐ **NEW** - Centralized API Gateway providing request routing, authentication middleware, service discovery, and load balancing
-* **Business Services Module**: Domain-specific microservices with FastAPI (Python) and Node.js (TypeScript) implementations
-* **Data Module**: Polyglot persistence with PostgreSQL for relational data and MongoDB for flexible document storage
-* **Infrastructure Module**: Complete Docker-based deployment with container orchestration, networking, and persistent storage
+* **Presentation Module**: Multi-platform presentation layer with Next.js-based web frontend and React Native mobile application
+* **Gateway Module**: ⭐ **NEW** - Centralized API Gateway providing cross-platform request routing, authentication middleware, service discovery, and load balancing
+* **Business Services Module**: Domain-specific microservices with FastAPI (Python) and Node.js (TypeScript) implementations, supporting both web and mobile clients
+* **Data Module**: Polyglot persistence with PostgreSQL for relational data, MongoDB for flexible document storage, and mobile local storage for offline capabilities
+* **Infrastructure Module**: Complete deployment solution with Docker-based backend services and native mobile app distribution
 
 ## 4. Technical Implementation Details
 
 ### Programming Languages Used
-- **JavaScript/TypeScript**: Frontend (Next.js), API Gateway (Node.js), Cart API
+- **JavaScript/TypeScript**: Frontend (Next.js), Mobile App (React Native), API Gateway (Node.js), Cart API
 - **Python**: Auth Service (FastAPI), Products API (FastAPI)
 - **SQL**: Database queries and schema definitions
 - **HTML/CSS**: Frontend templating and styling
+- **Platform-Specific**: Native iOS (Swift/Objective-C) and Android (Java/Kotlin) for mobile integrations
 
 ### New Features in Prototype 2
 - **API Gateway**: Centralized request handling and service orchestration
@@ -313,6 +358,8 @@ Tussi E-Commerce Platform
 - **Service Discovery**: Dynamic service routing and health monitoring
 - **Rate Limiting**: Request throttling and abuse prevention
 - **Centralized Logging**: Unified logging across all services
+- **Mobile Application**: Native iOS and Android app with offline capabilities
+- **Cross-Platform Synchronization**: Seamless data sync between web and mobile
 
 ## 5. Prototype Deployment
 
@@ -321,6 +368,9 @@ Tussi E-Commerce Platform
 - Node.js 18+ (for local development)
 - Python 3.9+ (for local development)
 - Poetry (for Python dependency management)
+- React Native CLI (for mobile development)
+- Xcode (for iOS development)
+- Android Studio (for Android development)
 
 ### Local Deployment Instructions
 
@@ -333,7 +383,7 @@ cd TUSSI/
 **2. Environment Setup:**
 The docker-compose.yml file contains all necessary environment variables. For local development, you may need to create `.env` files for each service.
 
-**3. Build and Deploy:**
+**3. Build and Deploy Backend Services:**
 ```bash
 # Build all containers
 docker-compose build
@@ -355,7 +405,25 @@ docker exec -it products-db psql -U user -d products
 # Then run queries from products_dump.sql
 ```
 
-**5. Verify Deployment:**
+**5. Mobile App Setup:**
+```bash
+# Navigate to mobile app directory
+cd mobile-app/
+
+# Install dependencies
+npm install
+
+# iOS setup
+cd ios && pod install && cd ..
+
+# Run on iOS simulator
+npx react-native run-ios
+
+# Run on Android emulator
+npx react-native run-android
+```
+
+**6. Verify Deployment:**
 ```bash
 # Check all containers
 docker-compose ps
@@ -365,6 +433,9 @@ curl http://localhost:9000/health    # API Gateway
 curl http://localhost:8000/health    # Auth Service
 curl http://localhost:8001/health    # Products API
 curl http://localhost:8002/health    # Cart API
+
+# Test mobile app connectivity
+# Open mobile app and verify API connectivity
 ```
 
 ### Services Configuration
@@ -372,6 +443,7 @@ curl http://localhost:8002/health    # Cart API
 | Service         | External Port | Internal Port | Description |
 |:----------------|:--------------|:--------------|:------------|
 | **Frontend**    | 3000          | 3000          | Next.js SSR Web Application |
+| **Mobile App**  | N/A           | N/A           | **Native iOS/Android Application** ⭐ **NEW** |
 | **API Gateway** | **9000**      | **9000**      | **Main API Gateway** ⭐ **NEW** |
 | Auth Service    | 8000          | 8000          | Authentication & Authorization |
 | Products API    | 8001          | 8000          | Product Catalog Management |
@@ -383,6 +455,7 @@ curl http://localhost:8002/health    # Cart API
 ### Access Points
 
 - **Web Application**: http://localhost:3000
+- **Mobile Application**: Available on iOS/Android devices ⭐ **NEW**
 - **API Gateway**: http://localhost:9000 ⭐ **NEW**
 - **API Documentation**: 
   - Gateway: http://localhost:9000/docs
@@ -393,7 +466,7 @@ curl http://localhost:8002/health    # Cart API
 ## 6. Testing
 
 ### API Testing
-All API endpoints are now accessible through the API Gateway:
+All API endpoints are now accessible through the API Gateway from both web and mobile clients:
 
 **Authentication:**
 - `POST /api/auth/register`
@@ -409,9 +482,16 @@ All API endpoints are now accessible through the API Gateway:
 - `POST /api/cart/add`
 - `POST /api/cart/checkout`
 
+### Mobile App Testing
+- **Unit Tests**: React Native component testing with Jest
+- **Integration Tests**: API connectivity and data synchronization
+- **E2E Tests**: Full user flows on iOS and Android simulators
+- **Device Testing**: Real device testing for iOS and Android
+
 ### Health Monitoring
 - **System Health**: `GET /health` (API Gateway)
 - **Service Status**: `GET /api/status` (Overall system status)
+- **Mobile Connectivity**: Built-in health checks within mobile app
 
 ## 7. Monitoring and Troubleshooting
 
@@ -427,6 +507,18 @@ docker-compose logs -f cart-api
 docker-compose logs -f
 ```
 
+### Mobile App Debugging
+```bash
+# iOS debugging
+npx react-native log-ios
+
+# Android debugging
+npx react-native log-android
+
+# Metro bundler logs
+npx react-native start
+```
+
 ### Common Issues
 
 **API Gateway Connection Issues:**
@@ -435,6 +527,15 @@ docker-compose logs -f
 docker-compose exec api-gateway curl -f http://auth-service:8000/health
 docker-compose exec api-gateway curl -f http://products-api:8000/health
 docker-compose exec api-gateway curl -f http://cart-api:8000/health
+```
+
+**Mobile App Connection Issues:**
+```bash
+# Check API Gateway accessibility from mobile
+curl http://[YOUR_LOCAL_IP]:9000/health
+
+# Verify mobile app configuration
+# Check API_GATEWAY_URL in mobile app configuration
 ```
 
 **Database Connection Issues:**
@@ -448,14 +549,14 @@ docker-compose exec carts-db mongosh --eval "db.adminCommand('ping')"
 ## 8. Architecture Compliance Checklist
 
 - [x] **Distributed architecture** - Microservices with API Gateway orchestration
-- [x] **Two presentation components** - Next.js web frontend + Mobile app (planned)
+- [x] **Two presentation components** - Next.js web frontend + React Native mobile app ⭐
 - [x] **Four logic components** - API Gateway, Auth Service, Products API, Cart API
 - [x] **Communication/orchestration component** - API Gateway handles service orchestration ⭐
-- [x] **Four data components** - Auth DB, Products DB, Cart DB + planned mobile storage
-- [x] **Asynchronous processing** - Background tasks in services
+- [x] **Four data components** - Auth DB, Products DB, Cart DB + Mobile AsyncStorage ⭐
+- [x] **Asynchronous processing** - Background tasks in services + mobile offline sync
 - [x] **HTTP-based connectors** - REST API calls, Database connectors
 - [x] **Four programming languages** - JavaScript/TypeScript, Python, SQL, HTML/CSS
-- [x] **Container-oriented deployment** - Full Docker Compose orchestration
+- [x] **Container-oriented deployment** - Full Docker Compose orchestration + mobile distribution
 
 ## 9. Changes from Prototype 1 to Prototype 2
 
@@ -465,21 +566,28 @@ docker-compose exec carts-db mongosh --eval "db.adminCommand('ping')"
 3. **Service Orchestration** - Improved inter-service communication
 4. **Health Monitoring** - Comprehensive health checks
 5. **Load Balancing** - Request distribution capabilities
+6. **Mobile Application** - Native iOS and Android app implementation ⭐
+7. **Cross-Platform Support** - Unified API for web and mobile clients
+8. **Offline Capabilities** - Mobile app offline data management
 
 ### Architecture Improvements:
 - **Centralized Routing**: All client requests go through API Gateway
 - **Better Error Handling**: Standardized error responses
 - **Enhanced Monitoring**: Centralized logging and health checks
 - **Improved Security**: Authentication middleware at gateway level
+- **Multi-Platform Support**: Native mobile experience with data synchronization
+- **Offline-First Design**: Mobile app works without internet connectivity
 
 ## 10. Future Enhancements
 
-- Mobile application implementation
+- Advanced push notifications for mobile app
 - Message queue integration (Redis/RabbitMQ)
 - Advanced monitoring (ELK Stack)
 - Caching layer (Redis)
 - CI/CD pipeline implementation
 - Kubernetes deployment
+- App Store optimization and analytics
+- Mobile app performance monitoring
 
 ## 11. Project Structure
 
@@ -515,6 +623,30 @@ TUSSI/
 │   ├── tailwind.config.ts
 │   ├── tsconfig.json
 │   └── web-app-manifest-512x512.png
+├── mobile-app/                   # ⭐ NEW - React Native Mobile Application
+│   ├── android/                 # Android-specific files
+│   │   ├── app/
+│   │   ├── gradle/
+│   │   └── build.gradle
+│   ├── ios/                     # iOS-specific files
+│   │   ├── TussiApp/
+│   │   ├── TussiApp.xcodeproj/
+│   │   └── Podfile
+│   ├── src/                     # React Native source code
+│   │   ├── components/          # Reusable components
+│   │   ├── navigation/          # Navigation configuration
+│   │   ├── screens/             # App screens
+│   │   ├── services/            # API services
+│   │   ├── store/               # State management
+│   │   └── utils/               # Utility functions
+│   ├── __tests__/               # Mobile app tests
+│   ├── .eslintrc.js
+│   ├── .prettierrc.js
+│   ├── babel.config.js
+│   ├── index.js                 # App entry point
+│   ├── metro.config.js
+│   ├── package.json
+│   └── react-native.config.js
 ├── nginx/                        # Optional Load Balancer
 │   └── nginx.conf               # Nginx configuration
 ├── services/                     # Microservices Directory
@@ -563,6 +695,10 @@ TUSSI/
 
 ### Architecture Insights from Project Structure
 
+**Multi-Platform Presentation:**
+- **Web Frontend** (`frontend/`): Next.js with React and TypeScript
+- **Mobile Application** (`mobile-app/`): React Native with native iOS/Android support ⭐
+
 **Microservices Distribution:**
 - Each service (`auth-service`, `products-api`, `cart-api`) is completely isolated with its own:
   - Dependencies (`pyproject.toml`, `package.json`)
@@ -574,25 +710,31 @@ TUSSI/
 - **Python Services** (`auth-service`, `products-api`): Use Poetry for dependency management and FastAPI framework
 - **Node.js Services** (`cart-api`, `api-gateway`): Use npm/yarn with TypeScript support
 - **Frontend**: Next.js with modern tooling (Tailwind, TypeScript, pnpm)
+- **Mobile**: React Native with platform-specific configurations for iOS and Android
 
 **Container Architecture:**
-- Each component has its own `Dockerfile`
-- `docker-compose.yml` orchestrates all services
-- Clear separation between development and production configurations
+- Each backend component has its own `Dockerfile`
+- `docker-compose.yml` orchestrates all backend services
+- Mobile app deployed through native app stores
 
 **API Gateway Integration:**
 - Dedicated `api-gateway/` directory shows the centralized routing approach
 - `server.js` contains the main gateway logic for request handling and service orchestration
+- Supports both web and mobile client requests
 
 **Database Strategy:**
 - `products_dump.sql` indicates PostgreSQL usage for products
 - MongoDB integration evident in `cart-api` structure
 - Database per service pattern clearly implemented
+- Mobile local storage for offline capabilities
 
 ## 12. References
 
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Next.js Documentation](https://nextjs.org/docs)
+- [React Native Documentation](https://reactnative.dev/docs/getting-started)
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [API Gateway Pattern](https://microservices.io/patterns/apigateway.html)
 - [Microservices Patterns](https://microservices.io/patterns/index.html)
+- [React Native AsyncStorage](https://react-native-async-storage.github.io/async-storage/)
+- [Cross-Platform Development Best Practices](https://reactnative.dev/docs/platformspecific-code)
