@@ -42,6 +42,10 @@ The name **Tussi** is intentionally provocative and disruptive—a metaphor to p
 ### Component-and-Connector (C&C) Structure
 
 #### C&C View
+![Architecture Diagram](
+  ArchitectureC&C.png
+)
+
 ```mermaid
 graph TD
     subgraph "Presentation Layer"
