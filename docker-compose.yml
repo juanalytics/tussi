@@ -1,4 +1,3 @@
-
 services:
   # ===== API GATEWAY =====
   api-gateway:
@@ -82,6 +81,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://user:password@products-db:5432/products
       - NODE_ENV=production
+    volumes:
+      - ./products_dump.sql:/app/products_dump.sql
     depends_on:
       - products-db
     networks:

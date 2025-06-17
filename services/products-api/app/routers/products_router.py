@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from typing import List
 
 from app.schemas import product_schema
@@ -44,4 +45,28 @@ def delete_product_endpoint(product_id: int, db: Session = Depends(get_db)):
     db_product = products_service.delete_product(db, product_id=product_id)
     if db_product is None:
         raise HTTPException(status_code=404, detail="Product not found")
-    return db_product 
+    return db_product
+
+@router.post("/populate", summary="Populate database with sample products")
+def populate_database(db: Session = Depends(get_db)):
+    """
+    Populates the database with sample products by executing the products_dump.sql file.
+    The SQL file is expected to be in the /app directory inside the container.
+    """
+    try:
+        with open("/app/products_dump.sql", "r", encoding="utf-16") as f:
+            # The file seems to have some weird characters at the beginning, so we strip them
+            sql_commands = f.read().strip()
+
+        if sql_commands:
+            db.execute(text(sql_commands))
+            db.commit()
+            return {"message": "Database populated successfully"}
+        else:
+            return {"message": "SQL file is empty, no data populated."}
+
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="products_dump.sql not found in /app directory.")
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to populate database: {str(e)}") 
