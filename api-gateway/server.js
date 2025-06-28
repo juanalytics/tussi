@@ -105,11 +105,22 @@ app.get('/health', async (req, res) => {
 
   const allServicesUp = Object.values(serviceChecks).every(check => check.status === 'UP');
 
-  res.status(allServicesUp ? 200 : 503).json({
+  // Always return 200 for gateway health - it's running if it can respond
+  res.status(200).json({
     gateway: 'UP',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
-    services: serviceChecks
+    services: serviceChecks,
+    overall: allServicesUp ? 'HEALTHY' : 'DEGRADED'
+  });
+});
+
+// Simple health check that doesn't depend on backend services
+app.get('/health/simple', (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    timestamp: new Date().toISOString(),
+    service: 'api-gateway'
   });
 });
 

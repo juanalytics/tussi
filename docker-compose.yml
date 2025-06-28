@@ -21,7 +21,8 @@ services:
       - products-api
       - cart-api
     networks:
-      - microservices_network
+      - public
+      - private
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
       interval: 30s
@@ -47,7 +48,7 @@ services:
     depends_on:
       - api-gateway
     networks:
-      - microservices_network
+      - public
 
   # ===== AUTH SERVICE =====
   auth-service:
@@ -64,7 +65,7 @@ services:
     depends_on:
       - auth-db
     networks:
-      - microservices_network
+      - private
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -86,7 +87,7 @@ services:
     depends_on:
       - products-db
     networks:
-      - microservices_network
+      - private
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -101,7 +102,7 @@ services:
     container_name: cart-api
     restart: always
     networks:
-      - microservices_network
+      - private
     ports:
       - "8002:8000"  # Mantener puerto para desarrollo/debug
     environment:
@@ -135,7 +136,7 @@ services:
     volumes:
       - authdata:/var/lib/postgresql/data
     networks:
-      - microservices_network
+      - private
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U authuser -d auth"]
       interval: 10s
@@ -155,7 +156,7 @@ services:
     volumes:
       - productsdata:/var/lib/postgresql/data
     networks:
-      - microservices_network
+      - private
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d products"]
       interval: 10s
@@ -168,7 +169,7 @@ services:
     volumes:
       - cartsdata:/data/db
     networks:
-      - microservices_network
+      - private
     ports:
       - "27017:27017"
     environment:
@@ -196,8 +197,11 @@ services:
   #     - microservices_network
   #   restart: unless-stopped
 networks:
-  microservices_network:
+  public:
     driver: bridge
+  private:
+    driver: bridge
+    internal: true # Aisla completamente de la red externa   
 
 volumes:
   authdata:

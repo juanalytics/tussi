@@ -3,6 +3,8 @@ from app.db.database import engine, Base
 from app.routers import products_router
 from app.models import product 
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -25,3 +27,11 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"message": "Welcome to Products API"} 
+
+@app.get("/health")
+def health_check():
+    return {
+        "status": "UP",
+        "service": "products-api",
+        "timestamp": datetime.now().isoformat()
+    } 
