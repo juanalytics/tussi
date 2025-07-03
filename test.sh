@@ -16,13 +16,14 @@ sleep 10
 
 # Services that should be accessible from localhost
 PUBLIC_SERVICES=(
-  "api-gateway|http://localhost:9000/health/simple"
+  "load-balancer|http://localhost:80/health/simple"
   "frontend|http://localhost:3000"
 )
 
 # Services that should NOT be accessible from localhost
 # We test that curl fails for these.
 ISOLATED_SERVICES=(
+  "api-gateway (isolated)|http://localhost:9000/health"
   "auth-service (isolated)|http://localhost:8000/health"
   "products-api (isolated)|http://localhost:8001/health"
   "cart-api (isolated)|http://localhost:8002/health"
