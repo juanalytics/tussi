@@ -194,6 +194,20 @@ services:
       retries: 5
       start_period: 40s
 
+  # ===== K6 LOAD TESTING =====
+  k6:
+    image: grafana/k6
+    container_name: k6
+    ports:
+      - "6565:6565" # For k6 web dashboard if needed
+    volumes:
+      - ./tests/k6:/scripts
+    networks:
+      - public
+    depends_on:
+      - load-balancer
+      - frontend
+
  # ===== MONITORING (Opcional) =====
   # nginx:
   #   image: nginx:alpine
