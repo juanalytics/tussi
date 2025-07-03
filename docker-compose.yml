@@ -1,13 +1,24 @@
 services:
+  # ===== LOAD BALANCER =====
+  load-balancer:
+    build: ./load-balancer
+    container_name: nginx-lb
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - public
+    restart: unless-stopped
+
   # ===== API GATEWAY =====
   api-gateway:
     build:
       context: ./api-gateway
       dockerfile: Dockerfile
-    container_name: api-gateway
     restart: unless-stopped
-    ports:
-      - "9000:9000"  # Gateway en puerto 9000
+    deploy:
+      replicas: 4
     environment:
       - NODE_ENV=production
       - PORT=9000
@@ -39,12 +50,12 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Ahora el frontend se comunica solo con el API Gateway
-      - NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:9000
+      # Ahora el frontend se comunica con el API Gateway a través del Load Balancer
+      - NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:80
       # Mantener las URLs originales para compatibilidad (opcional)
-      - NEXT_PUBLIC_AUTH_API_URL=http://localhost:9000/api/auth
-      - NEXT_PUBLIC_PRODUCTS_API_URL=http://localhost:9000/api/products
-      - NEXT_PUBLIC_CART_API_URL=http://localhost:9000/api/cart
+      - NEXT_PUBLIC_AUTH_API_URL=http://localhost:80/api/auth
+      - NEXT_PUBLIC_PRODUCTS_API_URL=http://localhost:80/api/products
+      - NEXT_PUBLIC_CART_API_URL=http://localhost:80/api/cart
     depends_on:
       - api-gateway
     networks:
