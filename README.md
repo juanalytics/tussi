@@ -43,16 +43,171 @@ The name **Tussi** is intentionally provocative and disruptive—a metaphor to p
 
 **Target Audience:** Young adults interested in unconventional wellness (CBD, legal nootropics, holistic products), sustainable and disruptive fashion, and digital art and sensory items.
 
-## 3. Architectural Structures
+## 3. Architectural Structure
 
-### Component-and-Connector (C&C) Structure
+### Component-and-Connector View
 
-#### C&C View
+Este sistema comprende dos clientes, cuatro servicios y tres bases de datos, conectados por ocho conectores.
 
-![Architecture Diagram](
-  ArchitectureC&C.png
-)
+- **Dos clientes**
 
+  - **Component-1: Web Client**
+  - **Component-2: Mobile Client**
+
+- **Cuatro servicios**
+
+  - **Component-3: API Gateway Service**
+  - **Component-4: Auth Service**
+  - **Component-5: Products API**
+  - **Component-6: Cart API**
+
+- **Tres bases de datos**
+
+  - **Component-7: Auth Database (PostgreSQL)**
+  - **Component-8: Products Database (PostgreSQL)**
+  - **Component-9: Cart Database (MongoDB)**
+
+- **Ocho conectores**
+
+  1. **c1: HTTP (REST)** — Component-1 → Component-3 (expuesto)
+  2. **c2: HTTP (REST)** — Component-2 → Component-3 (expuesto)
+  3. **c3: HTTP (REST)** — Component-3 → Component-4
+  4. **c4: HTTP (REST)** — Component-3 → Component-5
+  5. **c5: HTTP (REST)** — Component-3 → Component-6
+  6. **c6: TCP (PostgreSQL driver)** — Component-4 → Component-7
+  7. **c7: TCP (PostgreSQL driver)** — Component-5 → Component-8
+  8. **c8: TCP (MongoDB driver)** — Component-6 → Component-9
+
+---
+
+#### Components
+
+1. **Component-1: Web Client**
+
+   - Aplicación Next.js/React en el navegador.
+   - Se comunica via HTTP con el API Gateway.
+
+2. **Component-2: Mobile Client**
+
+   - App React Native en iOS/Android.
+   - Se comunica via HTTP con el API Gateway.
+
+3. **Component-3: API Gateway Service**
+
+   - Entrada única para todos los clientes.
+   - JWT, rate limiting, CORS, balanceo de carga, logging y health checks.
+
+4. **Component-4: Auth Service**
+
+   - FastAPI (Python).
+   - Endpoints: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`.
+   - Conexión TCP a PostgreSQL (Component-7).
+
+5. **Component-5: Products API**
+
+   - FastAPI (Python).
+   - Endpoints: `GET /api/products`, `GET /api/products/{id}`.
+   - Conexión TCP a PostgreSQL (Component-8).
+
+6. **Component-6: Cart API**
+
+   - Node.js/Express (TypeScript).
+   - Endpoints: `GET /api/cart`, `POST /api/cart/add`, `POST /api/cart/checkout`.
+   - Conexión TCP a MongoDB (Component-9).
+
+7. **Component-7: Auth Database (PostgreSQL)**
+
+   - Puerto 5432.
+   - Almacena credenciales y datos de usuario.
+
+8. **Component-8: Products Database (PostgreSQL)**
+
+   - Puerto 5433.
+   - Almacena catálogo e inventario.
+
+9. **Component-9: Cart Database (MongoDB)**
+
+   - Puerto 27017.
+   - Almacena sesiones y datos del carrito.
+
+---
+
+#### Connectors
+
+| Conector | Tipo                    | Desde         | Hasta             |
+| -------- | ----------------------- | ------------- | ----------------- |
+| **c1**   | HTTP (REST)             | Web Client    | API Gateway       |
+| **c2**   | HTTP (REST)             | Mobile Client | API Gateway       |
+| **c3**   | HTTP (REST)             | API Gateway   | Auth Service      |
+| **c4**   | HTTP (REST)             | API Gateway   | Products API      |
+| **c5**   | HTTP (REST)             | API Gateway   | Cart API          |
+| **c6**   | TCP (PostgreSQL driver) | Auth Service  | Auth Database     |
+| **c7**   | TCP (PostgreSQL driver) | Products API  | Products Database |
+| **c8**   | TCP (MongoDB driver)    | Cart API      | Cart Database     |
+
+---
+
+#### C&C Diagram
+
+```mermaid
+graph LR
+    WebClient[Component-1<br/>Web Client]
+    MobileClient[Component-2<br/>Mobile Client]
+    APIGateway[Component-3<br/>API Gateway Service]
+    AuthService[Component-4<br/>Auth Service]
+    ProductsAPI[Component-5<br/>Products API]
+    CartAPI[Component-6<br/>Cart API]
+    AuthDB[Component-7<br/>PostgreSQL]
+    ProductsDB[Component-8<br/>PostgreSQL]
+    CartDB[Component-9<br/>MongoDB]
+
+    WebClient -- "HTTP c1" --> APIGateway
+    MobileClient -- "HTTP c2" --> APIGateway
+    APIGateway -- "HTTP c3" --> AuthService
+    APIGateway -- "HTTP c4" --> ProductsAPI
+    APIGateway -- "HTTP c5" --> CartAPI
+    AuthService -- "TCP 5432 c6" --> AuthDB
+    ProductsAPI -- "TCP 5433 c7" --> ProductsDB
+    CartAPI -- "TCP 27017 c8" --> CartDB
+```
+
+---
+
+#### Description of Architectural Styles and Patterns Used
+
+**Architectural Styles:**
+
+1. **Microservices Architecture**
+   - Distributed system with independently deployable services
+   - Each service has isolated logic, databases, and Docker containers
+   - **Advantages:** Parallel development, simplified maintenance, horizontal scalability
+
+2. **API Gateway Pattern**
+   - Single entry point for all client requests
+   - Centralized routing, authentication, and cross-cutting concerns
+   - **NEW IN PROTOTYPE 2:** Enhanced service orchestration and load balancing
+
+3. **Container-based Architecture**
+   - All system components run in Docker containers orchestrated by Docker Compose
+   - **Advantages:** Consistent environments, simplified deployment, dependency isolation
+
+4. **Database per Service Pattern**
+   - Each microservice has its own dedicated database
+   - **Advantages:** Data isolation, technology diversity, independent scaling
+
+5. **Multi-Platform Client Architecture**
+   - Web and mobile clients consuming the same backend services
+   - **Advantages:** Code reuse, consistent user experience, unified API
+
+**Patterns:**
+
+- **Server-Side Rendering (SSR)**: Next.js frontend with SSR capabilities
+- **Circuit Breaker**: Implemented in API Gateway for fault tolerance
+- **Health Check Pattern**: All services expose health endpoints
+- **JWT Authentication**: Secure token-based authentication across services
+- **Cross-Platform Data Synchronization**: Shared state management between web and mobile
+
+#### Layered View
 ```mermaid
 graph TD
     subgraph "Presentation Layer"
@@ -93,44 +248,6 @@ graph TD
     CartAPI -- "Validates Stock via" --> APIGateway
 ```
 
-#### Description of Architectural Styles and Patterns Used
-
-**Architectural Styles:**
-
-1. **Microservices Architecture**
-   - Distributed system with independently deployable services
-   - Each service has isolated logic, databases, and Docker containers
-   - **Advantages:** Parallel development, simplified maintenance, horizontal scalability
-
-2. **API Gateway Pattern**
-   - Single entry point for all client requests
-   - Centralized routing, authentication, and cross-cutting concerns
-   - **NEW IN PROTOTYPE 2:** Enhanced service orchestration and load balancing
-
-3. **Container-based Architecture**
-   - All system components run in Docker containers orchestrated by Docker Compose
-   - **Advantages:** Consistent environments, simplified deployment, dependency isolation
-
-4. **Database per Service Pattern**
-   - Each microservice has its own dedicated database
-   - **Advantages:** Data isolation, technology diversity, independent scaling
-
-5. **Multi-Platform Client Architecture**
-   - Web and mobile clients consuming the same backend services
-   - **Advantages:** Code reuse, consistent user experience, unified API
-
-**Patterns:**
-
-- **Server-Side Rendering (SSR)**: Next.js frontend with SSR capabilities
-- **Circuit Breaker**: Implemented in API Gateway for fault tolerance
-- **Health Check Pattern**: All services expose health endpoints
-- **JWT Authentication**: Secure token-based authentication across services
-- **Cross-Platform Data Synchronization**: Shared state management between web and mobile
-
-#### Description of Architectural Elements and Relations
-
-**Components:**
-
 **Presentation Layer:**
 
 - **Frontend (Next.js)**
@@ -159,6 +276,7 @@ graph TD
     - Cross-platform client support
 
 **Business Logic Layer:**
+
 
 - **Auth Service**
   - Type: Logic
