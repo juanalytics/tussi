@@ -402,13 +402,19 @@ graph TD
 
 #### Decomposition View
 
+![decompositoon](decomposition.png)
+
 **Module Descriptions:**
+
+
 
 - **Presentation Module**: Multi-platform presentation layer with Next.js-based web frontend and React Native mobile application
 - **Gateway Module**: ⭐ **NEW** - Centralized API Gateway providing cross-platform request routing, authentication middleware, service discovery, and load balancing
 - **Business Services Module**: Domain-specific microservices with FastAPI (Python) and Node.js (TypeScript) implementations, supporting both web and mobile clients
 - **Data Module**: Polyglot persistence with PostgreSQL for relational data, MongoDB for flexible document storage, and mobile local storage for offline capabilities
 - **Infrastructure Module**: Complete deployment solution with Docker-based backend services and native mobile app distribution
+
+**functionalities Description**
 
 ## 4. Technical Implementation Details
 
