@@ -1,0 +1,51 @@
+graph TD
+    subgraph "Tussi System"
+        A["Presentation Module"]
+        B["Gateway Module"]
+        C["Business Services Module"]
+        D["Data Module"]
+        E["Infrastructure Module"]
+    end
+
+    A --> B
+    B --> C
+    C --> D
+    A --> E
+    C --> E
+    D --> E
+
+    subgraph "A [Presentation Module]"
+        A1["Web Frontend (Next.js)"]
+        A2["Mobile Application (React Native)"]
+    end
+
+    subgraph "B [Gateway Module]"
+        B1["API Gateway (Node.js)"]
+    end
+
+    subgraph "C [Business Services Module]"
+        C1["Auth Service (FastAPI)"]
+        C2["Products API (FastAPI)"]
+        C3["Cart API (Node.js)"]
+    end
+
+    subgraph "D [Data Module]"
+        D1["PostgreSQL (Auth & Products)"]
+        D2["MongoDB (Cart)"]
+        D3["Mobile Local Storage (AsyncStorage)"]
+    end
+
+    subgraph "E [Infrastructure Module]"
+        E1["Docker Containers"]
+        E2["Native App Distribution"]
+    end
+
+    A1 --> B1
+    A2 --> B1
+    B1 --> C1
+    B1 --> C2
+    B1 --> C3
+    C1 --> D1
+    C2 --> D1
+    C3 --> D2
+    A2 --> D3
