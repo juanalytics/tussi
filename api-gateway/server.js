@@ -9,6 +9,8 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 9000;
 
+
+app.set('trust proxy', 1);
 // Middleware de seguridad
 app.use(helmet());
 app.use(cors({
@@ -125,32 +127,72 @@ app.get('/health/simple', (req, res) => {
 });
 
 // ===== SERVICIO DE AUTENTICACIÓN =====
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
+//app.use('/api/auth/login', authLimiter);
+//app.use('/api/auth/register', authLimiter);
 
-app.use('/api/auth', generalLimiter, createProxyMiddleware({
-  target: SERVICES.AUTH_SERVICE,
-  changeOrigin: true,
-  pathRewrite: {
-    '^/api/auth': '/auth'
+// ===== SERVICIO DE AUTENTICACIÓN - CON DEBUGGING =====
+// ===== SERVICIO DE AUTENTICACIÓN =====
+app.use('/api/auth', 
+  // Rate limiter condicional
+  (req, res, next) => {
+    if (req.path === '/login' || req.path === '/register') {
+      return authLimiter(req, res, next);
+    }
+    return generalLimiter(req, res, next);
   },
-  onProxyReq: (proxyReq, req, res) => {
-    proxyReq.setHeader('x-gateway-request-id', req.headers['x-request-id'] || 'unknown');
-    proxyReq.setHeader('x-client-ip', req.ip);
-    proxyReq.setHeader('x-forwarded-for', req.get('X-Forwarded-For') || req.ip);
-  },
-  onProxyRes: (proxyRes, req, res) => {
-    proxyRes.headers['x-service'] = 'auth-service';
-  },
-  onError: (err, req, res) => {
-    console.error('Error en Auth Service:', err.message);
-    res.status(503).json({
-      error: 'Servicio de autenticación temporalmente no disponible',
-      code: 'AUTH_SERVICE_DOWN',
-      timestamp: new Date().toISOString()
-    });
+  
+  // Proxy manual
+  async (req, res) => {
+    const startTime = Date.now();
+    
+    try {
+      const targetUrl = `${SERVICES.AUTH_SERVICE}/auth${req.path}`;
+      console.log(`📤 [AUTH] ${req.method} ${req.originalUrl} → ${targetUrl}`);
+      
+      const config = {
+        method: req.method,
+        url: targetUrl,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000,
+        validateStatus: () => true
+      };
+
+      if (req.body && Object.keys(req.body).length > 0) {
+        config.data = req.body;
+      }
+
+      if (req.query && Object.keys(req.query).length > 0) {
+        config.params = req.query;
+      }
+
+      const response = await axios(config);
+      const duration = Date.now() - startTime;
+      
+      console.log(`📥 [AUTH] ${response.status} (${duration}ms)`);
+      
+      res.status(response.status)
+         .set('x-service', 'auth-service')
+         .json(response.data);
+         
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`❌ [AUTH] Error (${duration}ms):`, error.message);
+      
+      if (error.response) {
+        res.status(error.response.status).json(error.response.data);
+      } else {
+        res.status(503).json({
+          error: 'Servicio de autenticación temporalmente no disponible',
+          code: 'AUTH_SERVICE_DOWN',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
   }
-}));
+);
+
 
 // ===== SERVICIO DE PRODUCTOS =====
 app.use('/api/products',
