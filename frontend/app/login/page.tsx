@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { fetchUserProfile } from "@/services/auth"
 import { useAuth } from "@/app/context/AuthContext"    // ← import your auth hook
+import { loginUser } from "@/services/login";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -40,24 +41,7 @@ export default function LoginPage() {
 
     setIsLoading(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_API_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          username: email,
-          password: password,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        setError(errorData.detail || "Invalid email or password")
-        return
-      }
-
-      const { access_token } = await response.json()
+      const { access_token } = await loginUser({ username: email, password });
       localStorage.setItem("token", access_token)
 
       // **Fetch the user profile and update global state**
