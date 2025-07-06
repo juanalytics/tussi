@@ -137,6 +137,7 @@ app.get('/health/simple', (req, res) => {
 // ===== SERVICIO DE AUTENTICACIÓN =====
 // ===== SERVICIO DE AUTENTICACIÓN - VERSIÓN MEJORADA =====
 // ===== SERVICIO DE AUTENTICACIÓN - VERSIÓN CORREGIDA PARA OAUTH2 =====
+// ===== SERVICIO DE AUTENTICACIÓN - VERSIÓN CON HEADERS COMPLETOS =====
 app.use('/api/auth', 
   (req, res, next) => {
     if (req.path === '/login' || req.path === '/register') {
@@ -155,19 +156,31 @@ app.use('/api/auth',
       let requestData = null;
       let contentType = 'application/json';
       
+      // ⭐ CONFIGURAR HEADERS COMPLETOS
+      const headers = {
+        'Accept': 'application/json',
+        'User-Agent': req.headers['user-agent'] || 'api-gateway/1.0'
+      };
+
+      // ⭐ PASAR HEADER AUTHORIZATION SI EXISTE
+      if (req.headers.authorization) {
+        headers['Authorization'] = req.headers.authorization;
+        console.log(`🔐 [AUTH] Authorization header found: ${req.headers.authorization.substring(0, 20)}...`);
+      } else {
+        console.log(`⚠️  [AUTH] No Authorization header found`);
+      }
+      
       if (req.body && Object.keys(req.body).length > 0) {
         let bodyData = { ...req.body };
         
-        // ⭐ PARA LOGIN: ENVIAR COMO FORM DATA
         if (req.path === '/login') {
-          // Convertir email a username si es necesario
+          // Para login: enviar como form data
           if (bodyData.email && !bodyData.username) {
             bodyData.username = bodyData.email;
             delete bodyData.email;
             console.log(`🔄 [AUTH] Converted email → username for OAuth2`);
           }
           
-          // ⭐ CREAR FORM DATA para OAuth2PasswordRequestForm
           const formData = new URLSearchParams();
           formData.append('username', bodyData.username);
           formData.append('password', bodyData.password);
@@ -177,37 +190,37 @@ app.use('/api/auth',
           
           console.log(`📤 [AUTH] Sending as form data:`, requestData);
         } else {
-          // Para otros endpoints (register, etc.) enviar como JSON
+          // Para otros endpoints: enviar como JSON
           requestData = JSON.stringify(bodyData);
+          contentType = 'application/json';
           console.log(`📤 [AUTH] Sending as JSON:`, requestData);
         }
       }
-      
+
+      // ⭐ AGREGAR CONTENT-TYPE AL FINAL
+      headers['Content-Type'] = contentType;
+
       const config = {
         method: req.method.toLowerCase(),
         url: targetUrl,
-        headers: {
-          'Content-Type': contentType,
-          'Accept': 'application/json'
-        },
+        headers: headers,
         timeout: 30000,
         validateStatus: () => true,
         ...(requestData && { data: requestData })
       };
 
-      console.log(`📤 [AUTH] Request config:`, {
-        url: config.url,
-        method: config.method,
-        contentType: contentType,
-        dataType: typeof requestData
-      });
+      console.log(`📤 [AUTH] Request headers:`, Object.keys(headers));
+      console.log(`📤 [AUTH] Has Authorization:`, !!headers.Authorization);
 
       const response = await axios(config);
       const duration = Date.now() - startTime;
       
       console.log(`📥 [AUTH] ${response.status} (${duration}ms)`);
       
-      if (response.status === 422) {
+      if (response.status === 401) {
+        console.log(`🔐 [AUTH] 401 Unauthorized - Token issue`);
+        console.log(`📥 [AUTH] 401 Response:`, response.data);
+      } else if (response.status === 422) {
         console.log(`📥 [AUTH] 422 Error details:`, response.data);
       }
       
