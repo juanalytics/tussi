@@ -296,43 +296,86 @@ app.use('/api/products',
 );
 // ===== SERVICIO DE CARRITO ===== 
 // Todas las rutas del carrito requieren autenticación
-app.use('/api/cart', generalLimiter, authenticateToken, createProxyMiddleware({
-  target: SERVICES.CART_SERVICE,
-  changeOrigin: true,
-  pathRewrite: {
-    '^/api/cart': '/'
-  },
-  onProxyReq: (proxyReq, req, res) => {
-    // Pasar el token de autorización completo
-    const authHeader = req.headers['authorization'];
-    if (authHeader) {
-      proxyReq.setHeader('authorization', authHeader);
-    }
+// ⭐ DEBUGGING TEMPORAL PARA CART
+// ===== SERVICIO DE CARRITO - PROXY MANUAL =====
+app.use('/api/cart', 
+  generalLimiter, 
+  authenticateToken,
+  
+  async (req, res) => {
+    const startTime = Date.now();
     
-    // Pasar información del usuario
-    if (req.user) {
-      proxyReq.setHeader('x-user-id', req.user.sub);
-    }
-    
-    // Headers adicionales para el contexto
-    proxyReq.setHeader('x-client-ip', req.ip);
-    proxyReq.setHeader('x-gateway-request-id', req.headers['x-request-id'] || 'unknown');
-  },
-  onProxyRes: (proxyRes, req, res) => {
-    // Solo agregar headers informativos, NO modificar el body
-    proxyRes.headers['x-service'] = 'cart-service';
-    proxyRes.headers['x-proxied-by'] = 'api-gateway';
-  },
-  onError: (err, req, res) => {
-    console.error('Error en Cart Service:', err.message);
-    res.status(503).json({
-      error: 'Servicio de carrito temporalmente no disponible',
-      code: 'CART_SERVICE_DOWN',
-      timestamp: new Date().toISOString()
-    });
-  }
-}));
+    try {
+      const targetUrl = `${SERVICES.CART_SERVICE}${req.path}`;
+      console.log(`🛒 [CART] ${req.method} ${req.originalUrl} → ${targetUrl}`);
+      
+      const config = {
+        method: req.method.toLowerCase(),
+        url: targetUrl,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'authorization': req.headers.authorization,
+          'x-user-id': req.user.sub,  // ⭐ Pasar user ID del token JWT
+          'x-client-ip': req.ip
+        },
+        timeout: 30000,
+        validateStatus: () => true
+      };
 
+      // ⭐ TRANSFORMAR req.user para que sea compatible con cart-api
+      if (req.body && Object.keys(req.body).length > 0) {
+        // El cart-api espera req.user.id, entonces podemos:
+        // Opción 1: Agregar user info al body
+        const bodyWithUser = {
+          ...req.body,
+          _userId: req.user.sub  // Agregar info de usuario
+        };
+        config.data = JSON.stringify(bodyWithUser);
+      } else {
+        // Para GET requests, no hay body
+        config.data = JSON.stringify({
+          _userId: req.user.sub
+        });
+      }
+
+      if (req.query && Object.keys(req.query).length > 0) {
+        config.params = req.query;
+      }
+
+      console.log(`🛒 [CART] Sending to cart-api:`, {
+        url: config.url,
+        method: config.method,
+        userId: req.user.sub,
+        hasBody: !!config.data
+      });
+
+      const response = await axios(config);
+      const duration = Date.now() - startTime;
+      
+      console.log(`🛒 [CART] Response: ${response.status} (${duration}ms)`);
+      
+      res.status(response.status)
+         .set('x-service', 'cart-service')
+         .json(response.data);
+         
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`🛒 [CART] Error (${duration}ms):`, error.message);
+      
+      if (error.response) {
+        console.log(`🛒 [CART] Error response:`, error.response.data);
+        res.status(error.response.status).json(error.response.data);
+      } else {
+        res.status(503).json({
+          error: 'Servicio de carrito temporalmente no disponible',
+          code: 'CART_SERVICE_DOWN',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+  }
+);
 // ===== ENDPOINTS PROPIOS DEL GATEWAY =====
 
 // Información del usuario actual (endpoint propio del gateway)
