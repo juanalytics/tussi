@@ -9,6 +9,9 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 9000;
 
+app.use(express.urlencoded({ extended: true })); // Para form data
+app.use(express.json()); // Para JSON (ya lo tienes)
+
 
 app.set('trust proxy', 1);
 // Middleware de seguridad
@@ -132,8 +135,9 @@ app.get('/health/simple', (req, res) => {
 
 // ===== SERVICIO DE AUTENTICACIÓN - CON DEBUGGING =====
 // ===== SERVICIO DE AUTENTICACIÓN =====
+// ===== SERVICIO DE AUTENTICACIÓN - VERSIÓN MEJORADA =====
+// ===== SERVICIO DE AUTENTICACIÓN - VERSIÓN CORREGIDA PARA OAUTH2 =====
 app.use('/api/auth', 
-  // Rate limiter condicional
   (req, res, next) => {
     if (req.path === '/login' || req.path === '/register') {
       return authLimiter(req, res, next);
@@ -141,7 +145,6 @@ app.use('/api/auth',
     return generalLimiter(req, res, next);
   },
   
-  // Proxy manual
   async (req, res) => {
     const startTime = Date.now();
     
@@ -149,28 +152,64 @@ app.use('/api/auth',
       const targetUrl = `${SERVICES.AUTH_SERVICE}/auth${req.path}`;
       console.log(`📤 [AUTH] ${req.method} ${req.originalUrl} → ${targetUrl}`);
       
+      let requestData = null;
+      let contentType = 'application/json';
+      
+      if (req.body && Object.keys(req.body).length > 0) {
+        let bodyData = { ...req.body };
+        
+        // ⭐ PARA LOGIN: ENVIAR COMO FORM DATA
+        if (req.path === '/login') {
+          // Convertir email a username si es necesario
+          if (bodyData.email && !bodyData.username) {
+            bodyData.username = bodyData.email;
+            delete bodyData.email;
+            console.log(`🔄 [AUTH] Converted email → username for OAuth2`);
+          }
+          
+          // ⭐ CREAR FORM DATA para OAuth2PasswordRequestForm
+          const formData = new URLSearchParams();
+          formData.append('username', bodyData.username);
+          formData.append('password', bodyData.password);
+          
+          requestData = formData.toString();
+          contentType = 'application/x-www-form-urlencoded';
+          
+          console.log(`📤 [AUTH] Sending as form data:`, requestData);
+        } else {
+          // Para otros endpoints (register, etc.) enviar como JSON
+          requestData = JSON.stringify(bodyData);
+          console.log(`📤 [AUTH] Sending as JSON:`, requestData);
+        }
+      }
+      
       const config = {
-        method: req.method,
+        method: req.method.toLowerCase(),
         url: targetUrl,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': contentType,
+          'Accept': 'application/json'
         },
         timeout: 30000,
-        validateStatus: () => true
+        validateStatus: () => true,
+        ...(requestData && { data: requestData })
       };
 
-      if (req.body && Object.keys(req.body).length > 0) {
-        config.data = req.body;
-      }
-
-      if (req.query && Object.keys(req.query).length > 0) {
-        config.params = req.query;
-      }
+      console.log(`📤 [AUTH] Request config:`, {
+        url: config.url,
+        method: config.method,
+        contentType: contentType,
+        dataType: typeof requestData
+      });
 
       const response = await axios(config);
       const duration = Date.now() - startTime;
       
       console.log(`📥 [AUTH] ${response.status} (${duration}ms)`);
+      
+      if (response.status === 422) {
+        console.log(`📥 [AUTH] 422 Error details:`, response.data);
+      }
       
       res.status(response.status)
          .set('x-service', 'auth-service')
@@ -192,7 +231,6 @@ app.use('/api/auth',
     }
   }
 );
-
 
 // ===== SERVICIO DE PRODUCTOS =====
 app.use('/api/products',
