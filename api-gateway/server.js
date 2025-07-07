@@ -298,6 +298,7 @@ app.use('/api/products',
 // Todas las rutas del carrito requieren autenticación
 // ⭐ DEBUGGING TEMPORAL PARA CART
 // ===== SERVICIO DE CARRITO - PROXY MANUAL =====
+// ===== SERVICIO DE CARRITO - PROXY MANUAL CORREGIDO =====
 app.use('/api/cart', 
   generalLimiter, 
   authenticateToken,
@@ -316,38 +317,27 @@ app.use('/api/cart',
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'authorization': req.headers.authorization,
-          'x-user-id': req.user.sub,  // ⭐ Pasar user ID del token JWT
+          'x-user-id': req.user.sub,  // ⭐ Solo en headers, NO en body
           'x-client-ip': req.ip
         },
         timeout: 30000,
         validateStatus: () => true
       };
 
-      // ⭐ TRANSFORMAR req.user para que sea compatible con cart-api
+      // ⭐ NO MODIFICAR EL BODY - Enviarlo tal como viene
       if (req.body && Object.keys(req.body).length > 0) {
-        // El cart-api espera req.user.id, entonces podemos:
-        // Opción 1: Agregar user info al body
-        const bodyWithUser = {
-          ...req.body,
-          _userId: req.user.sub  // Agregar info de usuario
-        };
-        config.data = JSON.stringify(bodyWithUser);
-      } else {
-        // Para GET requests, no hay body
-        config.data = JSON.stringify({
-          _userId: req.user.sub
-        });
+        config.data = JSON.stringify(req.body);  // Solo el body original
       }
 
       if (req.query && Object.keys(req.query).length > 0) {
         config.params = req.query;
       }
 
-      console.log(`🛒 [CART] Sending to cart-api:`, {
+      console.log(`🛒 [CART] Sending:`, {
         url: config.url,
         method: config.method,
         userId: req.user.sub,
-        hasBody: !!config.data
+        body: req.body
       });
 
       const response = await axios(config);
