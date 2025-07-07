@@ -404,37 +404,96 @@ graph TD
 
 ![decompositoon](decomposition.png)
 
+```mermaid
+graph TD
+    subgraph "Tussi E-commerce Platform"
+        subgraph "Module: Presentation"
+            subgraph "Web Client (Next.js)"
+                wc1["User Authentication (Login, Register pages)"]
+                wc2["Product Discovery (Lists, Detail pages)"]
+                wc3["Shopping Cart Management"]
+                wc4["Responsive UI Components"]
+            end
+            subgraph "Mobile Client (React Native)"
+                mc1["User Authentication (Login, Register screens)"]
+                mc2["Product Discovery (Lists, Detail screens)"]
+                mc3["Shopping Cart Management"]
+                mc4["Offline Capabilities (AsyncStorage)"]
+            end
+        end
+
+        subgraph "Module: Gateway"
+            subgraph "API Gateway (Node.js)"
+                gw1["Request Routing (to backend services)"]
+                gw2["Authentication Middleware (JWT Validation)"]
+                gw3["Rate Limiting & Security Policies"]
+                gw4["Centralized Logging & Health Checks"]
+                gw5["Endpoint Aggregation (/api/search)"]
+            end
+        end
+
+        subgraph "Module: Business Services"
+            subgraph "Authentication Service (FastAPI)"
+                subgraph "User Management"
+                    auth_reg["Register User"]
+                    auth_profile["Get User Profile"]
+                end
+                subgraph "Session Management"
+                    auth_login["Login User (issue JWT)"]
+                    auth_verify["Verify JWT (used by gateway)"]
+                end
+            end
+            subgraph "Products Service (FastAPI)"
+                subgraph "Product Catalog"
+                    prod_crud["Create, Read, Update, Delete Products"]
+                    prod_list["List Products (with pagination)"]
+                end
+            end
+            subgraph "Cart Service (Node.js)"
+                subgraph "Cart Operations"
+                    cart_get["Get User's Cart"]
+                    cart_add["Add/Update Item in Cart"]
+                    cart_remove["Remove Item from Cart"]
+                    cart_clear["Clear Cart"]
+                end
+            end
+        end
+
+        subgraph "Module: Data Persistence"
+            db_auth["Auth DB (PostgreSQL)<br/>Stores user credentials and profiles"]
+            db_prod["Products DB (PostgreSQL)<br/>Stores product catalog and inventory"]
+            db_cart["Cart DB (MongoDB)<br/>Stores shopping cart sessions and items"]
+        end
+    end
+```
+
 **Module Descriptions:**
 
+- **Presentation Module**: Multi-platform presentation layer with a Next.js-based web frontend and a React Native mobile application. It provides the user interface for both web and mobile platforms, handling user interaction and communication with the API Gateway.
+- **Gateway Module**: A centralized API Gateway built with Node.js that acts as a single entry point for all client requests. It is responsible for routing, authentication middleware, rate limiting, service discovery, and load balancing across the backend microservices.
+- **Business Services Module**: A set of domain-specific microservices that implement the core business logic. This includes an **Authentication Service** (FastAPI) for user registration and login, a **Products Service** (FastAPI) for catalog management, and a **Cart Service** (Node.js) for shopping cart operations.
+- **Data Persistence Module**: Implements a polyglot persistence strategy using multiple databases. It includes a PostgreSQL database for the **Auth Service**, another PostgreSQL database for the **Products Service**, and a MongoDB database for the **Cart Service**. This ensures data isolation and allows each service to use the most appropriate database technology.
 
+**Functionalities Description**
 
-- **Presentation Module**: Multi-platform presentation layer with Next.js-based web frontend and React Native mobile application
-- **Gateway Module**: ⭐ **NEW** - Centralized API Gateway providing cross-platform request routing, authentication middleware, service discovery, and load balancing
-- **Business Services Module**: Domain-specific microservices with FastAPI (Python) and Node.js (TypeScript) implementations, supporting both web and mobile clients
-- **Data Module**: Polyglot persistence with PostgreSQL for relational data, MongoDB for flexible document storage, and mobile local storage for offline capabilities
-- **Infrastructure Module**: Complete deployment solution with Docker-based backend services and native mobile app distribution
-
-**functionalities Description**
-
-## 4. Technical Implementation Details
-
-### Programming Languages Used
-
-- **JavaScript/TypeScript**: Frontend (Next.js), Mobile App (React Native), API Gateway (Node.js), Cart API
-- **Python**: Auth Service (FastAPI), Products API (FastAPI)
-- **SQL**: Database queries and schema definitions
-- **HTML/CSS**: Frontend templating and styling
-- **Platform-Specific**: Native iOS (Swift/Objective-C) and Android (Java/Kotlin) for mobile integrations
-
-### New Features in Prototype 2
-
-- **API Gateway**: Centralized request handling and service orchestration
-- **Enhanced Security**: JWT middleware validation at gateway level
-- **Service Discovery**: Dynamic service routing and health monitoring
-- **Rate Limiting**: Request throttling and abuse prevention
-- **Centralized Logging**: Unified logging across all services
-- **Mobile Application**: Native iOS and Android app with offline capabilities
-- **Cross-Platform Synchronization**: Seamless data sync between web and mobile
+*   **User Management & Authentication**:
+    *   Secure user registration and login via the Authentication Service.
+    *   JWT-based session management, validated at the API Gateway.
+    *   Users can view and manage their profiles.
+*   **Product Catalog**:
+    *   Browse a list of products with details and pagination.
+    *   View detailed information for a single product.
+    *   (For admins) Create, update, and delete products from the catalog.
+*   **Shopping Cart**:
+    *   Authenticated users can add products to their shopping cart.
+    *   View the contents of the cart.
+    *   Update the quantity of items or remove them.
+    *   Clear the entire cart.
+*   **Cross-Cutting Concerns (Gateway)**:
+    *   Secure access to services with token validation.
+    *   Protect services from abuse with rate limiting.
+    *   Provide centralized health checks for monitoring system status.
+    *   Aggregate data from multiple services, such as enriching search results with cart information.
 
 ## 5. Prototype Deployment
 

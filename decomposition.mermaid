@@ -1,0 +1,60 @@
+graph TD
+    subgraph "Tussi E-commerce Platform"
+        subgraph "Module: Presentation"
+            subgraph "Web Client (Next.js)"
+                wc1["User Authentication (Login, Register pages)"]
+                wc2["Product Discovery (Lists, Detail pages)"]
+                wc3["Shopping Cart Management"]
+                wc4["Responsive UI Components"]
+            end
+            subgraph "Mobile Client (React Native)"
+                mc1["User Authentication (Login, Register screens)"]
+                mc2["Product Discovery (Lists, Detail screens)"]
+                mc3["Shopping Cart Management"]
+                mc4["Offline Capabilities (AsyncStorage)"]
+            end
+        end
+
+        subgraph "Module: Gateway"
+            subgraph "API Gateway (Node.js)"
+                gw1["Request Routing (to backend services)"]
+                gw2["Authentication Middleware (JWT Validation)"]
+                gw3["Rate Limiting & Security Policies"]
+                gw4["Centralized Logging & Health Checks"]
+                gw5["Endpoint Aggregation (/api/search)"]
+            end
+        end
+
+        subgraph "Module: Business Services"
+            subgraph "Authentication Service (FastAPI)"
+                subgraph "User Management"
+                    auth_reg["Register User"]
+                    auth_profile["Get User Profile"]
+                end
+                subgraph "Session Management"
+                    auth_login["Login User (issue JWT)"]
+                    auth_verify["Verify JWT (used by gateway)"]
+                end
+            end
+            subgraph "Products Service (FastAPI)"
+                subgraph "Product Catalog"
+                    prod_crud["Create, Read, Update, Delete Products"]
+                    prod_list["List Products (with pagination)"]
+                end
+            end
+            subgraph "Cart Service (Node.js)"
+                subgraph "Cart Operations"
+                    cart_get["Get User's Cart"]
+                    cart_add["Add/Update Item in Cart"]
+                    cart_remove["Remove Item from Cart"]
+                    cart_clear["Clear Cart"]
+                end
+            end
+        end
+
+        subgraph "Module: Data Persistence"
+            db_auth["Auth DB (PostgreSQL)<br/>Stores user credentials and profiles"]
+            db_prod["Products DB (PostgreSQL)<br/>Stores product catalog and inventory"]
+            db_cart["Cart DB (MongoDB)<br/>Stores shopping cart sessions and items"]
+        end
+    end
