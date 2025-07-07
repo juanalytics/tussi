@@ -5,6 +5,7 @@
 **Name:** 1a  
 
 **Team Members:**
+
 - Xamir Ernesto Rojas Gamboa
 - Juan Sebastian Medina Pinto
 - Juan Manuel Pérez Ordoñez
@@ -12,17 +13,21 @@
 ## 2. Software System
 
 ### Name
+
 Tussi
 
 ### Logo
+
 ![Tussi Logo](logo.png)
 
-### Description
+### Description}
+
 **Tussi** is a distributed e-commerce platform built with modern microservices architecture that provides user authentication, product catalog management, and shopping cart functionality. The system is designed to handle high traffic loads through distributed services and uses modern web technologies for optimal performance and scalability.
 
 The platform connects buyers and sellers in a highly scalable, modular, and secure environment, featuring decoupled microservices backed by PostgreSQL and MongoDB databases, with a frontend built using Next.js, React, and Tailwind CSS, plus a native mobile application for iOS and Android.
 
 #### Key Features of Second Prototype
+
 - **API Gateway Integration**: Centralized entry point for all client requests
 - **Enhanced Security**: JWT-based authentication with middleware validation
 - **Service Orchestration**: Improved service-to-service communication
@@ -31,64 +36,147 @@ The platform connects buyers and sellers in a highly scalable, modular, and secu
 - **Multi-Platform Support**: Web application and native mobile app for iOS/Android
 
 #### Justification for Tussi's Name and Design
+
 The name **Tussi** is intentionally provocative and disruptive—a metaphor to positively alter shopping experiences, creating emotional, sensory, and memorable interactions.
 
 **Aesthetic and Visual Symbolism:** Intense pink color, animations, and "psychoactive" effects are deliberate emotional design choices, creating sensory engagement and visual differentiation.
 
 **Target Audience:** Young adults interested in unconventional wellness (CBD, legal nootropics, holistic products), sustainable and disruptive fashion, and digital art and sensory items.
 
-## 3. Architectural Structures
+## 3. Architectural Structure
 
-### Component-and-Connector (C&C) Structure
+### Component-and-Connector View
 
-#### C&C View
-![Architecture Diagram](
-  ArchitectureC&C.png
-)
+Este sistema comprende dos clientes, cuatro servicios y tres bases de datos, conectados por ocho conectores.
+
+- **Dos clientes**
+
+  - **Component-1: Web Client**
+  - **Component-2: Mobile Client**
+
+- **Cuatro servicios**
+
+  - **Component-3: API Gateway Service**
+  - **Component-4: Auth Service**
+  - **Component-5: Products API**
+  - **Component-6: Cart API**
+
+- **Tres bases de datos**
+
+  - **Component-7: Auth Database (PostgreSQL)**
+  - **Component-8: Products Database (PostgreSQL)**
+  - **Component-9: Cart Database (MongoDB)**
+
+- **Ocho conectores**
+
+  1. **c1: HTTP (REST)** — Component-1 → Component-3 (expuesto)
+  2. **c2: HTTP (REST)** — Component-2 → Component-3 (expuesto)
+  3. **c3: HTTP (REST)** — Component-3 → Component-4
+  4. **c4: HTTP (REST)** — Component-3 → Component-5
+  5. **c5: HTTP (REST)** — Component-3 → Component-6
+  6. **c6: TCP (PostgreSQL driver)** — Component-4 → Component-7
+  7. **c7: TCP (PostgreSQL driver)** — Component-5 → Component-8
+  8. **c8: TCP (MongoDB driver)** — Component-6 → Component-9
+
+---
+
+#### Components
+
+1. **Component-1: Web Client**
+
+   - Aplicación Next.js/React en el navegador.
+   - Se comunica via HTTP con el API Gateway.
+
+2. **Component-2: Mobile Client**
+
+   - App React Native en iOS/Android.
+   - Se comunica via HTTP con el API Gateway.
+
+3. **Component-3: API Gateway Service**
+
+   - Entrada única para todos los clientes.
+   - JWT, rate limiting, CORS, balanceo de carga, logging y health checks.
+
+4. **Component-4: Auth Service**
+
+   - FastAPI (Python).
+   - Endpoints: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`.
+   - Conexión TCP a PostgreSQL (Component-7).
+
+5. **Component-5: Products API**
+
+   - FastAPI (Python).
+   - Endpoints: `GET /api/products`, `GET /api/products/{id}`.
+   - Conexión TCP a PostgreSQL (Component-8).
+
+6. **Component-6: Cart API**
+
+   - Node.js/Express (TypeScript).
+   - Endpoints: `GET /api/cart`, `POST /api/cart/add`, `POST /api/cart/checkout`.
+   - Conexión TCP a MongoDB (Component-9).
+
+7. **Component-7: Auth Database (PostgreSQL)**
+
+   - Puerto 5432.
+   - Almacena credenciales y datos de usuario.
+
+8. **Component-8: Products Database (PostgreSQL)**
+
+   - Puerto 5433.
+   - Almacena catálogo e inventario.
+
+9. **Component-9: Cart Database (MongoDB)**
+
+   - Puerto 27017.
+   - Almacena sesiones y datos del carrito.
+
+---
+
+#### Connectors
+
+| Conector | Tipo                    | Desde         | Hasta             |
+| -------- | ----------------------- | ------------- | ----------------- |
+| **c1**   | HTTP (REST)             | Web Client    | API Gateway       |
+| **c2**   | HTTP (REST)             | Mobile Client | API Gateway       |
+| **c3**   | HTTP (REST)             | API Gateway   | Auth Service      |
+| **c4**   | HTTP (REST)             | API Gateway   | Products API      |
+| **c5**   | HTTP (REST)             | API Gateway   | Cart API          |
+| **c6**   | TCP (PostgreSQL driver) | Auth Service  | Auth Database     |
+| **c7**   | TCP (PostgreSQL driver) | Products API  | Products Database |
+| **c8**   | TCP (MongoDB driver)    | Cart API      | Cart Database     |
+
+---
+
+#### C&C Diagram
 
 ```mermaid
-graph TD
-    subgraph "Presentation Layer"
-        Frontend[/"Frontend"/]
-        MobileApp[/"Mobile App"/]
-    end
+graph LR
+    WebClient[Component-1<br/>Web Client]
+    MobileClient[Component-2<br/>Mobile Client]
+    APIGateway[Component-3<br/>API Gateway Service]
+    AuthService[Component-4<br/>Auth Service]
+    ProductsAPI[Component-5<br/>Products API]
+    CartAPI[Component-6<br/>Cart API]
+    AuthDB[Component-7<br/>PostgreSQL]
+    ProductsDB[Component-8<br/>PostgreSQL]
+    CartDB[Component-9<br/>MongoDB]
 
-    subgraph "Gateway Layer"
-        APIGateway["API Gateway"]
-    end
-
-    subgraph "Business Logic Layer"
-        AuthService["Auth Service"]
-        ProductsAPI["Products API"]
-        CartAPI["Cart API"]
-    end
-
-    subgraph "Data Layer"
-        AuthDB[(Auth Database<br>PostgreSQL)]
-        ProductsDB[(Products Database<br>PostgreSQL)]
-        CartDB[(Cart Database<br>MongoDB)]
-        MobileLocalStorage[("Mobile Local<br>Storage")]
-    end
-
-    Frontend -- "HTTP REST API" --> APIGateway
-    MobileApp -- "HTTP REST API" --> APIGateway
-
-    APIGateway -- "Routes to" --> AuthService
-    APIGateway -- "Routes to" --> ProductsAPI
-    APIGateway -- "Routes to" --> CartAPI
-
-    AuthService -- "Connects to" --> AuthDB
-    ProductsAPI -- "Connects to" --> ProductsDB
-    CartAPI -- "Connects to" --> CartDB
-    MobileApp -- "Uses" --> MobileLocalStorage
-
-    CartAPI -- "Validates User via" --> APIGateway
-    CartAPI -- "Validates Stock via" --> APIGateway
+    WebClient -- "HTTP c1" --> APIGateway
+    MobileClient -- "HTTP c2" --> APIGateway
+    APIGateway -- "HTTP c3" --> AuthService
+    APIGateway -- "HTTP c4" --> ProductsAPI
+    APIGateway -- "HTTP c5" --> CartAPI
+    AuthService -- "TCP 5432 c6" --> AuthDB
+    ProductsAPI -- "TCP 5433 c7" --> ProductsDB
+    CartAPI -- "TCP 27017 c8" --> CartDB
 ```
+
+---
 
 #### Description of Architectural Styles and Patterns Used
 
 **Architectural Styles:**
+
 1. **Microservices Architecture**
    - Distributed system with independently deployable services
    - Each service has isolated logic, databases, and Docker containers
@@ -112,203 +200,102 @@ graph TD
    - **Advantages:** Code reuse, consistent user experience, unified API
 
 **Patterns:**
+
 - **Server-Side Rendering (SSR)**: Next.js frontend with SSR capabilities
 - **Circuit Breaker**: Implemented in API Gateway for fault tolerance
 - **Health Check Pattern**: All services expose health endpoints
 - **JWT Authentication**: Secure token-based authentication across services
 - **Cross-Platform Data Synchronization**: Shared state management between web and mobile
 
-#### Description of Architectural Elements and Relations
+#### Layered (Tier & Layer) View
 
-**Components:**
-
-**Presentation Layer:**
-- **Frontend (Next.js)**
-  - Type: Presentation
-  - Technology: Next.js 14, React, TypeScript, Tailwind CSS
-  - Responsibilities: Server-side rendering, user interface, client-side interactions
-  - **NEW:** Enhanced integration with API Gateway
-
-- **Mobile App (React Native)** ⭐ **NEW IN PROTOTYPE 2**
-  - Type: Presentation
-  - Technology: React Native, TypeScript, Native Navigation
-  - Responsibilities: Native mobile experience, offline capabilities, push notifications
-  - Platform Support: iOS and Android
-
-**Gateway Layer:**
-- **API Gateway** ⭐ **NEW IN PROTOTYPE 2**
-  - Type: Logic/Communication
-  - Technology: Node.js, Express
-  - Responsibilities: 
-    - Request routing and load balancing
-    - Authentication middleware and JWT validation
-    - Rate limiting and CORS handling
-    - Service discovery and health monitoring
-    - Centralized logging and error handling
-    - Cross-platform client support
-
-**Business Logic Layer:**
-- **Auth Service**
-  - Type: Logic
-  - Technology: FastAPI (Python), Poetry for dependency management
-  - Responsibilities: User authentication, JWT token management, user registration/login
-
-- **Products API**
-  - Type: Logic
-  - Technology: FastAPI (Python), Poetry for dependency management
-  - Responsibilities: Product catalog management, inventory tracking, product search
-
-- **Cart API**
-  - Type: Logic
-  - Technology: Node.js, TypeScript, Express
-  - Responsibilities: Shopping cart operations, cart persistence, cart session management
-
-**Data Layer:**
-- **Auth Database**
-  - Type: Data
-  - Technology: PostgreSQL 15
-  - Responsibilities: User credentials, authentication data storage
-
-- **Products Database**
-  - Type: Data
-  - Technology: PostgreSQL 15
-  - Responsibilities: Product information, inventory data storage
-
-- **Cart Database**
-  - Type: Data
-  - Technology: MongoDB
-  - Responsibilities: Shopping cart data, session storage
-
-- **Mobile Local Storage** ⭐ **NEW**
-  - Type: Data
-  - Technology: AsyncStorage (React Native)
-  - Responsibilities: Offline data caching, user preferences, session persistence
-
-**Connectors and Communication:**
-
-**External Communications:**
-- **HTTP REST API (TLS + JWT)**
-  - **Web Frontend → API Gateway**: Browser-based client requests
-  - **Mobile App → API Gateway**: Native mobile client requests
-  - **API Gateway → Microservices**: Internal service communication via bridge network
-
-**Internal Communications:**
-- **API Gateway → Auth Service**: Authentication and authorization requests
-- **API Gateway → Products API**: Product catalog operations
-- **API Gateway → Cart API**: Shopping cart management
-- **Cart API → Auth Service**: User validation via API Gateway
-- **Cart API → Products API**: Stock validation via API Gateway
-
-**Database Connections:**
-- **SQL (TCP/5432)**: PostgreSQL drivers for auth/products services
-- **MongoDB Driver (TCP/27017)**: MongoDB driver for cart service
-- **AsyncStorage**: Local mobile data persistence
-
-**Critical Flows:**
-
-1. **Authentication Flow (Enhanced)**
-   - Web/Mobile Client → API Gateway → Auth Service
-   - API Gateway validates and caches JWT tokens
-   - Enhanced security with rate limiting and request validation
-   - Cross-platform session synchronization
-
-2. **Product Catalog Flow**
-   - Web/Mobile Client → API Gateway → Products API
-   - Gateway handles load balancing and caching
-   - Mobile offline caching capabilities
-
-3. **Cart Management & Checkout Flow**
-   - Web/Mobile Client → API Gateway → Cart Service
-   - Gateway orchestrates calls to Auth Service and Products API
-   - Improved error handling and transaction management
-   - Cross-platform cart synchronization
-
-### Layered Structure
-
-#### Layered View
-The system implements an N-Tier Layered Architecture with microservices distribution:
 ```mermaid
-graph TD
-    subgraph "User Interface"
-        A[Web Browser]
-        B[Mobile Device]
-    end
+graph TB
+  subgraph "Tier 1: Presentation"
+    WebClient["Web Client<br>(Next.js)"]
+    MobileClient["Mobile Client<br>(React Native)"]
+  end
 
-    subgraph "Presentation Layer"
-        C["Frontend"]
-        D["Mobile App"]
-    end
+  subgraph "Tier 2: Communication"
+    APIGateway["API Gateway<br>(Node.js/Express)"]
+  end
 
-    subgraph "API Gateway Layer"
-        E["API Gateway"]
+  subgraph "Tier 3: Logic"
+    subgraph "L1: Controllers"
+      AuthCtrl["Auth Controller"]
+      ProdCtrl["Products Controller"]
+      CartCtrl["Cart Controller"]
     end
-
-    subgraph "Business Logic Layer"
-        F["Auth Service"]
-        G["Products API"]
-        H["Cart API"]
+    subgraph "L2: Services"
+      AuthSvc["Auth Service"]
+      ProdSvc["Products Service"]
+      CartSvc["Cart Service"]
     end
-
-    subgraph "Data Access Layer"
-        I["SQLAlchemy (Auth, Products)"]
-        J["Mongoose (Cart)"]
-        K["AsyncStorage (Mobile)"]
+    subgraph "L3: Models"
+      UserModel["User Model<br>(ORM/ODM)"]
+      ProductModel["Product Model<br>(ORM/ODM)"]
+      CartModel["Cart Model<br>(ODM)"]
     end
+  end
 
-    subgraph "Data Layer"
-        L["Auth DB (PostgreSQL)"]
-        M["Products DB (PostgreSQL)"]
-        N["Cart DB (MongoDB)"]
-        O["Mobile Local Storage"]
-    end
+  subgraph "Tier 4: Data"
+    AuthDB["Auth DB<br>(PostgreSQL)"]
+    ProdDB["Products DB<br>(PostgreSQL)"]
+    CartDB["Cart DB<br>(MongoDB)"]
+    MobileStore["Mobile Local<br>Storage"]
+  end
 
-    A --> C
-    B --> D
-    C --> E
-    D --> E
-    E --> F
-    E --> G
-    E --> H
-    F --> I
-    G --> I
-    H --> J
-    D --> K
-    I --> L
-    I --> M
-    J --> N
-    K --> O
+  WebClient      -->|HTTP| APIGateway
+  MobileClient   -->|HTTP| APIGateway
+  APIGateway     -->|REST| AuthCtrl
+  APIGateway     -->|REST| ProdCtrl
+  APIGateway     -->|REST| CartCtrl
+  AuthCtrl       -->|calls| AuthSvc
+  ProdCtrl       -->|calls| ProdSvc
+  CartCtrl       -->|calls| CartSvc
+  AuthSvc        -->|uses| UserModel
+  ProdSvc        -->|uses| ProductModel
+  CartSvc        -->|uses| CartModel
+  UserModel      -->|persists| AuthDB
+  ProductModel   -->|persists| ProdDB
+  CartModel      -->|persists| CartDB
+  MobileClient   -->|caches| MobileStore
 ```
 
-**Layers:**
-1. **Presentation Layer**
-   - Components: Next.js Frontend, React Native Mobile App
-   - Technologies: Next.js 14 (SSR), React, React Native, TypeScript, Tailwind CSS
-   - Responsibilities: User interface rendering, client-side logic, SSR optimization, native mobile experience
+**Tier 1: Presentation**
 
-2. **API Gateway Layer** ⭐ **NEW**
-   - Components: API Gateway Service
-   - Technologies: Node.js, Express
-   - Responsibilities: Request routing, authentication, rate limiting, service orchestration, cross-platform support
+- **Web Client:** Next.js/React app running in the browser.
+- **Mobile Client:** React Native app on iOS/Android.
 
-3. **Business Logic Layer**
-   - Components: Auth Service, Products API, Cart API
-   - Technologies: FastAPI (Python), Node.js (TypeScript)
-   - Responsibilities: Core business logic, validation, processing rules
+**Tier 2: Communication**
 
-4. **Data Access Layer**
-   - Components: Database connectors within each service, Mobile local storage adapters
-   - Technologies: SQLAlchemy (Python), Mongoose (Node.js), PostgreSQL drivers, AsyncStorage
-   - Responsibilities: Data persistence, query optimization, transaction management, offline caching
+- **API Gateway:** Node.js/Express service that centralizes routing, JWT auth, rate-limiting, CORS, load balancing and health checks for all client traffic.
 
-5. **Data Layer**
-   - Components: PostgreSQL databases, MongoDB database, Mobile local storage
-   - Technologies: PostgreSQL 15, MongoDB, AsyncStorage (React Native)
-   - Responsibilities: Data storage, backup, indexing, data integrity, offline data management
+**Tier 3: Logic**
+
+- **L1 Controllers (Routing Layer):**
+
+  - FastAPI routers (Auth, Products) and Express controllers (Cart) that validate HTTP requests and forward them to the service layer.
+- **L2 Services (Business Logic Layer):**
+
+  - Modular classes/functions encapsulating core use cases: user registration/login, catalog queries, cart operations, transaction management.
+- **L3 Models (Data Access Layer):**
+
+  - ORM/ODM schemas and repository interfaces for each domain entity (User, Product, Cart), isolating persistence logic.
+
+**Tier 4: Data**
+
+- **Auth DB:** PostgreSQL instance for user credentials and auth metadata.
+- **Products DB:** PostgreSQL instance for product catalog and inventory.
+- **Cart DB:** MongoDB instance for shopping cart sessions and items.
+- **Mobile Local Storage:** AsyncStorage for offline caching of user preferences and session data.
 
 ### Deployment Structure
 
 #### Deployment View
+
 Container Orchestration Pattern with Docker Compose for backend services and native mobile app distribution.
+
 ```mermaid
 graph TD
     subgraph "Docker Host"
@@ -367,7 +354,7 @@ graph TD
   - Image: Custom Node.js build
   - Ports: `9000:9000`
   - Dependencies: `auth-service`, `products-api`, `cart-api`
-  - Environment: 
+  - Environment:
     - `NODE_ENV=production`
     - `PORT=9000`
     - `JWT_SECRET=your-secret-key`
@@ -404,6 +391,7 @@ graph TD
   - **Cart DB**: MongoDB on port 27017
 
 **Infrastructure:**
+
 - **Network**: Custom bridge network (`microservices_network`) for internal communication
 - **Storage**: Docker volumes for database persistence
 - **Monitoring**: Health checks for all services
@@ -414,17 +402,24 @@ graph TD
 
 #### Decomposition View
 
+![decompositoon](decomposition.png)
+
 **Module Descriptions:**
 
-* **Presentation Module**: Multi-platform presentation layer with Next.js-based web frontend and React Native mobile application
-* **Gateway Module**: ⭐ **NEW** - Centralized API Gateway providing cross-platform request routing, authentication middleware, service discovery, and load balancing
-* **Business Services Module**: Domain-specific microservices with FastAPI (Python) and Node.js (TypeScript) implementations, supporting both web and mobile clients
-* **Data Module**: Polyglot persistence with PostgreSQL for relational data, MongoDB for flexible document storage, and mobile local storage for offline capabilities
-* **Infrastructure Module**: Complete deployment solution with Docker-based backend services and native mobile app distribution
+
+
+- **Presentation Module**: Multi-platform presentation layer with Next.js-based web frontend and React Native mobile application
+- **Gateway Module**: ⭐ **NEW** - Centralized API Gateway providing cross-platform request routing, authentication middleware, service discovery, and load balancing
+- **Business Services Module**: Domain-specific microservices with FastAPI (Python) and Node.js (TypeScript) implementations, supporting both web and mobile clients
+- **Data Module**: Polyglot persistence with PostgreSQL for relational data, MongoDB for flexible document storage, and mobile local storage for offline capabilities
+- **Infrastructure Module**: Complete deployment solution with Docker-based backend services and native mobile app distribution
+
+**functionalities Description**
 
 ## 4. Technical Implementation Details
 
 ### Programming Languages Used
+
 - **JavaScript/TypeScript**: Frontend (Next.js), Mobile App (React Native), API Gateway (Node.js), Cart API
 - **Python**: Auth Service (FastAPI), Products API (FastAPI)
 - **SQL**: Database queries and schema definitions
@@ -432,6 +427,7 @@ graph TD
 - **Platform-Specific**: Native iOS (Swift/Objective-C) and Android (Java/Kotlin) for mobile integrations
 
 ### New Features in Prototype 2
+
 - **API Gateway**: Centralized request handling and service orchestration
 - **Enhanced Security**: JWT middleware validation at gateway level
 - **Service Discovery**: Dynamic service routing and health monitoring
@@ -443,6 +439,7 @@ graph TD
 ## 5. Prototype Deployment
 
 ### Prerequisites
+
 - Docker and Docker Compose (version 3.8+)
 - Node.js 18+ (for local development)
 - Python 3.9+ (for local development)
@@ -454,6 +451,7 @@ graph TD
 ### Local Deployment Instructions
 
 **1. Clone the Repository:**
+
 ```bash
 git clone [repository-url]
 cd TUSSI/
@@ -463,6 +461,7 @@ cd TUSSI/
 The docker-compose.yml file contains all necessary environment variables. For local development, you may need to create `.env` files for each service.
 
 **3. Build and Deploy Backend Services:**
+
 ```bash
 # Build all containers
 docker-compose build
@@ -475,6 +474,7 @@ docker-compose logs -f
 ```
 
 **4. Database Initialization:**
+
 ```bash
 # Wait for databases to be ready
 docker-compose ps
@@ -485,6 +485,7 @@ docker exec -it products-db psql -U user -d products
 ```
 
 **5. Mobile App Setup:**
+
 ```bash
 # Navigate to mobile app directory
 cd mobile-app/
@@ -503,6 +504,7 @@ npx react-native run-android
 ```
 
 **6. Verify Deployment:**
+
 ```bash
 # Check all containers
 docker-compose ps
@@ -533,41 +535,47 @@ curl http://localhost:8002/health    # Cart API
 
 ### Access Points
 
-- **Web Application**: http://localhost:3000
+- **Web Application**: <http://localhost:3000>
 - **Mobile Application**: Available on iOS/Android devices ⭐ **NEW**
-- **API Gateway**: http://localhost:9000 ⭐ **NEW**
-- **API Documentation**: 
-  - Gateway: http://localhost:9000/docs
-  - Auth Service: http://localhost:8000/docs
-  - Products API: http://localhost:8001/docs
-  - Cart API: http://localhost:8002/docs
+- **API Gateway**: <http://localhost:9000> ⭐ **NEW**
+- **API Documentation**:
+  - Gateway: <http://localhost:9000/docs>
+  - Auth Service: <http://localhost:8000/docs>
+  - Products API: <http://localhost:8001/docs>
+  - Cart API: <http://localhost:8002/docs>
 
 ## 6. Testing
 
 ### API Testing
+
 All API endpoints are now accessible through the API Gateway from both web and mobile clients:
 
 **Authentication:**
+
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `GET /api/auth/me`
 
 **Products:**
+
 - `GET /api/products`
 - `GET /api/products/{id}`
 
 **Cart:**
+
 - `GET /api/cart`
 - `POST /api/cart/add`
 - `POST /api/cart/checkout`
 
 ### Mobile App Testing
+
 - **Unit Tests**: React Native component testing with Jest
 - **Integration Tests**: API connectivity and data synchronization
 - **E2E Tests**: Full user flows on iOS and Android simulators
 - **Device Testing**: Real device testing for iOS and Android
 
 ### Health Monitoring
+
 - **System Health**: `GET /health` (API Gateway)
 - **Service Status**: `GET /api/status` (Overall system status)
 - **Mobile Connectivity**: Built-in health checks within mobile app
@@ -575,6 +583,7 @@ All API endpoints are now accessible through the API Gateway from both web and m
 ## 7. Monitoring and Troubleshooting
 
 ### Application Logs
+
 ```bash
 # View logs for specific service
 docker-compose logs -f api-gateway
@@ -587,6 +596,7 @@ docker-compose logs -f
 ```
 
 ### Mobile App Debugging
+
 ```bash
 # iOS debugging
 npx react-native log-ios
@@ -601,6 +611,7 @@ npx react-native start
 ### Common Issues
 
 **API Gateway Connection Issues:**
+
 ```bash
 # Ensure all backend services are healthy
 docker-compose exec api-gateway curl -f http://auth-service:8000/health
@@ -609,6 +620,7 @@ docker-compose exec api-gateway curl -f http://cart-api:8000/health
 ```
 
 **Mobile App Connection Issues:**
+
 ```bash
 # Check API Gateway accessibility from mobile
 curl http://[YOUR_LOCAL_IP]:9000/health
@@ -618,6 +630,7 @@ curl http://[YOUR_LOCAL_IP]:9000/health
 ```
 
 **Database Connection Issues:**
+
 ```bash
 # Check database health
 docker-compose exec auth-db pg_isready -U authuser -d auth
@@ -639,7 +652,8 @@ docker-compose exec carts-db mongosh --eval "db.adminCommand('ping')"
 
 ## 9. Changes from Prototype 1 to Prototype 2
 
-### Major Additions:
+### Major Additions
+
 1. **API Gateway Implementation** - Centralized request handling
 2. **Enhanced Security** - JWT middleware at gateway level
 3. **Service Orchestration** - Improved inter-service communication
@@ -649,7 +663,8 @@ docker-compose exec carts-db mongosh --eval "db.adminCommand('ping')"
 7. **Cross-Platform Support** - Unified API for web and mobile clients
 8. **Offline Capabilities** - Mobile app offline data management
 
-### Architecture Improvements:
+### Architecture Improvements
+
 - **Centralized Routing**: All client requests go through API Gateway
 - **Better Error Handling**: Standardized error responses
 - **Enhanced Monitoring**: Centralized logging and health checks
@@ -670,7 +685,7 @@ docker-compose exec carts-db mongosh --eval "db.adminCommand('ping')"
 
 ## 11. Project Structure
 
-```
+```sh
 TUSSI/
 ├── .gitignore
 ├── diagram.png                     # Architecture diagram
@@ -775,10 +790,12 @@ TUSSI/
 ### Architecture Insights from Project Structure
 
 **Multi-Platform Presentation:**
+
 - **Web Frontend** (`frontend/`): Next.js with React and TypeScript
 - **Mobile Application** (`mobile-app/`): React Native with native iOS/Android support ⭐
 
 **Microservices Distribution:**
+
 - Each service (`auth-service`, `products-api`, `cart-api`) is completely isolated with its own:
   - Dependencies (`pyproject.toml`, `package.json`)
   - Dockerfile for containerization
@@ -786,22 +803,26 @@ TUSSI/
   - Database models and business logic
 
 **Technology Stack Evidence:**
+
 - **Python Services** (`auth-service`, `products-api`): Use Poetry for dependency management and FastAPI framework
 - **Node.js Services** (`cart-api`, `api-gateway`): Use npm/yarn with TypeScript support
 - **Frontend**: Next.js with modern tooling (Tailwind, TypeScript, pnpm)
 - **Mobile**: React Native with platform-specific configurations for iOS and Android
 
 **Container Architecture:**
+
 - Each backend component has its own `Dockerfile`
 - `docker-compose.yml` orchestrates all backend services
 - Mobile app deployed through native app stores
 
 **API Gateway Integration:**
+
 - Dedicated `api-gateway/` directory shows the centralized routing approach
 - `server.js` contains the main gateway logic for request handling and service orchestration
 - Supports both web and mobile client requests
 
 **Database Strategy:**
+
 - `products_dump.sql` indicates PostgreSQL usage for products
 - MongoDB integration evident in `cart-api` structure
 - Database per service pattern clearly implemented

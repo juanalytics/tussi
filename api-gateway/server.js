@@ -9,6 +9,11 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 9000;
 
+app.use(express.urlencoded({ extended: true })); // Para form data
+app.use(express.json()); // Para JSON (ya lo tienes)
+
+
+app.set('trust proxy', 1);
 // Middleware de seguridad
 app.use(helmet());
 app.use(cors({
@@ -105,41 +110,140 @@ app.get('/health', async (req, res) => {
 
   const allServicesUp = Object.values(serviceChecks).every(check => check.status === 'UP');
 
-  res.status(allServicesUp ? 200 : 503).json({
+  // Always return 200 for gateway health - it's running if it can respond
+  res.status(200).json({
     gateway: 'UP',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
-    services: serviceChecks
+    services: serviceChecks,
+    overall: allServicesUp ? 'HEALTHY' : 'DEGRADED'
+  });
+});
+
+// Simple health check that doesn't depend on backend services
+app.get('/health/simple', (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    timestamp: new Date().toISOString(),
+    service: 'api-gateway'
   });
 });
 
 // ===== SERVICIO DE AUTENTICACIÓN =====
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
+//app.use('/api/auth/login', authLimiter);
+//app.use('/api/auth/register', authLimiter);
 
-app.use('/api/auth', generalLimiter, createProxyMiddleware({
-  target: SERVICES.AUTH_SERVICE,
-  changeOrigin: true,
-  pathRewrite: {
-    '^/api/auth': '/auth'
+// ===== SERVICIO DE AUTENTICACIÓN - CON DEBUGGING =====
+// ===== SERVICIO DE AUTENTICACIÓN =====
+// ===== SERVICIO DE AUTENTICACIÓN - VERSIÓN MEJORADA =====
+// ===== SERVICIO DE AUTENTICACIÓN - VERSIÓN CORREGIDA PARA OAUTH2 =====
+// ===== SERVICIO DE AUTENTICACIÓN - VERSIÓN CON HEADERS COMPLETOS =====
+app.use('/api/auth', 
+  (req, res, next) => {
+    if (req.path === '/login' || req.path === '/register') {
+      return authLimiter(req, res, next);
+    }
+    return generalLimiter(req, res, next);
   },
-  onProxyReq: (proxyReq, req, res) => {
-    proxyReq.setHeader('x-gateway-request-id', req.headers['x-request-id'] || 'unknown');
-    proxyReq.setHeader('x-client-ip', req.ip);
-    proxyReq.setHeader('x-forwarded-for', req.get('X-Forwarded-For') || req.ip);
-  },
-  onProxyRes: (proxyRes, req, res) => {
-    proxyRes.headers['x-service'] = 'auth-service';
-  },
-  onError: (err, req, res) => {
-    console.error('Error en Auth Service:', err.message);
-    res.status(503).json({
-      error: 'Servicio de autenticación temporalmente no disponible',
-      code: 'AUTH_SERVICE_DOWN',
-      timestamp: new Date().toISOString()
-    });
+  
+  async (req, res) => {
+    const startTime = Date.now();
+    
+    try {
+      const targetUrl = `${SERVICES.AUTH_SERVICE}/auth${req.path}`;
+      console.log(`📤 [AUTH] ${req.method} ${req.originalUrl} → ${targetUrl}`);
+      
+      let requestData = null;
+      let contentType = 'application/json';
+      
+      // ⭐ CONFIGURAR HEADERS COMPLETOS
+      const headers = {
+        'Accept': 'application/json',
+        'User-Agent': req.headers['user-agent'] || 'api-gateway/1.0'
+      };
+
+      // ⭐ PASAR HEADER AUTHORIZATION SI EXISTE
+      if (req.headers.authorization) {
+        headers['Authorization'] = req.headers.authorization;
+        console.log(`🔐 [AUTH] Authorization header found: ${req.headers.authorization.substring(0, 20)}...`);
+      } else {
+        console.log(`⚠️  [AUTH] No Authorization header found`);
+      }
+      
+      if (req.body && Object.keys(req.body).length > 0) {
+        let bodyData = { ...req.body };
+        
+        if (req.path === '/login') {
+          // Para login: enviar como form data
+          if (bodyData.email && !bodyData.username) {
+            bodyData.username = bodyData.email;
+            delete bodyData.email;
+            console.log(`🔄 [AUTH] Converted email → username for OAuth2`);
+          }
+          
+          const formData = new URLSearchParams();
+          formData.append('username', bodyData.username);
+          formData.append('password', bodyData.password);
+          
+          requestData = formData.toString();
+          contentType = 'application/x-www-form-urlencoded';
+          
+          console.log(`📤 [AUTH] Sending as form data:`, requestData);
+        } else {
+          // Para otros endpoints: enviar como JSON
+          requestData = JSON.stringify(bodyData);
+          contentType = 'application/json';
+          console.log(`📤 [AUTH] Sending as JSON:`, requestData);
+        }
+      }
+
+      // ⭐ AGREGAR CONTENT-TYPE AL FINAL
+      headers['Content-Type'] = contentType;
+
+      const config = {
+        method: req.method.toLowerCase(),
+        url: targetUrl,
+        headers: headers,
+        timeout: 30000,
+        validateStatus: () => true,
+        ...(requestData && { data: requestData })
+      };
+
+      console.log(`📤 [AUTH] Request headers:`, Object.keys(headers));
+      console.log(`📤 [AUTH] Has Authorization:`, !!headers.Authorization);
+
+      const response = await axios(config);
+      const duration = Date.now() - startTime;
+      
+      console.log(`📥 [AUTH] ${response.status} (${duration}ms)`);
+      
+      if (response.status === 401) {
+        console.log(`🔐 [AUTH] 401 Unauthorized - Token issue`);
+        console.log(`📥 [AUTH] 401 Response:`, response.data);
+      } else if (response.status === 422) {
+        console.log(`📥 [AUTH] 422 Error details:`, response.data);
+      }
+      
+      res.status(response.status)
+         .set('x-service', 'auth-service')
+         .json(response.data);
+         
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`❌ [AUTH] Error (${duration}ms):`, error.message);
+      
+      if (error.response) {
+        res.status(error.response.status).json(error.response.data);
+      } else {
+        res.status(503).json({
+          error: 'Servicio de autenticación temporalmente no disponible',
+          code: 'AUTH_SERVICE_DOWN',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
   }
-}));
+);
 
 // ===== SERVICIO DE PRODUCTOS =====
 app.use('/api/products',
@@ -192,43 +296,76 @@ app.use('/api/products',
 );
 // ===== SERVICIO DE CARRITO ===== 
 // Todas las rutas del carrito requieren autenticación
-app.use('/api/cart', generalLimiter, authenticateToken, createProxyMiddleware({
-  target: SERVICES.CART_SERVICE,
-  changeOrigin: true,
-  pathRewrite: {
-    '^/api/cart': '/'
-  },
-  onProxyReq: (proxyReq, req, res) => {
-    // Pasar el token de autorización completo
-    const authHeader = req.headers['authorization'];
-    if (authHeader) {
-      proxyReq.setHeader('authorization', authHeader);
-    }
+// ⭐ DEBUGGING TEMPORAL PARA CART
+// ===== SERVICIO DE CARRITO - PROXY MANUAL =====
+// ===== SERVICIO DE CARRITO - PROXY MANUAL CORREGIDO =====
+app.use('/api/cart', 
+  generalLimiter, 
+  authenticateToken,
+  
+  async (req, res) => {
+    const startTime = Date.now();
     
-    // Pasar información del usuario
-    if (req.user) {
-      proxyReq.setHeader('x-user-id', req.user.sub);
-    }
-    
-    // Headers adicionales para el contexto
-    proxyReq.setHeader('x-client-ip', req.ip);
-    proxyReq.setHeader('x-gateway-request-id', req.headers['x-request-id'] || 'unknown');
-  },
-  onProxyRes: (proxyRes, req, res) => {
-    // Solo agregar headers informativos, NO modificar el body
-    proxyRes.headers['x-service'] = 'cart-service';
-    proxyRes.headers['x-proxied-by'] = 'api-gateway';
-  },
-  onError: (err, req, res) => {
-    console.error('Error en Cart Service:', err.message);
-    res.status(503).json({
-      error: 'Servicio de carrito temporalmente no disponible',
-      code: 'CART_SERVICE_DOWN',
-      timestamp: new Date().toISOString()
-    });
-  }
-}));
+    try {
+      const targetUrl = `${SERVICES.CART_SERVICE}${req.path}`;
+      console.log(`🛒 [CART] ${req.method} ${req.originalUrl} → ${targetUrl}`);
+      
+      const config = {
+        method: req.method.toLowerCase(),
+        url: targetUrl,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'authorization': req.headers.authorization,
+          'x-user-id': req.user.sub,  // ⭐ Solo en headers, NO en body
+          'x-client-ip': req.ip
+        },
+        timeout: 30000,
+        validateStatus: () => true
+      };
 
+      // ⭐ NO MODIFICAR EL BODY - Enviarlo tal como viene
+      if (req.body && Object.keys(req.body).length > 0) {
+        config.data = JSON.stringify(req.body);  // Solo el body original
+      }
+
+      if (req.query && Object.keys(req.query).length > 0) {
+        config.params = req.query;
+      }
+
+      console.log(`🛒 [CART] Sending:`, {
+        url: config.url,
+        method: config.method,
+        userId: req.user.sub,
+        body: req.body
+      });
+
+      const response = await axios(config);
+      const duration = Date.now() - startTime;
+      
+      console.log(`🛒 [CART] Response: ${response.status} (${duration}ms)`);
+      
+      res.status(response.status)
+         .set('x-service', 'cart-service')
+         .json(response.data);
+         
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`🛒 [CART] Error (${duration}ms):`, error.message);
+      
+      if (error.response) {
+        console.log(`🛒 [CART] Error response:`, error.response.data);
+        res.status(error.response.status).json(error.response.data);
+      } else {
+        res.status(503).json({
+          error: 'Servicio de carrito temporalmente no disponible',
+          code: 'CART_SERVICE_DOWN',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+  }
+);
 // ===== ENDPOINTS PROPIOS DEL GATEWAY =====
 
 // Información del usuario actual (endpoint propio del gateway)

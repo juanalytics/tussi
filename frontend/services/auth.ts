@@ -1,6 +1,6 @@
 // src/services/auth.ts
 
-const AUTH_API = "http://localhost:8000"
+const API_BASE = process.env.NEXT_PUBLIC_AUTH_API_URL as string;
 
 export interface UserCreate {
   email: string
@@ -13,7 +13,7 @@ export interface UserCreate {
 }
 
 export async function registerUser(data: UserCreate) {
-  const res = await fetch(`${AUTH_API}/auth/register`, {
+  const res = await fetch(`${API_BASE}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -31,7 +31,7 @@ export async function fetchUserProfile(): Promise<any> {
 
   if (!token) throw new Error("No token found")
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_AUTH_API_URL}/auth/me`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_AUTH_API_URL}/me`, {
     method: "GET",
     headers: {
       "Authorization": `Bearer ${token}`,
