@@ -476,24 +476,94 @@ graph TD
 
 **Functionalities Description**
 
-*   **User Management & Authentication**:
-    *   Secure user registration and login via the Authentication Service.
-    *   JWT-based session management, validated at the API Gateway.
-    *   Users can view and manage their profiles.
-*   **Product Catalog**:
-    *   Browse a list of products with details and pagination.
-    *   View detailed information for a single product.
-    *   (For admins) Create, update, and delete products from the catalog.
-*   **Shopping Cart**:
-    *   Authenticated users can add products to their shopping cart.
-    *   View the contents of the cart.
-    *   Update the quantity of items or remove them.
-    *   Clear the entire cart.
-*   **Cross-Cutting Concerns (Gateway)**:
-    *   Secure access to services with token validation.
-    *   Protect services from abuse with rate limiting.
-    *   Provide centralized health checks for monitoring system status.
-    *   Aggregate data from multiple services, such as enriching search results with cart information.
+- **User Management & Authentication**:
+  - Secure user registration and login via the Authentication Service.
+  - JWT-based session management, validated at the API Gateway.
+  - Users can view and manage their profiles.
+- **Product Catalog**:
+  - Browse a list of products with details and pagination.
+  - View detailed information for a single product.
+  - (For admins) Create, update, and delete products from the catalog.
+- **Shopping Cart**:
+  - Authenticated users can add products to their shopping cart.
+  - View the contents of the cart.
+  - Update the quantity of items or remove them.
+  - Clear the entire cart.
+- **Cross-Cutting Concerns (Gateway)**:
+  - Secure access to services with token validation.
+  - Protect services from abuse with rate limiting.
+  - Provide centralized health checks for monitoring system status.
+  - Aggregate data from multiple services, such as enriching search results with cart information.
+
+## 4. Quality Properties
+
+### Security Scenarios
+
+#### Product Modification for Fraud (Auditability)
+
+```mermaid
+graph LR
+    A["<b>Stimulus source:</b><br/> Legitimate administrator"] --> B["<b>Stimulus:</b><br/>Secret price modification"]
+    
+    B --> C_sub
+    
+    subgraph Environment
+        C_sub["<b>Artifact:</b><br/>products-api + products-db"]
+    end
+    
+    C_sub --> D["<b>Response:</b><br/> Immutable change log"]
+    
+    D --> E["<b>Metric:</b><br/>Complete and verifiable history"]
+```
+
+**Description:**
+
+An administrator, using legitimate credentials, secretly changes the price of a high-value item to a very low price, makes a purchase, and then restores the original price to conceal the fraudulent activity.
+
+| Part                   | Detail                                                                                                                                          |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | Price of a high-value product is changed to a very low amount and later restored.                                                               |
+| **Source of stimulus** | Administrator with a legitimate account (no sign of compromise).                                                                                |
+| **Artifact**           | `products-api` service and `products-db` database.                                                                                              |
+| **Environment**        | Production, normal business operations.                                                                                                         |
+| **Response**           | The system must immutably log every price change, including user, previous value, new value, and timestamp.                                     |
+| **Response metric**    | Ability to generate a complete change history; prove that the price changed from X to Y and then from Y to X, with no possibility of tampering. |
+
+---
+
+### Performance Scenarios
+
+#### Bottleneck on Write and Reads in Producst database
+
+```mermaid
+graph LR
+    A["<b>Stimulus Source:</b><br/>Concurrent Reads + Writes"] --> B["<b>Stimulus:</b><br/> Update Stock and Select Products"]
+    
+    B --> C_sub
+    
+    subgraph Environment
+        C_sub["<b>Artifact:</b><br/>products-api + products-db"]
+    end
+    
+    C_sub --> D["<b>Response:</b><br/> Handle Reads and Writes"]
+    
+    D --> E["<b>Metric:</b><br/> <350ms Read ; <1,5s Write "]
+```
+
+---
+
+The product database experiences lockups when there are concurrent massive reads and simultaneous stock updates.
+
+| Part                   | Detail                                                                                  |
+| ---------------------- | --------------------------------------------------------------------------------------- |
+| **Stimulus**           | An administrator updates stock while there is peak read load from web and mobile users. |
+| **Source of stimulus** | Concurrent users (reads) and administrator (write).                                     |
+| **Artifact**           | `products-api` service and PostgreSQL database `products-db`.                           |
+| **Environment**        | Production, peak usage hours.                                                           |
+| **Response**           | Serve reads quickly and process stock updates without prolonged lockups.                |
+| **Response metric**    | Reads in < 350 ms; update confirmation in < 1.5 s; no deadlocks or write timeouts.      |
+
+---
 
 ## 5. Prototype Deployment
 
