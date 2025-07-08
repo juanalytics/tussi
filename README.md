@@ -20,7 +20,7 @@ Tussi
 
 ![Tussi Logo](logo.png)
 
-### Description}
+### Description
 
 **Tussi** is a distributed e-commerce platform built with modern microservices architecture that provides user authentication, product catalog management, and shopping cart functionality. The system is designed to handle high traffic loads through distributed services and uses modern web technologies for optimal performance and scalability.
 
@@ -207,49 +207,6 @@ graph LR
         CartDB
     end
 ```
-
----
-
-#### Description of Architectural Styles and Patterns Used
-
-**Architectural Styles:**
-
-1. **Microservices Architecture**
-   - Distributed system with independently deployable services
-   - Each service has isolated logic, databases, and Docker containers
-   - **Advantages:** Parallel development, simplified maintenance, horizontal scalability
-
-2. **Load Balancer + API Gateway Pattern**
-   - **Load Balancer**: Single external entry point with SSL termination and traffic distribution
-   - **API Gateway**: Internal service orchestration with authentication and routing
-   - **NEW IN PROTOTYPE 2:** Enhanced high availability with multiple API Gateway replicas
-
-3. **Container-based Architecture**
-   - All system components run in Docker containers orchestrated by Docker Compose
-   - **Advantages:** Consistent environments, simplified deployment, dependency isolation
-
-4. **Database per Service Pattern**
-   - Each microservice has its own dedicated database
-   - **Advantages:** Data isolation, technology diversity, independent scaling
-
-5. **Multi-Platform Client Architecture**
-   - Web and mobile clients consuming the same backend services
-   - **Advantages:** Code reuse, consistent user experience, unified API
-
-6. **Continuous Testing Architecture**
-   - **K6 Load Testing**: Automated performance testing service
-   - **NEW IN PROTOTYPE 2:** Integrated load testing with performance monitoring
-   - **Advantages:** Proactive performance validation, scalability verification
-
-**Patterns:**
-
-- **Server-Side Rendering (SSR)**: Next.js frontend with SSR capabilities
-- **Circuit Breaker**: Implemented in API Gateway for fault tolerance
-- **Health Check Pattern**: All services expose health endpoints
-- **JWT Authentication**: Secure token-based authentication across services
-- **Cross-Platform Data Synchronization**: Shared state management between web and mobile
-- **Load Testing Pattern**: Automated performance testing with K6 service
-- **SSL Termination Pattern**: Centralized SSL/TLS management at load balancer
 
 #### Layered (Tier & Layer) View
 
@@ -610,6 +567,8 @@ An attacker on an insecure network (e.g., public Wi-Fi) attempts to perform a ma
 | **Environment**        | A user is accessing the application from an untrusted public network.                                                                                                  |
 | **Response**           | The system enforces HTTPS-only communication. All data in transit is encrypted via TLS, rendering any intercepted traffic unreadable to the attacker.                    |
 | **Response metric**    | Data confidentiality and integrity are preserved. The percentage of non-encrypted connections should be 0%. Attempts to connect via HTTP are automatically rejected or upgraded. |
+
+![https](https.png)
 
 #### Attempt to Bypass API Gateway
 
@@ -1035,10 +994,44 @@ The system includes automated load testing capabilities:
 ```bash
 # Run K6 load tests
 docker-compose exec k6 k6 run /scripts/test.js
-
-# Monitor performance metrics
-curl http://localhost:6565/metrics
 ```
+
+
+**Description:**
+This load test exercises the `/products` endpoint through a controlled sequence of traffic patterns to validate performance, scalability, and resilience. It consists of the following seven stages (implemented in k6):
+
+1. **Warm-up** (30 s, 5 VUs)
+   Gently primes caches, JIT compilation, and connection pools.
+
+2. **Ramp-up** (1 m, 20 VUs)
+   Gradually increases load to steady state to detect any early bottlenecks.
+
+3. **Sustained Load** (3 m, 20 VUs)
+   Holds constant traffic to verify stable throughput under normal conditions.
+
+4. **Stress Test** (2 m, 50 VUs)
+   Pushes the service beyond typical load to identify breakpoints and resource exhaustion.
+
+5. **Spike Test** (1 m, 100 VUs)
+   Sudden surge to validate autoscaling, throttling, or graceful degradation.
+
+6. **Recovery** (2 m, 20 VUs)
+   Drops back to sustained load level to observe recovery time and service stabilization.
+
+7. **Cool-down** (30 s, 0 VUs)
+   Ensures connections shutdown cleanly and there are no lingering errors.
+
+During the test, we collect key metrics and enforce these thresholds:
+
+* **95th-percentile response time** must remain below 2 s.
+* **Error rate** (HTTP failures) must stay under 0.1%.
+* **Success rate** (HTTP 2xx responses) must exceed 95%.
+
+![load](load.png)
+![load1](load1.png)
+![load2](load2.png)
+
+The accompanying chart shows a 10-sample moving average of HTTP request durations, demonstrating how the endpoint’s latency evolves across each phase. This comprehensive profile uncovers potential performance regressions, validates SLAs, and ensures the products API can handle real-world traffic surges.
 
 **K6 Test Features:**
 - **Stress Testing**: Simulates high concurrent user loads
