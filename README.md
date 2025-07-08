@@ -745,7 +745,59 @@ The product database experiences lockups when there are concurrent massive reads
 
 ---
 
-## 5. Prototype Deployment
+## 5. Architectural Styles
+
+### Layered (N Tier)
+
+The system is structured into four distinct tiers, promoting a clear separation of concerns. Tier 1 (Presentation) encompasses the web (Next.js) and mobile (React Native) clients. Tier 2 (Communication) is the API Gateway, which acts as a single entry point. Tier 3 (Logic) handles all business processes and is subdivided into Controllers, Services, and Models. Tier 4 (Data) includes the PostgreSQL and MongoDB databases. This layered approach simplifies development, testing, and maintenance by isolating responsibilities.
+
+### client server: Network
+
+The architecture follows a classic client-server model. The clients (web browser and mobile app) are decoupled from the backend services. They communicate via stateless HTTP requests to the server-side, which is fronted by the API Gateway. This fundamental separation allows the client and server components to be developed, deployed, and scaled independently.
+
+#### Micro services: Service Based
+
+The backend is decomposed into a set of independently deployable microservices. Each service (e.g., Authentication, Products, Cart) is aligned with a specific business capability, manages its own database, and runs in a separate Docker container. This service-based style enhances scalability, fault isolation, and technological flexibility, as each service can be developed and updated without impacting others.
+
+#### polyglot Architecture
+
+Tussi embraces a polyglot approach for both programming languages and data persistence. Services are built with the technology best suited for their function: Python with FastAPI for the Auth and Products services, and Node.js for the API Gateway and Cart service. Similarly, the data architecture uses both PostgreSQL for structured, relational data (Users, Products) and MongoDB for flexible, document-based data (Shopping Cart).
+
+## 6. Architectural Patterns
+
+### API Gateway Pattern
+
+The API Gateway serves as a single, unified entry point for all client requests. It is responsible for routing traffic to the appropriate downstream microservice and centralizing cross-cutting concerns like JWT-based authentication, rate limiting, CORS policies, and centralized logging. This simplifies client logic and provides a robust control plane for the backend.
+
+### Load Balancer Pattern: Round Robin Implementation
+
+To ensure high availability and performance, the system employs a load balancer (Nginx) to distribute incoming traffic across multiple replicated instances of services like the API Gateway. It uses a round-robin strategy to balance the load, and by monitoring the health of each instance, it can automatically route traffic away from failed instances, thus preventing downtime.
+
+#### Database per service Pattern
+
+Each microservice has exclusive ownership of its own database, which is kept private and is not directly accessible by other services. The Auth and Products services each connect to a dedicated PostgreSQL instance, while the Cart Service uses its own MongoDB instance. This pattern guarantees loose coupling and allows each service to choose the most appropriate data model and technology.
+
+### Server side rendering
+
+The web application is built with Next.js and leverages Server-Side Rendering (SSR). When a user requests a page, it is rendered on the server into full HTML and then sent to the client. This pattern improves initial page load times and provides a better user experience, while also being highly beneficial for Search Engine Optimization (SEO).
+
+### Secure Channel Pattern Architectural Tactic: Encrypt Data (Resist Attack)
+
+To guarantee confidentiality and integrity, all data transmitted between clients and the API Gateway is encrypted using TLS/SSL (HTTPS). This application of the Secure Channel pattern is a critical security tactic to resist man-in-the-middle attacks and prevent eavesdropping on sensitive information, especially over untrusted networks.
+
+### Reverse Proxy Pattern Architectural Tactic: Limit Access (Resist Attack)
+
+The API Gateway implements the Reverse Proxy pattern, acting as an intermediary that protects the backend microservices. Clients send requests to the gateway, which then forwards them to the internal services. This hides the internal network topology and prevents any direct external access to the individual services, effectively reducing the system's attack surface.
+
+### Network Segmentation Pattern Architectural Tactic: Limit Access (Resist Attack)
+
+As a key security tactic, the system's deployment is structured with network segmentation using Docker's networking features. It establishes distinct `public` and `private` networks. External-facing components reside in the public network, while sensitive backend services and databases are isolated in the private network. This contains the impact of a potential breach by preventing lateral movement.
+
+### Performance Tactics Load Balancer Pattern Architectural Tactic: Maintain Multiple Copies of Computations (Manage Resources)
+
+To manage system resources and maintain performance under heavy load, a load balancer is used to horizontally scale stateless services. By maintaining multiple copies of components like the API Gateway and distributing traffic among them, the system can handle a larger volume of concurrent computations, ensuring that response times remain low and preventing any single instance from becoming a bottleneck.
+
+## 7. Prototype Deployment
 
 ### Prerequisites
 
@@ -853,7 +905,7 @@ curl http://localhost:8002/health    # Cart API
   - Products API: <http://localhost:8001/docs>
   - Cart API: <http://localhost:8002/docs>
 
-## 6. Testing
+## 8. Testing
 
 ### API Testing
 
@@ -889,7 +941,7 @@ All API endpoints are now accessible through the API Gateway from both web and m
 - **Service Status**: `GET /api/status` (Overall system status)
 - **Mobile Connectivity**: Built-in health checks within mobile app
 
-## 7. Monitoring and Troubleshooting
+## 9. Monitoring and Troubleshooting
 
 ### Application Logs
 
@@ -947,52 +999,7 @@ docker-compose exec products-db pg_isready -U user -d products
 docker-compose exec carts-db mongosh --eval "db.adminCommand('ping')"
 ```
 
-## 8. Architecture Compliance Checklist
-
-- [x] **Distributed architecture** - Microservices with API Gateway orchestration
-- [x] **Two presentation components** - Next.js web frontend + React Native mobile app ⭐
-- [x] **Four logic components** - API Gateway, Auth Service, Products API, Cart API
-- [x] **Communication/orchestration component** - API Gateway handles service orchestration ⭐
-- [x] **Four data components** - Auth DB, Products DB, Cart DB + Mobile AsyncStorage ⭐
-- [x] **Asynchronous processing** - Background tasks in services + mobile offline sync
-- [x] **HTTP-based connectors** - REST API calls, Database connectors
-- [x] **Four programming languages** - JavaScript/TypeScript, Python, SQL, HTML/CSS
-- [x] **Container-oriented deployment** - Full Docker Compose orchestration + mobile distribution
-
-## 9. Changes from Prototype 1 to Prototype 2
-
-### Major Additions
-
-1. **API Gateway Implementation** - Centralized request handling
-2. **Enhanced Security** - JWT middleware at gateway level
-3. **Service Orchestration** - Improved inter-service communication
-4. **Health Monitoring** - Comprehensive health checks
-5. **Load Balancing** - Request distribution capabilities
-6. **Mobile Application** - Native iOS and Android app implementation ⭐
-7. **Cross-Platform Support** - Unified API for web and mobile clients
-8. **Offline Capabilities** - Mobile app offline data management
-
-### Architecture Improvements
-
-- **Centralized Routing**: All client requests go through API Gateway
-- **Better Error Handling**: Standardized error responses
-- **Enhanced Monitoring**: Centralized logging and health checks
-- **Improved Security**: Authentication middleware at gateway level
-- **Multi-Platform Support**: Native mobile experience with data synchronization
-- **Offline-First Design**: Mobile app works without internet connectivity
-
-## 10. Future Enhancements
-
-- Advanced push notifications for mobile app
-- Message queue integration (Redis/RabbitMQ)
-- Advanced monitoring (ELK Stack)
-- Caching layer (Redis)
-- CI/CD pipeline implementation
-- Kubernetes deployment
-- App Store optimization and analytics
-- Mobile app performance monitoring
-
-## 11. Project Structure
+## 10. Project Structure
 
 ```sh
 TUSSI/
