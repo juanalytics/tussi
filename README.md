@@ -47,36 +47,42 @@ The name **Tussi** is intentionally provocative and disruptive—a metaphor to p
 
 ### Component-and-Connector View
 
-Este sistema comprende dos clientes, cuatro servicios y tres bases de datos, conectados por ocho conectores.
+Este sistema comprende dos clientes, un balanceador de carga, cuatro servicios y tres bases de datos, conectados por diez conectores.
 
 - **Dos clientes**
 
   - **Component-1: Web Client**
   - **Component-2: Mobile Client**
 
+- **Un balanceador de carga**
+
+  - **Component-3: Load Balancer (Nginx)**
+
 - **Cuatro servicios**
 
-  - **Component-3: API Gateway Service**
-  - **Component-4: Auth Service**
-  - **Component-5: Products API**
-  - **Component-6: Cart API**
+  - **Component-4: API Gateway Service**
+  - **Component-5: Auth Service**
+  - **Component-6: Products API**
+  - **Component-7: Cart API**
 
 - **Tres bases de datos**
 
-  - **Component-7: Auth Database (PostgreSQL)**
-  - **Component-8: Products Database (PostgreSQL)**
-  - **Component-9: Cart Database (MongoDB)**
+  - **Component-8: Auth Database (PostgreSQL)**
+  - **Component-9: Products Database (PostgreSQL)**
+  - **Component-10: Cart Database (MongoDB)**
 
-- **Ocho conectores**
+- **Diez conectores**
 
-  1. **c1: HTTP (REST)** — Component-1 → Component-3 (expuesto)
-  2. **c2: HTTP (REST)** — Component-2 → Component-3 (expuesto)
-  3. **c3: HTTP (REST)** — Component-3 → Component-4
-  4. **c4: HTTP (REST)** — Component-3 → Component-5
-  5. **c5: HTTP (REST)** — Component-3 → Component-6
-  6. **c6: TCP (PostgreSQL driver)** — Component-4 → Component-7
+  1. **c1: HTTPS/HTTP** — Component-1 → Component-3 (expuesto)
+  2. **c2: HTTPS/HTTP** — Component-2 → Component-3 (expuesto)
+  3. **c3: HTTP (Load Balancing)** — Component-3 → Component-4
+  4. **c4: HTTP (REST)** — Component-4 → Component-5
+  5. **c5: HTTP (REST)** — Component-4 → Component-6
+  6. **c6: HTTP (REST)** — Component-4 → Component-7
   7. **c7: TCP (PostgreSQL driver)** — Component-5 → Component-8
-  8. **c8: TCP (MongoDB driver)** — Component-6 → Component-9
+  8. **c8: TCP (PostgreSQL driver)** — Component-6 → Component-9
+  9. **c9: TCP (MongoDB driver)** — Component-7 → Component-10
+  10. **c10: HTTPS/HTTP (Testing)** — K6 Load Testing → Component-3
 
 ---
 
@@ -85,65 +91,75 @@ Este sistema comprende dos clientes, cuatro servicios y tres bases de datos, con
 1. **Component-1: Web Client**
 
    - Aplicación Next.js/React en el navegador.
-   - Se comunica via HTTP con el API Gateway.
+   - Se comunica via HTTPS/HTTP con el Load Balancer.
 
 2. **Component-2: Mobile Client**
 
    - App React Native en iOS/Android.
-   - Se comunica via HTTP con el API Gateway.
+   - Se comunica via HTTPS/HTTP con el Load Balancer.
 
-3. **Component-3: API Gateway Service**
+3. **Component-3: Load Balancer (Nginx)**
 
-   - Entrada única para todos los clientes.
-   - JWT, rate limiting, CORS, balanceo de carga, logging y health checks.
+   - Punto de entrada único con terminación SSL/TLS.
+   - Distribución de carga con algoritmo round-robin.
+   - Redirección HTTP a HTTPS y manejo de certificados.
+   - Balanceo entre múltiples instancias del API Gateway.
 
-4. **Component-4: Auth Service**
+4. **Component-4: API Gateway Service**
+
+   - Servicio de enrutamiento y proxy reverso.
+   - JWT, rate limiting, CORS, logging y health checks.
+   - Múltiples réplicas (4 instancias) para alta disponibilidad.
+
+5. **Component-5: Auth Service**
 
    - FastAPI (Python).
    - Endpoints: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`.
-   - Conexión TCP a PostgreSQL (Component-7).
+   - Conexión TCP a PostgreSQL (Component-8).
 
-5. **Component-5: Products API**
+6. **Component-6: Products API**
 
    - FastAPI (Python).
    - Endpoints: `GET /api/products`, `GET /api/products/{id}`.
-   - Conexión TCP a PostgreSQL (Component-8).
+   - Conexión TCP a PostgreSQL (Component-9).
 
-6. **Component-6: Cart API**
+7. **Component-7: Cart API**
 
    - Node.js/Express (TypeScript).
    - Endpoints: `GET /api/cart`, `POST /api/cart/add`, `POST /api/cart/checkout`.
-   - Conexión TCP a MongoDB (Component-9).
+   - Conexión TCP a MongoDB (Component-10).
 
-7. **Component-7: Auth Database (PostgreSQL)**
+8. **Component-8: Auth Database (PostgreSQL)**
 
    - Puerto 5432.
    - Almacena credenciales y datos de usuario.
 
-8. **Component-8: Products Database (PostgreSQL)**
+9. **Component-9: Products Database (PostgreSQL)**
 
    - Puerto 5433.
    - Almacena catálogo e inventario.
 
-9. **Component-9: Cart Database (MongoDB)**
+10. **Component-10: Cart Database (MongoDB)**
 
-   - Puerto 27017.
-   - Almacena sesiones y datos del carrito.
+    - Puerto 27017.
+    - Almacena sesiones y datos del carrito.
 
 ---
 
 #### Connectors
 
-| Conector | Tipo                    | Desde         | Hasta             |
-| -------- | ----------------------- | ------------- | ----------------- |
-| **c1**   | HTTP (REST)             | Web Client    | API Gateway       |
-| **c2**   | HTTP (REST)             | Mobile Client | API Gateway       |
-| **c3**   | HTTP (REST)             | API Gateway   | Auth Service      |
-| **c4**   | HTTP (REST)             | API Gateway   | Products API      |
-| **c5**   | HTTP (REST)             | API Gateway   | Cart API          |
-| **c6**   | TCP (PostgreSQL driver) | Auth Service  | Auth Database     |
-| **c7**   | TCP (PostgreSQL driver) | Products API  | Products Database |
-| **c8**   | TCP (MongoDB driver)    | Cart API      | Cart Database     |
+| Conector | Tipo                    | Desde               | Hasta                 |
+| -------- | ----------------------- | ------------------- | --------------------- |
+| **c1**   | HTTPS/HTTP              | Web Client          | Load Balancer         |
+| **c2**   | HTTPS/HTTP              | Mobile Client       | Load Balancer         |
+| **c3**   | HTTP (Load Balancing)   | Load Balancer       | API Gateway           |
+| **c4**   | HTTP (REST)             | API Gateway         | Auth Service          |
+| **c5**   | HTTP (REST)             | API Gateway         | Products API          |
+| **c6**   | HTTP (REST)             | API Gateway         | Cart API              |
+| **c7**   | TCP (PostgreSQL driver) | Auth Service        | Auth Database         |
+| **c8**   | TCP (PostgreSQL driver) | Products API        | Products Database     |
+| **c9**   | TCP (MongoDB driver)    | Cart API            | Cart Database         |
+| **c10**  | HTTPS/HTTP (Testing)    | K6 Load Testing     | Load Balancer         |
 
 ---
 
@@ -153,22 +169,43 @@ Este sistema comprende dos clientes, cuatro servicios y tres bases de datos, con
 graph LR
     WebClient[Component-1<br/>Web Client]
     MobileClient[Component-2<br/>Mobile Client]
-    APIGateway[Component-3<br/>API Gateway Service]
-    AuthService[Component-4<br/>Auth Service]
-    ProductsAPI[Component-5<br/>Products API]
-    CartAPI[Component-6<br/>Cart API]
-    AuthDB[Component-7<br/>PostgreSQL]
-    ProductsDB[Component-8<br/>PostgreSQL]
-    CartDB[Component-9<br/>MongoDB]
+    LoadBalancer[Component-3<br/>Load Balancer<br/>Nginx]
+    APIGateway[Component-4<br/>API Gateway Service<br/>4 replicas]
+    AuthService[Component-5<br/>Auth Service]
+    ProductsAPI[Component-6<br/>Products API]
+    CartAPI[Component-7<br/>Cart API]
+    AuthDB[Component-8<br/>PostgreSQL]
+    ProductsDB[Component-9<br/>PostgreSQL]
+    CartDB[Component-10<br/>MongoDB]
+    K6[K6 Load Testing]
 
-    WebClient -- "HTTP c1" --> APIGateway
-    MobileClient -- "HTTP c2" --> APIGateway
-    APIGateway -- "HTTP c3" --> AuthService
-    APIGateway -- "HTTP c4" --> ProductsAPI
-    APIGateway -- "HTTP c5" --> CartAPI
-    AuthService -- "TCP 5432 c6" --> AuthDB
-    ProductsAPI -- "TCP 5433 c7" --> ProductsDB
-    CartAPI -- "TCP 27017 c8" --> CartDB
+    WebClient -- "HTTPS c1" --> LoadBalancer
+    MobileClient -- "HTTPS c2" --> LoadBalancer
+    K6 -- "HTTP c10" --> LoadBalancer
+    LoadBalancer -- "HTTP c3" --> APIGateway
+    APIGateway -- "HTTP c4" --> AuthService
+    APIGateway -- "HTTP c5" --> ProductsAPI
+    APIGateway -- "HTTP c6" --> CartAPI
+    AuthService -- "TCP 5432 c7" --> AuthDB
+    ProductsAPI -- "TCP 5433 c8" --> ProductsDB
+    CartAPI -- "TCP 27017 c9" --> CartDB
+
+    subgraph "Public Network"
+        WebClient
+        MobileClient
+        LoadBalancer
+        APIGateway
+        K6
+    end
+
+    subgraph "Private Network"
+        AuthService
+        ProductsAPI
+        CartAPI
+        AuthDB
+        ProductsDB
+        CartDB
+    end
 ```
 
 ---
@@ -182,10 +219,10 @@ graph LR
    - Each service has isolated logic, databases, and Docker containers
    - **Advantages:** Parallel development, simplified maintenance, horizontal scalability
 
-2. **API Gateway Pattern**
-   - Single entry point for all client requests
-   - Centralized routing, authentication, and cross-cutting concerns
-   - **NEW IN PROTOTYPE 2:** Enhanced service orchestration and load balancing
+2. **Load Balancer + API Gateway Pattern**
+   - **Load Balancer**: Single external entry point with SSL termination and traffic distribution
+   - **API Gateway**: Internal service orchestration with authentication and routing
+   - **NEW IN PROTOTYPE 2:** Enhanced high availability with multiple API Gateway replicas
 
 3. **Container-based Architecture**
    - All system components run in Docker containers orchestrated by Docker Compose
@@ -199,6 +236,11 @@ graph LR
    - Web and mobile clients consuming the same backend services
    - **Advantages:** Code reuse, consistent user experience, unified API
 
+6. **Continuous Testing Architecture**
+   - **K6 Load Testing**: Automated performance testing service
+   - **NEW IN PROTOTYPE 2:** Integrated load testing with performance monitoring
+   - **Advantages:** Proactive performance validation, scalability verification
+
 **Patterns:**
 
 - **Server-Side Rendering (SSR)**: Next.js frontend with SSR capabilities
@@ -206,6 +248,8 @@ graph LR
 - **Health Check Pattern**: All services expose health endpoints
 - **JWT Authentication**: Secure token-based authentication across services
 - **Cross-Platform Data Synchronization**: Shared state management between web and mobile
+- **Load Testing Pattern**: Automated performance testing with K6 service
+- **SSL Termination Pattern**: Centralized SSL/TLS management at load balancer
 
 #### Layered (Tier & Layer) View
 
@@ -294,14 +338,19 @@ graph TB
 
 #### Deployment View
 
-Container Orchestration Pattern with Docker Compose for backend services and native mobile app distribution.
+Container Orchestration Pattern with Docker Compose, network segmentation, and load balancing for high availability.
 
 ```mermaid
 graph TD
     subgraph "Docker Host"
-        subgraph "Docker Network (microservices_network)"
+        subgraph "Public Network"
+            LoadBalancerContainer["Load Balancer Container<br>(Nginx, Ports 80/443)"]
             FrontendContainer["Frontend Container<br>(Port 3000)"]
-            APIGatewayContainer["API Gateway Container<br>(Port 9000)"]
+            APIGatewayContainer["API Gateway Container<br>(4 replicas, Port 9000)"]
+            K6Container["K6 Load Testing<br>(Port 6565)"]
+        end
+
+        subgraph "Private Network (Internal Only)"
             AuthServiceContainer["Auth Service Container<br>(Port 8000)"]
             ProductsAPIContainer["Products API Container<br>(Port 8001)"]
             CartAPIContainer["Cart API Container<br>(Port 8002)"]
@@ -310,92 +359,125 @@ graph TD
             CartDBContainer["Cart DB Container<br>(MongoDB, Port 27017)"]
         end
 
+        LoadBalancerContainer -- "SSL Termination & Load Balancing" --> APIGatewayContainer
         FrontendContainer -- "Depends on" --> APIGatewayContainer
-        APIGatewayContainer -- "Depends on" --> AuthServiceContainer
-        APIGatewayContainer -- "Depends on" --> ProductsAPIContainer
-        APIGatewayContainer -- "Depends on" --> CartAPIContainer
+        APIGatewayContainer -- "Reverse Proxy" --> AuthServiceContainer
+        APIGatewayContainer -- "Reverse Proxy" --> ProductsAPIContainer
+        APIGatewayContainer -- "Reverse Proxy" --> CartAPIContainer
         AuthServiceContainer -- "Depends on" --> AuthDBContainer
         ProductsAPIContainer -- "Depends on" --> ProductsDBContainer
         CartAPIContainer -- "Depends on" --> CartDBContainer
+        K6Container -- "Load Testing" --> LoadBalancerContainer
     end
 
     subgraph "Client Devices"
         UserDevice["User Device<br>(Browser)"]
         MobileDevice["Mobile Device<br>(iOS/Android)"]
+        TestingDevice["Testing Environment<br>(K6 Scripts)"]
     end
 
-    UserDevice -- "HTTP/S" --> FrontendContainer
-    UserDevice -- "HTTP/S" --> APIGatewayContainer
-    MobileDevice -- "HTTP/S" --> APIGatewayContainer
+    UserDevice -- "HTTPS/HTTP" --> LoadBalancerContainer
+    UserDevice -- "HTTPS/HTTP" --> FrontendContainer
+    MobileDevice -- "HTTPS/HTTP" --> LoadBalancerContainer
+    TestingDevice -- "HTTP" --> K6Container
 
     subgraph "App Stores"
         AppStore["App Store / Google Play"]
     end
 
     MobileDevice -- "Installs from" --> AppStore
+
+    subgraph "SSL/TLS"
+        SSLCerts["SSL Certificates<br>(./ssl volume)"]
+    end
+
+    SSLCerts -- "Mounted to" --> LoadBalancerContainer
 ```
 
 **Deployment Units:**
+
+- **Load Balancer Container:** ⭐ **NEW**
+  - Image: Custom Nginx build
+  - Ports: `80:80` (HTTP redirect), `443:443` (HTTPS)
+  - Dependencies: `api-gateway`
+  - SSL/TLS: Certificate volume mount (`./ssl:/etc/ssl/certs`)
+  - Features: SSL termination, HTTP to HTTPS redirect, round-robin load balancing
+  - Network: `public` (external access)
 
 - **Frontend Container:**
   - Image: Custom Next.js build
   - Ports: `3000:3000`
   - Dependencies: `api-gateway`
-  - Environment: `NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:9000`
+  - Environment: `NEXT_PUBLIC_API_GATEWAY_URL=https://localhost:443`
+  - Network: `public`
 
 - **Mobile Application:** ⭐ **NEW**
   - Platform: iOS/Android Native
   - Distribution: App Store/Google Play Store
-  - Dependencies: API Gateway (remote)
+  - Dependencies: Load Balancer (HTTPS endpoint)
   - Environment: `API_GATEWAY_URL=https://api.tussi.com` (production)
   - Local Storage: AsyncStorage for offline capabilities
 
 - **API Gateway Container:** ⭐ **NEW**
   - Image: Custom Node.js build
-  - Ports: `9000:9000`
+  - Replicas: 4 instances for high availability
   - Dependencies: `auth-service`, `products-api`, `cart-api`
   - Environment:
     - `NODE_ENV=production`
     - `PORT=9000`
-    - `JWT_SECRET=your-secret-key`
+    - `JWT_SECRET=supersecretkey`
     - `AUTH_SERVICE_URL=http://auth-service:8000`
     - `PRODUCTS_SERVICE_URL=http://products-api:8000`
     - `CART_SERVICE_URL=http://cart-api:8000`
-    - `MOBILE_CLIENT_SUPPORT=true`
   - Health Check: `curl -f http://localhost:9000/health`
+  - Networks: `public` (receives from load balancer), `private` (communicates with services)
+
+- **K6 Load Testing Container:** ⭐ **NEW**
+  - Image: `grafana/k6`
+  - Ports: `6565:6565`
+  - Volume: `./tests/k6:/scripts`
+  - Dependencies: `load-balancer`
+  - Network: `public`
 
 - **Auth Service Container:**
   - Image: Custom FastAPI build
-  - Ports: `8000:8000`
+  - Ports: `8000:8000` (development/debug access)
   - Dependencies: `auth-db`
   - Environment: `DATABASE_URL=postgresql://authuser:supersecret@auth-db:5432/auth`
   - Health Check: `curl -f http://localhost:8000/health`
+  - Network: `private` (isolated from external access)
 
 - **Products API Container:**
   - Image: Custom FastAPI build
-  - Ports: `8001:8000`
+  - Ports: `8001:8000` (development/debug access)
   - Dependencies: `products-db`
   - Environment: `DATABASE_URL=postgresql://user:password@products-db:5432/products`
   - Health Check: `curl -f http://localhost:8000/health`
+  - Network: `private` (isolated from external access)
 
 - **Cart API Container:**
   - Image: Custom Node.js TypeScript build
-  - Ports: `8002:8000`
+  - Ports: `8002:8000` (development/debug access)
   - Dependencies: `carts-db`, `auth-service`
   - Environment: `MONGO_URI=mongodb://root:rootpassword@carts-db:27017/cart-service?authSource=admin`
   - Health Check: `curl -f http://localhost:8000/health`
+  - Network: `private` (isolated from external access)
 
 - **Database Containers:**
-  - **Auth DB**: PostgreSQL 15 on port 5432
-  - **Products DB**: PostgreSQL 15 on port 5433
-  - **Cart DB**: MongoDB on port 27017
+  - **Auth DB**: PostgreSQL 15 on port 5432, network: `private`
+  - **Products DB**: PostgreSQL 15 on port 5433, network: `private`
+  - **Cart DB**: MongoDB on port 27017, network: `private`
 
 **Infrastructure:**
 
-- **Network**: Custom bridge network (`microservices_network`) for internal communication
+- **Network Segmentation**: 
+  - **Public Network**: Load balancer, frontend, API Gateway, K6 testing
+  - **Private Network**: All backend services and databases (internal=true, no external access)
 - **Storage**: Docker volumes for database persistence
 - **Monitoring**: Health checks for all services
-- **Load Balancing**: API Gateway handles service routing and load distribution
+- **Load Balancing**: Nginx handles SSL termination and distributes traffic across API Gateway replicas
+- **Security**: SSL/TLS certificates, network isolation, reverse proxy pattern
+- **Testing**: K6 load testing service for performance validation
 - **Mobile Distribution**: Native app stores for iOS/Android deployment
 
 ### Decomposition Structure
@@ -785,13 +867,26 @@ The web application is built with Next.js and leverages Server-Side Rendering (S
 
 To guarantee confidentiality and integrity, all data transmitted between clients and the API Gateway is encrypted using TLS/SSL (HTTPS). This application of the Secure Channel pattern is a critical security tactic to resist man-in-the-middle attacks and prevent eavesdropping on sensitive information, especially over untrusted networks.
 
+### Load Balancer Pattern Architectural Tactic: Manage Resources & SSL Termination
+
+The Load Balancer (Nginx) serves as the single entry point for all external traffic, handling SSL termination and distributing requests across multiple API Gateway replicas using round-robin algorithm. This pattern ensures high availability, improved performance, and centralized SSL/TLS management, reducing the computational overhead on backend services.
+
 ### Reverse Proxy Pattern Architectural Tactic: Limit Access (Resist Attack)
 
-The API Gateway implements the Reverse Proxy pattern, acting as an intermediary that protects the backend microservices. Clients send requests to the gateway, which then forwards them to the internal services. This hides the internal network topology and prevents any direct external access to the individual services, effectively reducing the system's attack surface.
+The system implements a two-tier reverse proxy architecture:
+1. **Load Balancer**: Acts as the primary reverse proxy, handling SSL termination and routing to API Gateway instances
+2. **API Gateway**: Acts as an internal reverse proxy, forwarding authenticated requests to backend microservices
+
+This dual-layer approach completely hides the internal network topology and prevents any direct external access to individual services, effectively minimizing the system's attack surface.
 
 ### Network Segmentation Pattern Architectural Tactic: Limit Access (Resist Attack)
 
-As a key security tactic, the system's deployment is structured with network segmentation using Docker's networking features. It establishes distinct `public` and `private` networks. External-facing components reside in the public network, while sensitive backend services and databases are isolated in the private network. This contains the impact of a potential breach by preventing lateral movement.
+The system employs strict network segmentation using Docker's networking features:
+- **Public Network**: Contains load balancer, frontend, API Gateway replicas, and K6 testing - accessible from external sources
+- **Private Network**: Contains all backend services and databases with `internal: true` flag - completely isolated from external access
+- **Cross-Network Communication**: Only the API Gateway can bridge between networks, acting as a controlled gateway
+
+This segmentation ensures that even if the frontend or API Gateway is compromised, attackers cannot directly access backend services or databases, containing the blast radius of potential breaches.
 
 ### Performance Tactics Load Balancer Pattern Architectural Tactic: Maintain Multiple Copies of Computations (Manage Resources)
 
@@ -882,34 +977,39 @@ curl http://localhost:8002/health    # Cart API
 
 ### Services Configuration
 
-| Service         | External Port | Internal Port | Description |
-|:----------------|:--------------|:--------------|:------------|
-| **Frontend**    | 3000          | 3000          | Next.js SSR Web Application |
-| **Mobile App**  | N/A           | N/A           | **Native iOS/Android Application** ⭐ **NEW** |
-| **API Gateway** | **9000**      | **9000**      | **Main API Gateway** ⭐ **NEW** |
-| Auth Service    | 8000          | 8000          | Authentication & Authorization |
-| Products API    | 8001          | 8000          | Product Catalog Management |
-| Cart API        | 8002          | 8000          | Shopping Cart Operations |
-| Auth DB         | 5432          | 5432          | PostgreSQL Auth Database |
-| Products DB     | 5433          | 5432          | PostgreSQL Products Database |
-| Cart DB         | 27017         | 27017         | MongoDB Cart Database |
+| Service         | External Port | Internal Port | Network  | Description |
+|:----------------|:--------------|:--------------|:---------|:------------|
+| **Load Balancer** | **80, 443**   | **80, 443**   | public   | **Nginx SSL Termination & Load Balancing** ⭐ **NEW** |
+| **Frontend**    | 3000          | 3000          | public   | Next.js SSR Web Application |
+| **Mobile App**  | N/A           | N/A           | N/A      | **Native iOS/Android Application** ⭐ **NEW** |
+| **API Gateway** | N/A           | **9000**      | public, private | **Main API Gateway (4 replicas)** ⭐ **NEW** |
+| **K6 Testing**  | 6565          | 6565          | public   | **Load Testing Service** ⭐ **NEW** |
+| Auth Service    | 8000*         | 8000          | private  | Authentication & Authorization |
+| Products API    | 8001*         | 8000          | private  | Product Catalog Management |
+| Cart API        | 8002*         | 8000          | private  | Shopping Cart Operations |
+| Auth DB         | 5432*         | 5432          | private  | PostgreSQL Auth Database |
+| Products DB     | 5433*         | 5432          | private  | PostgreSQL Products Database |
+| Cart DB         | 27017*        | 27017         | private  | MongoDB Cart Database |
+
+**Note:** Ports marked with * are exposed for development/debugging purposes only. In production, only the Load Balancer (80/443) and Frontend (3000) should be externally accessible.
 
 ### Access Points
 
+- **Primary Access** (Production): <https://localhost:443> (Load Balancer) ⭐ **NEW**
 - **Web Application**: <http://localhost:3000>
 - **Mobile Application**: Available on iOS/Android devices ⭐ **NEW**
-- **API Gateway**: <http://localhost:9000> ⭐ **NEW**
+- **Load Testing**: <http://localhost:6565> (K6 Dashboard) ⭐ **NEW**
 - **API Documentation**:
-  - Gateway: <http://localhost:9000/docs>
-  - Auth Service: <http://localhost:8000/docs>
-  - Products API: <http://localhost:8001/docs>
-  - Cart API: <http://localhost:8002/docs>
+  - Gateway: <https://localhost:443/docs> (Production) or <http://localhost:9000/docs> (Development)
+  - Auth Service: <http://localhost:8000/docs> (Development only)
+  - Products API: <http://localhost:8001/docs> (Development only)
+  - Cart API: <http://localhost:8002/docs> (Development only)
 
 ## 8. Testing
 
 ### API Testing
 
-All API endpoints are now accessible through the API Gateway from both web and mobile clients:
+All API endpoints are accessible through the Load Balancer and API Gateway from both web and mobile clients:
 
 **Authentication:**
 
@@ -928,18 +1028,39 @@ All API endpoints are now accessible through the API Gateway from both web and m
 - `POST /api/cart/add`
 - `POST /api/cart/checkout`
 
+### Load Testing with K6 ⭐ **NEW**
+
+The system includes automated load testing capabilities:
+
+```bash
+# Run K6 load tests
+docker-compose exec k6 k6 run /scripts/test.js
+
+# Monitor performance metrics
+curl http://localhost:6565/metrics
+```
+
+**K6 Test Features:**
+- **Stress Testing**: Simulates high concurrent user loads
+- **Performance Metrics**: Response time, throughput, error rates
+- **Scalability Validation**: Tests system behavior under load
+- **Load Balancer Testing**: Validates traffic distribution across API Gateway replicas
+
 ### Mobile App Testing
 
 - **Unit Tests**: React Native component testing with Jest
 - **Integration Tests**: API connectivity and data synchronization
 - **E2E Tests**: Full user flows on iOS and Android simulators
 - **Device Testing**: Real device testing for iOS and Android
+- **Load Testing**: Mobile app performance under various network conditions
 
 ### Health Monitoring
 
-- **System Health**: `GET /health` (API Gateway)
+- **Primary Health**: `GET /health` (Load Balancer)
+- **API Gateway Health**: `GET /api/health` (API Gateway instances)
 - **Service Status**: `GET /api/status` (Overall system status)
 - **Mobile Connectivity**: Built-in health checks within mobile app
+- **SSL Certificate Status**: Automated certificate validation
 
 ## 9. Monitoring and Troubleshooting
 
@@ -947,13 +1068,28 @@ All API endpoints are now accessible through the API Gateway from both web and m
 
 ```bash
 # View logs for specific service
+docker-compose logs -f load-balancer
 docker-compose logs -f api-gateway
 docker-compose logs -f auth-service
 docker-compose logs -f products-api
 docker-compose logs -f cart-api
+docker-compose logs -f k6
 
 # View all logs
 docker-compose logs -f
+```
+
+### Load Testing and Performance Monitoring
+
+```bash
+# Run K6 load tests
+docker-compose exec k6 k6 run /scripts/test.js
+
+# Monitor K6 dashboard
+curl http://localhost:6565/
+
+# Check load balancer metrics
+docker-compose exec load-balancer nginx -s reload
 ```
 
 ### Mobile App Debugging
@@ -971,6 +1107,19 @@ npx react-native start
 
 ### Common Issues
 
+**Load Balancer Connection Issues:**
+
+```bash
+# Check load balancer status
+curl -I https://localhost:443/health
+
+# Verify SSL certificate
+openssl s_client -connect localhost:443 -servername localhost
+
+# Check load balancer logs
+docker-compose logs -f load-balancer
+```
+
 **API Gateway Connection Issues:**
 
 ```bash
@@ -978,16 +1127,32 @@ npx react-native start
 docker-compose exec api-gateway curl -f http://auth-service:8000/health
 docker-compose exec api-gateway curl -f http://products-api:8000/health
 docker-compose exec api-gateway curl -f http://cart-api:8000/health
+
+# Check API Gateway replicas
+docker-compose ps api-gateway
 ```
 
 **Mobile App Connection Issues:**
 
 ```bash
-# Check API Gateway accessibility from mobile
-curl http://[YOUR_LOCAL_IP]:9000/health
+# Check Load Balancer accessibility from mobile
+curl https://[YOUR_LOCAL_IP]:443/health
 
 # Verify mobile app configuration
-# Check API_GATEWAY_URL in mobile app configuration
+# Check API_GATEWAY_URL points to load balancer (https://[YOUR_LOCAL_IP]:443)
+```
+
+**Network Segmentation Issues:**
+
+```bash
+# Verify network isolation
+docker network ls
+docker network inspect tussi_public
+docker network inspect tussi_private
+
+# Test that private services are not accessible externally
+curl http://localhost:8000/health  # Should work (development)
+# But private network services should not be accessible from outside Docker
 ```
 
 **Database Connection Issues:**
