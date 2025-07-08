@@ -568,7 +568,7 @@ graph LR
     B --> C_sub
     
     subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Docker Networks (`public` and `private`)"]
+        C_sub["<b>Artifact:</b><br/>Docker Networks (npublic and private)"]
     end
     
     C_sub --> D["<b>Response:</b><br/>Docker network rules block traffic between isolated networks"]
