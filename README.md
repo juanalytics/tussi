@@ -223,10 +223,10 @@ graph TB
   end
 
   subgraph "Tier 4: Data"
-    AuthDB["Auth DB<br>(PostgreSQL)"]
-    ProdDB["Products DB<br>(PostgreSQL)"]
-    CartDB["Cart DB<br>(MongoDB)"]
-    MobileStore["Mobile Local<br>Storage"]
+    AuthDB[("Auth DB<br>(PostgreSQL)")]
+    ProdDB[("Products DB<br>(PostgreSQL)")]
+    CartDB[("Cart DB<br>(MongoDB)")]
+    MobileStore[("Mobile Local<br>Storage")]
   end
 
   WebClient      -->|HTTP| APIGateway
