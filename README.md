@@ -174,9 +174,9 @@ graph LR
     AuthService[Component-5<br/>Auth Service]
     ProductsAPI[Component-6<br/>Products API]
     CartAPI[Component-7<br/>Cart API]
-    AuthDB[Component-8<br/>PostgreSQL]
-    ProductsDB[Component-9<br/>PostgreSQL]
-    CartDB[Component-10<br/>MongoDB]
+    AuthDB[(Component-8<br/>PostgreSQL)]
+    ProductsDB[(Component-9<br/>PostgreSQL)]
+    CartDB[(Component-10<br/>MongoDB)]
     K6[K6 Load Testing]
 
     WebClient -- "HTTPS c1" --> LoadBalancer
