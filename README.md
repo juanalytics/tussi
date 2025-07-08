@@ -563,17 +563,17 @@ A malicious actor, having discovered the potential internal IP address of a micr
 
 ```mermaid
 graph LR
-    A["<b>Stimulus Source:</b><br/>Attacker with access to a network segment"] --> B["<b>Stimulus:</b><br/>Attempt at lateral movement towards a critical segment (e.g., database)"]
+    A["<b>Stimulus Source:</b><br/>Attacker in compromised container"] --> B["<b>Stimulus:</b><br/>Attempt lateral movement to database"]
     
     B --> C_sub
     
     subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Firewall Rules / Access Control Lists (ACLs)"]
+        C_sub["<b>Artifact:</b><br/>Docker Networks (`public` and `private`)"]
     end
     
-    C_sub --> D["<b>Response:</b><br/>The firewall blocks unauthorized traffic between segments, isolating the attack"]
+    C_sub --> D["<b>Response:</b><br/>Docker network rules block traffic between isolated networks"]
     
-    D --> E["<b>Metric:</b><br/>Limited Internal Attack Surface + Breach Containment"]
+    D --> E["<b>Metric:</b><br/>Zero connectivity between frontend and database networks"]
 ```
 
 **Description:**
@@ -584,10 +584,10 @@ An attacker successfully exploits a vulnerability in the `frontend` service cont
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Stimulus**           | A connection attempt is made from the compromised `frontend` container to the `auth-db` container on its internal port (5432).                                                                                         |
 | **Source of stimulus** | An attacker who has gained remote code execution within the `frontend` container.                                                                                                                                      |
-| **Artifact**           | The Docker network configuration in `docker-compose.yml`, which separates services into a `public` network (for frontend-facing components) and an `internal: true` `private` network (for backend services and databases). |
-| **Environment**        | Production Docker deployment. The `frontend` container is in the `public` network, while the `auth-db` is exclusively in the `private` network.                                                                          |
-| **Response**           | The connection attempt from `frontend` to `auth-db` fails at the network level. Docker's networking rules prevent any traffic from the `public` network from reaching the isolated `private` network directly.          |
-| **Response metric**    | Lateral movement from the presentation tier to the data tier is blocked. The blast radius of the initial compromise is successfully contained, protecting critical data assets.                                          |
+| **Artifact**           | The Docker network configuration in `docker-compose.yml`, which defines two distinct networks: `public` for external-facing services and `private` (with `internal: true`) for the backend and databases.              |
+| **Environment**        | Production Docker deployment. The `frontend` container is connected only to the `public` network, while the `auth-db` is exclusively on the `private` network.                                                           |
+| **Response**           | The connection attempt from `frontend` to `auth-db` is blocked at the Docker network layer. Because the containers do not share a common network and the `private` network is isolated, no route exists between them. Only the API Gateway, which is connected to both, can bridge this gap. |
+| **Response metric**    | Lateral movement from the presentation tier to the data tier is prevented. The number of unauthorized network paths between the `public` and `private` networks is zero. The blast radius of the frontend compromise is contained. |
 
 #### Product Modification for Fraud (Auditability)
 
@@ -623,22 +623,95 @@ An administrator, using legitimate credentials, secretly changes the price of a 
 
 ### Performance Scenarios
 
-### 4\. Load Balancer Pattern
+#### API Gateway Instance Fail
 
 ```mermaid
 graph LR
-    A["<b>Stimulus Source:</b><br/>Multiple simultaneous clients"] --> B["<b>Stimulus:</b><br/>High volume of concurrent requests to the system"]
+    A["<b>Stimulus Source:</b><br/>Internal Failure"] --> B["<b>Stimulus:</b><br/>API Gateway instance crashes"]
     
     B --> C_sub
     
     subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Load Balancer"]
+        C_sub["<b>Artifact:</b><br/>Load Balancer + Replicated API Gateways"]
     end
     
-    C_sub --> D["<b>Response:</b><br/>Traffic is distributed evenly among multiple instances of the service"]
+    C_sub --> D["<b>Response:</b><br/>Load balancer detects failure and redirects traffic to healthy instances"]
     
-    D --> E["<b>Metric:</b><br/>Availability + Average Response Time"]
+    D --> E["<b>Metric:</b><br/>High Availability (>99.9%)"]
 ```
+
+**Description:**
+
+During a period of high traffic, one of the four replicated API Gateway container instances crashes due to an unexpected internal error, such as resource exhaustion or a process failure.
+
+| Part                   | Detail                                                                                                                                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | One of the API Gateway instances becomes unresponsive and fails its health check.                                                                                                                       |
+| **Source of stimulus** | An internal system fault.                                                                                                                                                                               |
+| **Artifact**           | The Nginx Load Balancer, the replicated API Gateway containers, and the health check mechanism.                                                                                                           |
+| **Environment**        | Production environment, under normal to high load.                                                                                                                                                      |
+| **Response**           | The load balancer, which continuously monitors the health of upstream services, detects that an instance is down. It immediately removes the failed instance from the pool and routes all incoming traffic to the remaining healthy instances. |
+| **Response metric**    | System availability is maintained, with zero failed requests from the client's perspective after a brief connection-retry interval. The overall service experiences minimal to no degradation.             |
+
+#### Increase on Concurrent Users
+
+```mermaid
+graph LR
+    A["<b>Stimulus Source:</b><br/>External Clients"] --> B["<b>Stimulus:</b><br/>Sudden surge in user traffic"]
+    
+    B --> C_sub
+    
+    subgraph Environment
+        C_sub["<b>Artifact:</b><br/>Container Orchestrator + Load Balancer"]
+    end
+    
+    C_sub --> D["<b>Response:</b><br/>Additional service instances are deployed and traffic is distributed"]
+    
+    D --> E["<b>Metric:</b><br/>Sustained Response Time + Resource Utilization"]
+```
+
+**Description:**
+
+A successful marketing campaign results in a massive, sudden surge in concurrent users, causing CPU and memory utilization on the existing service containers to approach dangerous levels, threatening system-wide slowdowns.
+
+| Part                   | Detail                                                                                                                                                                                                                                                                                                                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | The number of active users increases tenfold, from 1,000 to 10,000 in a few minutes.                                                                                                                                                                                                                                                                              |
+| **Source of stimulus** | A large number of external web and mobile clients.                                                                                                                                                                                                                                                                                                               |
+| **Artifact**           | The container orchestration setup (`docker-compose` with `deploy: replicas`) and the Nginx Load Balancer.                                                                                                                                                                                                                                                          |
+| **Environment**        | Production, during a flash sale or major promotional event.                                                                                                                                                                                                                                                                                                      |
+| **Response**           | An operator scales the number of replicas for the `api-gateway` and `products-api` services (e.g., using `docker-compose up --scale api-gateway=8`). The load balancer automatically discovers the new instances as they become healthy and begins distributing the traffic among the expanded pool, thus reducing the load on each individual container. |
+| **Response metric**    | The average API response time remains below the 500ms target, and the CPU utilization across all instances is kept below 80%. The system successfully handles the increased load without a drop in performance.                                                                                                                                                   |
+
+#### Denial Of Service Attack
+
+```mermaid
+graph LR
+    A["<b>Stimulus Source:</b><br/>Malicious Client/Script"] --> B["<b>Stimulus:</b><br/>Request flood to a specific endpoint"]
+    
+    B --> C_sub
+    
+    subgraph Environment
+        C_sub["<b>Artifact:</b><br/>API Gateway Rate Limiting Middleware"]
+    end
+    
+    C_sub --> D["<b>Response:</b><br/>Excessive requests from the source are blocked with HTTP 429"]
+    
+    D --> E["<b>Metric:</b><br/>Service Availability + Blocked Malicious Requests"]
+```
+
+**Description:**
+
+A malicious actor or a poorly configured script begins to flood the `/api/auth/login` endpoint with hundreds of requests per minute from a single IP address in an attempt to guess passwords or cause a denial of service.
+
+| Part                   | Detail                                                                                                                                                                                                                                  |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | A single client IP sends over 100 requests to the `/api/auth/login` endpoint within a 60-second window.                                                                                                                                  |
+| **Source of stimulus** | An external, automated script.                                                                                                                                                                                                          |
+| **Artifact**           | The `express-rate-limit` middleware implemented in the API Gateway.                                                                                                                                                                       |
+| **Environment**        | Production.                                                                                                                                                                                                                             |
+| **Response**           | The API Gateway tracks the number of requests per IP. After the configured limit for authentication endpoints (5 requests per window) is exceeded, the gateway immediately begins rejecting subsequent requests from that IP with an HTTP 429 "Too Many Requests" error. |
+| **Response metric**    | The `auth-service` is protected from the flood and its resources are not exhausted. The service remains fully available to legitimate users. The percentage of malicious requests that are successfully blocked after the limit is reached is 100%. |
 
 #### Bottleneck on Write and Reads in Products database
 
