@@ -89,14 +89,19 @@ services:
       context: ./services/products-api
     container_name: products-api
     ports:
-      - "8001:8000"  # Mantener puerto para desarrollo/debug
+      - "8001:8000" # Mantener puerto para desarrollo/debug
     environment:
       - DATABASE_URL=postgresql://user:password@products-db:5432/products
       - NODE_ENV=production
+      - READ_DB_URL=mongodb://read_root:read_rootpassword@products-read-db:27017
+      - READ_DB_NAME=products_read_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     volumes:
       - ./products_dump.sql:/app/products_dump.sql
     depends_on:
       - products-db
+      - products-read-db
+      - rabbitmq
     networks:
       - private
     healthcheck:
@@ -194,6 +199,40 @@ services:
       retries: 5
       start_period: 40s
 
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - private
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  products-read-db:
+    image: mongo:latest
+    container_name: products-read-db
+    volumes:
+      - productsreaddata:/data/db
+    networks:
+      - private
+    ports:
+      - "27018:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=read_root
+      - MONGO_INITDB_ROOT_PASSWORD=read_rootpassword
+    command: mongod --quiet
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
   # ===== K6 LOAD TESTING =====
   k6:
     image: grafana/k6
@@ -232,3 +271,4 @@ volumes:
   authdata:
   productsdata:
   cartsdata:
+  productsreaddata:

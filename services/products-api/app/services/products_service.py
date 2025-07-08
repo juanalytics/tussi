@@ -1,34 +1,49 @@
 from sqlalchemy.orm import Session
-from app.models import product as product_model
+from app.models import product as event_model
 from app.schemas import product_schema
-from typing import List, Optional
+from typing import Optional
+import uuid
 
-def get_product(db: Session, product_id: int) -> Optional[product_model.Product]:
-    return db.query(product_model.Product).filter(product_model.Product.id == product_id).first()
-
-def get_products(db: Session, skip: int = 0, limit: int = 100) -> List[product_model.Product]:
-    return db.query(product_model.Product).offset(skip).limit(limit).all()
-
-def create_product(db: Session, product: product_schema.ProductCreate) -> product_model.Product:
-    db_product = product_model.Product(**product.dict())
-    db.add(db_product)
+def create_product(db: Session, product: product_schema.ProductCreate) -> (str, event_model.ProductEvent):
+    product_id = str(uuid.uuid4())
+    event_data = product.dict()
+    
+    event = event_model.ProductEvent(
+        product_id=product_id,
+        event_type="ProductCreated",
+        event_data=event_data
+    )
+    db.add(event)
     db.commit()
-    db.refresh(db_product)
-    return db_product
+    db.refresh(event)
+    return product_id, event
 
-def update_product(db: Session, product_id: int, product_update: product_schema.ProductUpdate) -> Optional[product_model.Product]:
-    db_product = get_product(db, product_id)
-    if db_product:
-        update_data = product_update.dict(exclude_unset=True)
-        for key, value in update_data.items():
-            setattr(db_product, key, value)
-        db.commit()
-        db.refresh(db_product)
-    return db_product
+def update_product(db: Session, product_id: str, product_update: product_schema.ProductUpdate) -> Optional[event_model.ProductEvent]:
+    update_data = product_update.dict(exclude_unset=True)
+    if not update_data:
+        return None
 
-def delete_product(db: Session, product_id: int) -> Optional[product_model.Product]:
-    db_product = get_product(db, product_id)
-    if db_product:
-        db.delete(db_product)
-        db.commit()
-    return db_product 
+    # In a real-world scenario, you would first validate if the product exists
+    # by checking the event store for a "ProductCreated" event.
+    
+    event = event_model.ProductEvent(
+        product_id=product_id,
+        event_type="ProductUpdated",
+        event_data=update_data
+    )
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+    return event
+
+def delete_product(db: Session, product_id: str) -> Optional[event_model.ProductEvent]:
+    # Similar to update, we just create a "deleted" event
+    event = event_model.ProductEvent(
+        product_id=product_id,
+        event_type="ProductDeleted",
+        event_data={} 
+    )
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+    return event 
