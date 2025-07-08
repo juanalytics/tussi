@@ -189,23 +189,6 @@ graph LR
     AuthService -- "TCP 5432 c7" --> AuthDB
     ProductsAPI -- "TCP 5433 c8" --> ProductsDB
     CartAPI -- "TCP 27017 c9" --> CartDB
-
-    subgraph "Public Network"
-        WebClient
-        MobileClient
-        LoadBalancer
-        APIGateway
-        K6
-    end
-
-    subgraph "Private Network"
-        AuthService
-        ProductsAPI
-        CartAPI
-        AuthDB
-        ProductsDB
-        CartDB
-    end
 ```
 
 #### Layered (Tier & Layer) View
