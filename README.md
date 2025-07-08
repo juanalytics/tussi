@@ -499,6 +499,96 @@ graph TD
 
 ### Security Scenarios
 
+#### Man in the middle Attack
+
+```mermaid
+graph LR
+    A["<b>Stimulus Source:</b><br/>External Component"] --> B["<b>Stimulus:</b><br/>Attempt to intercept data in transit"]
+    
+    B --> C_sub
+    
+    subgraph Environment
+        C_sub["<b>Artifact:</b><br/>Communication Channel (TLS/SSL)"]
+    end
+    
+    C_sub --> D["<b>Response:</b><br/>Data travels encrypted, preventing unauthorized reading"]
+    
+    D --> E["<b>Metric:</b><br/>Data Confidentiality + Integrity"]
+```
+
+**Description:**
+
+An attacker on an insecure network (e.g., public Wi-Fi) attempts to perform a man-in-the-middle (MITM) attack to intercept sensitive data, such as login credentials or personal information, being transmitted between a user's device and the Tussi backend.
+
+| Part                   | Detail                                                                                                                                                                 |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | An attempt to intercept and read HTTP traffic between a client (web or mobile) and the API Gateway.                                                                    |
+| **Source of stimulus** | An external attacker with access to the network path.                                                                                                                  |
+| **Artifact**           | The communication channel between the client and the Load Balancer/API Gateway, secured with TLS/SSL.                                                                    |
+| **Environment**        | A user is accessing the application from an untrusted public network.                                                                                                  |
+| **Response**           | The system enforces HTTPS-only communication. All data in transit is encrypted via TLS, rendering any intercepted traffic unreadable to the attacker.                    |
+| **Response metric**    | Data confidentiality and integrity are preserved. The percentage of non-encrypted connections should be 0%. Attempts to connect via HTTP are automatically rejected or upgraded. |
+
+#### Attempt to Bypass API Gateway
+
+```mermaid
+graph LR
+    A["<b>Stimulus Source:</b><br/>External Client"] --> B["<b>Stimulus:</b><br/>Request to an internal microservice"]
+    
+    B --> C_sub
+    
+    subgraph Environment
+        C_sub["<b>Artifact:</b><br/>Reverse Proxy (API Gateway)"]
+    end
+    
+    C_sub --> D["<b>Response:</b><br/>The proxy validates and routes the request; the client never directly accesses the service"]
+    
+    D --> E["<b>Metric:</b><br/>Reduced Service Exposure + Isolation"]
+```
+
+**Description:**
+
+A malicious actor, having discovered the potential internal IP address of a microservice, attempts to bypass the API Gateway and communicate directly with the `products-api` to exploit a potential vulnerability that the gateway's security filters would otherwise block.
+
+| Part                   | Detail                                                                                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | A crafted HTTP request is sent directly to the internal IP or hostname of a backend microservice.                                                       |
+| **Source of stimulus** | An external attacker or a compromised, non-critical external-facing service.                                                                            |
+| **Artifact**           | The API Gateway, which serves as the single entry point, and the network configuration that isolates backend services.                                    |
+| **Environment**        | Production. Backend services are running in a private network, inaccessible from the public internet.                                                   |
+| **Response**           | The request fails because the private network is not exposed. The API Gateway is the only component listening for external traffic, and it validates, authenticates, and sanitizes all requests before forwarding them. |
+| **Response metric**    | The attack surface is minimized by exposing only one entry point. The number of directly accessible internal service endpoints from an external source is zero. |
+
+### Frontend Compromised
+
+```mermaid
+graph LR
+    A["<b>Stimulus Source:</b><br/>Attacker with access to a network segment"] --> B["<b>Stimulus:</b><br/>Attempt at lateral movement towards a critical segment (e.g., database)"]
+    
+    B --> C_sub
+    
+    subgraph Environment
+        C_sub["<b>Artifact:</b><br/>Firewall Rules / Access Control Lists (ACLs)"]
+    end
+    
+    C_sub --> D["<b>Response:</b><br/>The firewall blocks unauthorized traffic between segments, isolating the attack"]
+    
+    D --> E["<b>Metric:</b><br/>Limited Internal Attack Surface + Breach Containment"]
+```
+
+**Description:**
+
+An attacker successfully exploits a vulnerability in the `frontend` service container. From this compromised position, they attempt to pivot and establish a direct connection to the `auth-db` (PostgreSQL database) to exfiltrate all user credentials.
+
+| Part                   | Detail                                                                                                                                                                                                               |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | A connection attempt is made from the compromised `frontend` container to the `auth-db` container on its internal port (5432).                                                                                         |
+| **Source of stimulus** | An attacker who has gained remote code execution within the `frontend` container.                                                                                                                                      |
+| **Artifact**           | The Docker network configuration in `docker-compose.yml`, which separates services into a `public` network (for frontend-facing components) and an `internal: true` `private` network (for backend services and databases). |
+| **Environment**        | Production Docker deployment. The `frontend` container is in the `public` network, while the `auth-db` is exclusively in the `private` network.                                                                          |
+| **Response**           | The connection attempt from `frontend` to `auth-db` fails at the network level. Docker's networking rules prevent any traffic from the `public` network from reaching the isolated `private` network directly.          |
+| **Response metric**    | Lateral movement from the presentation tier to the data tier is blocked. The blast radius of the initial compromise is successfully contained, protecting critical data assets.                                          |
+
 #### Product Modification for Fraud (Auditability)
 
 ```mermaid
@@ -533,7 +623,24 @@ An administrator, using legitimate credentials, secretly changes the price of a 
 
 ### Performance Scenarios
 
-#### Bottleneck on Write and Reads in Producst database
+### 4\. Load Balancer Pattern
+
+```mermaid
+graph LR
+    A["<b>Stimulus Source:</b><br/>Multiple simultaneous clients"] --> B["<b>Stimulus:</b><br/>High volume of concurrent requests to the system"]
+    
+    B --> C_sub
+    
+    subgraph Environment
+        C_sub["<b>Artifact:</b><br/>Load Balancer"]
+    end
+    
+    C_sub --> D["<b>Response:</b><br/>Traffic is distributed evenly among multiple instances of the service"]
+    
+    D --> E["<b>Metric:</b><br/>Availability + Average Response Time"]
+```
+
+#### Bottleneck on Write and Reads in Products database
 
 ```mermaid
 graph LR
