@@ -805,6 +805,39 @@ Each microservice has exclusive ownership of its own database, which is kept pri
 
 The web application is built with Next.js and leverages Server-Side Rendering (SSR). When a user requests a page, it is rendered on the server into full HTML and then sent to the client. This pattern improves initial page load times and provides a better user experience, while also being highly beneficial for Search Engine Optimization (SEO).
 
+### Active Redundancy (Hot Spare) Pattern
+
+The system ensures high availability for the API Gateway using an active redundancy pattern with hot spares.
+- **Replication**: The `api-gateway` service can be horizontally scaled to run multiple instances. To run 4 instances, for example, use the command: `docker-compose up -d --scale api-gateway=4`. All instances are active and running simultaneously.
+- **Load Balancing**: An Nginx load balancer sits in front of the API Gateway replicas and distributes incoming traffic among them. Docker's internal DNS resolves the `api-gateway` service name to the different container IPs, and Nginx uses this to perform round-robin load balancing.
+- **Fault Tolerance**: If one of the API Gateway instances fails or becomes unresponsive, Nginx will be unable to connect to it and will automatically stop routing traffic to that instance. Requests will be seamlessly redirected to the remaining healthy instances.
+
+This "hot spare" approach minimizes downtime and ensures that the system can handle instance failures without impacting users.
+
+### Passive Redundancy (Warm Spare) Pattern
+
+For stateful components like the products database, the system uses a passive redundancy (or "warm spare") strategy focused on rapid recovery.
+- **Backup**: A complete dump of the products database is available in `products_dump.sql`. This serves as the "spare" component.
+- **Recovery Script**: A recovery script, `scripts/restore-products-db.sh`, is provided to automate the restoration process.
+- **Manual Intervention**: If the primary `products-db` container suffers from data corruption or a critical failure that requires a restore, an operator can execute the script to quickly rebuild the database state from the backup.
+
+This "warm spare" is not running continuously, so it doesn't consume resources. It is "warm" because the backup is ready and the restoration process is scripted, minimizing the recovery time objective (RTO). To recover the database, run:
+```bash
+./scripts/restore-products-db.sh
+```
+
+### Cold Spare (On-Demand Service) Pattern
+
+The system uses a cold spare pattern for on-demand services that are not required for core application functionality. The `k6` load testing service is implemented as a cold spare.
+- **Inactive by Default**: The `k6` service is defined in the `docker-compose.yml` but assigned to a `testing` profile. It remains completely inactive and consumes no resources during normal system operation.
+- **Manual Activation**: To bring the service online for performance testing, it must be activated manually by an operator. This is done by including the `testing` profile in the Docker Compose command.
+- **On-Demand Availability**: This pattern keeps the production environment lean and reduces the potential attack surface by not running unnecessary services, while still making powerful tools available on demand.
+
+To activate the `k6` load testing service, run:
+```bash
+docker-compose --profile testing up -d
+```
+
 ### Secure Channel Pattern Architectural Tactic: Encrypt Data (Resist Attack)
 
 To guarantee confidentiality and integrity, all data transmitted between clients and the API Gateway is encrypted using TLS/SSL (HTTPS). This application of the Secure Channel pattern is a critical security tactic to resist man-in-the-middle attacks and prevent eavesdropping on sensitive information, especially over untrusted networks.
@@ -1150,6 +1183,8 @@ TUSSI/
 ├── logo.png                       # Tussi logo
 ├── products_dump.sql              # Sample products data
 ├── README.md                      # This documentation
+├── scripts/                       # Utility scripts
+│   └── restore-products-db.sh     # DB restore script
 ├── api-gateway/                   # ⭐ NEW - API Gateway Service
 │   ├── node_modules/
 │   │   ├── Dockerfile
