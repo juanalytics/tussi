@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: tussi-services
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: us-central1-docker.pkg.dev/PROJECT_ID_REPLACE_ME/tussi-services/frontend:v1.0.0
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NEXT_PUBLIC_API_GATEWAY_URL
+          value: "https://[YOUR_DOMAIN]"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: tussi-services
+spec:
+  selector:
+    app: frontend
+  ports:
+  - port: 80
+    targetPort: 3000 

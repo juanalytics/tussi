@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tussi-services
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tussi-databases 

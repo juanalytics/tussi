@@ -1,0 +1,112 @@
+# Auth Database (PostgreSQL)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: auth-db
+  namespace: tussi-databases
+spec:
+  serviceName: "auth-db-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-db
+  template:
+    metadata:
+      labels:
+        app: auth-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "auth"
+        - name: POSTGRES_USER
+          value: "authuser"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-auth-secret
+              key: password
+        volumeMounts:
+        - name: auth-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: auth-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "gce-ssd"
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-db-service
+  namespace: tussi-databases
+spec:
+  selector:
+    app: auth-db
+  ports:
+  - port: 5432
+    targetPort: 5432
+
+# Carts Database (MongoDB)
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: carts-db
+  namespace: tussi-databases
+spec:
+  serviceName: "carts-db-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: carts-db
+  template:
+    metadata:
+      labels:
+        app: carts-db
+    spec:
+      containers:
+      - name: mongo
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: "root"
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: password
+        volumeMounts:
+        - name: carts-data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: carts-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "gce-ssd"
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: carts-db-service
+  namespace: tussi-databases
+spec:
+  selector:
+    app: carts-db
+  ports:
+  - port: 27017
+    targetPort: 27017 
