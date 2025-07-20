@@ -6,4 +6,4 @@ docker-compose.yml
 tests
 docs
 *.md
-.env
+.env 
