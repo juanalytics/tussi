@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tussi - Distributed E-commerce Platform</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/theme/black.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/plugin/highlight/monokai.css">
+    <style>
+        .reveal h1, .reveal h2, .reveal h3 {
+            color: #ff1493;
+        }
+        .reveal .slides section .fragment {
+            color: #ffffff;
+        }
+        .reveal .progress {
+            color: #ff1493;
+        }
+        .small-text {
+            font-size: 0.7em;
+        }
+        .smaller-text {
+            font-size: 0.6em;
+        }
+        .team-member {
+            display: inline-block;
+            margin: 20px;
+            padding: 20px;
+            border: 2px solid #ff1493;
+            border-radius: 10px;
+        }
+        .architecture-diagram {
+            max-width: 90%;
+            max-height: 70vh;
+        }
+        .two-column {
+            display: flex;
+            justify-content: space-between;
+        }
+        .column {
+            flex: 1;
+            margin: 0 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Title Slide -->
+            <section data-background-color="#000000">
+                <img src="logo.png" alt="Tussi Logo" style="max-width: 300px;">
+                <h1 style="color: #ff1493;">TUSSI</h1>
+                <h2>Distributed E-commerce Platform</h2>
+                <p class="fragment">Built with Modern Microservices Architecture</p>
+                <p class="fragment small-text">Team 1a - Software Architecture Project</p>
+            </section>
+
+            <!-- Team Section -->
+            <section>
+                <h2>Team 1a</h2>
+                <div class="team-member">
+                    <h3>Xamir Ernesto Rojas Gamboa</h3>
+                </div>
+                <div class="team-member">
+                    <h3>Juan Sebastian Medina Pinto</h3>
+                </div>
+                <div class="team-member">
+                    <h3>Juan Manuel Pérez Ordoñez</h3>
+                </div>
+            </section>
+
+            <!-- What is Tussi -->
+            <section>
+                <h2>What is Tussi?</h2>
+                <div class="fragment">
+                    <p><strong>Tussi</strong> is a distributed e-commerce platform built with modern microservices architecture</p>
+                </div>
+                <div class="fragment">
+                    <ul>
+                        <li>🔐 User Authentication</li>
+                        <li>📦 Product Catalog Management</li>
+                        <li>🛒 Shopping Cart Functionality</li>
+                        <li>📱 Multi-platform Support (Web + Mobile)</li>
+                        <li>⚡ High Performance & Scalability</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Key Features -->
+            <section>
+                <h2>Second Prototype Features</h2>
+                <div class="two-column">
+                    <div class="column">
+                        <ul>
+                            <li class="fragment">🌐 API Gateway Integration</li>
+                            <li class="fragment">🔒 Enhanced Security (JWT)</li>
+                            <li class="fragment">🔄 Service Orchestration</li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <ul>
+                            <li class="fragment">⚖️ Load Balancing</li>
+                            <li class="fragment">📊 Monitoring & Health Checks</li>
+                            <li class="fragment">📱 Multi-Platform Support</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Why Tussi? -->
+            <section data-background-color="#ff1493">
+                <h2 style="color: #000;">Why "Tussi"?</h2>
+                <blockquote style="color: #000;">
+                    "Intentionally provocative and disruptive—a metaphor to positively alter shopping experiences, creating emotional, sensory, and memorable interactions."
+                </blockquote>
+                <div class="fragment">
+                    <p style="color: #000;"><strong>Target Audience:</strong> Young adults interested in unconventional wellness, sustainable fashion, and digital art</p>
+                </div>
+            </section>
+
+            <!-- Architecture Overview -->
+            <section>
+                <h2>Architecture Overview</h2>
+                <img src="ArchitectureC&C.png" alt="Architecture Diagram" class="architecture-diagram">
+            </section>
+
+            <!-- Component & Connector View -->
+            <section>
+                <h2>Component & Connector View</h2>
+                <div class="small-text">
+                    <div class="two-column">
+                        <div class="column">
+                            <h3>Components (10)</h3>
+                            <ul>
+                                <li>🌐 Web Client</li>
+                                <li>📱 Mobile Client</li>
+                                <li>⚖️ Load Balancer (Nginx)</li>
+                                <li>🚪 API Gateway Service</li>
+                                <li>🔐 Auth Service</li>
+                            </ul>
+                        </div>
+                        <div class="column">
+                            <ul>
+                                <li>📦 Products API</li>
+                                <li>🛒 Cart API</li>
+                                <li>🗄️ Auth Database (PostgreSQL)</li>
+                                <li>🗄️ Products Database (PostgreSQL)</li>
+                                <li>🗄️ Cart Database (MongoDB)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="fragment">
+                        <h3>Connectors (10)</h3>
+                        <p>HTTPS/HTTP, REST APIs, TCP Database Connections</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Layered Architecture -->
+            <section>
+                <h2>Layered (Tier & Layer) View</h2>
+                <div class="small-text">
+                    <table>
+                        <tr>
+                            <th>Tier 1: Presentation</th>
+                            <td>Web Client (Next.js), Mobile Client (React Native)</td>
+                        </tr>
+                        <tr>
+                            <th>Tier 2: Communication</th>
+                            <td>API Gateway (Node.js/Express)</td>
+                        </tr>
+                        <tr>
+                            <th>Tier 3: Logic</th>
+                            <td>Controllers, Services, Models</td>
+                        </tr>
+                        <tr>
+                            <th>Tier 4: Data</th>
+                            <td>PostgreSQL, MongoDB, Mobile Local Storage</td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Deployment Structure -->
+            <section>
+                <h2>Deployment Structure</h2>
+                <img src="decomposition.png" alt="Deployment Diagram" class="architecture-diagram">
+            </section>
+
+            <!-- Security Scenarios -->
+            <section>
+                <h2>Security Scenarios</h2>
+                <div class="fragment">
+                    <h3>🛡️ Man-in-the-Middle Attack Protection</h3>
+                    <p class="small-text">TLS/SSL encryption prevents data interception</p>
+                </div>
+                <div class="fragment">
+                    <h3>🚫 API Gateway Bypass Prevention</h3>
+                    <p class="small-text">Private networks isolate backend services</p>
+                </div>
+                <div class="fragment">
+                    <h3>🔒 Frontend Compromise Containment</h3>
+                    <p class="small-text">Network segmentation prevents lateral movement</p>
+                </div>
+            </section>
+
+            <!-- Performance Scenarios -->
+            <section>
+                <h2>Performance Scenarios</h2>
+                <div class="fragment">
+                    <h3>⚖️ Load Balancing</h3>
+                    <p class="small-text">4 API Gateway replicas with round-robin distribution</p>
+                </div>
+                <div class="fragment">
+                    <h3>📈 Scalability</h3>
+                    <p class="small-text">Horizontal scaling for traffic surges</p>
+                </div>
+                <div class="fragment">
+                    <h3>🛡️ DDoS Protection</h3>
+                    <p class="small-text">Rate limiting and request throttling</p>
+                </div>
+            </section>
+
+            <!-- Architectural Styles -->
+            <section>
+                <h2>Architectural Styles</h2>
+                <ul>
+                    <li class="fragment"><strong>Layered (N-Tier):</strong> 4-tier separation of concerns</li>
+                    <li class="fragment"><strong>Client-Server:</strong> Decoupled client and server components</li>
+                    <li class="fragment"><strong>Microservices:</strong> Independently deployable services</li>
+                    <li class="fragment"><strong>Polyglot:</strong> Multiple languages and databases</li>
+                </ul>
+            </section>
+
+            <!-- Architectural Patterns -->
+            <section>
+                <h2>Key Architectural Patterns</h2>
+                <div class="two-column small-text">
+                    <div class="column">
+                        <ul>
+                            <li class="fragment">🚪 API Gateway Pattern</li>
+                            <li class="fragment">⚖️ Load Balancer Pattern</li>
+                            <li class="fragment">🗄️ Database per Service</li>
+                            <li class="fragment">🖥️ Server-Side Rendering</li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <ul>
+                            <li class="fragment">🔥 Active Redundancy (Hot Spare)</li>
+                            <li class="fragment">🔄 Passive Redundancy (Warm Spare)</li>
+                            <li class="fragment">❄️ Cold Spare (On-Demand)</li>
+                            <li class="fragment">🔒 Secure Channel Pattern</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Technology Stack -->
+            <section>
+                <h2>Technology Stack</h2>
+                <div class="two-column">
+                    <div class="column">
+                        <h3>Frontend</h3>
+                        <ul>
+                            <li>🌐 Next.js (Web)</li>
+                            <li>📱 React Native (Mobile)</li>
+                            <li>🎨 Tailwind CSS</li>
+                            <li>📝 TypeScript</li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <h3>Backend</h3>
+                        <ul>
+                            <li>🐍 FastAPI (Python)</li>
+                            <li>🟢 Node.js/Express</li>
+                            <li>🐘 PostgreSQL</li>
+                            <li>🍃 MongoDB</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Deployment -->
+            <section>
+                <h2>Deployment</h2>
+                <div class="small-text">
+                    <h3>🐳 Docker Containerization</h3>
+                    <pre><code class="bash">
+# Build and deploy
+docker-compose build
+docker-compose up -d
+
+# Scale API Gateway
+docker-compose up -d --scale api-gateway=4
+                    </code></pre>
+                    <div class="fragment">
+                        <h3>📊 Service Ports</h3>
+                        <p>Load Balancer: 80/443 | Frontend: 3000 | K6 Testing: 6565</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Testing -->
+            <section>
+                <h2>Testing Strategy</h2>
+                <div class="fragment">
+                    <h3>📊 Load Testing with K6</h3>
+                    <img src="load.png" alt="Load Testing Results" style="max-width: 60%;">
+                </div>
+                <div class="fragment small-text">
+                    <p>7-stage performance testing: Warm-up → Ramp-up → Sustained → Stress → Spike → Recovery → Cool-down</p>
+                </div>
+            </section>
+
+            <!-- Monitoring -->
+            <section>
+                <h2>Monitoring & Health Checks</h2>
+                <div class="small-text">
+                    <pre><code class="bash">
+# Health endpoints
+curl https://localhost:443/health          # Load Balancer
+curl http://localhost:9000/health         # API Gateway
+curl http://localhost:8000/health         # Auth Service
+
+# View logs
+docker-compose logs -f api-gateway
+docker-compose logs -f auth-service
+                    </code></pre>
+                </div>
+            </section>
+
+            <!-- Network Segmentation -->
+            <section>
+                <h2>Network Segmentation</h2>
+                <div class="two-column small-text">
+                    <div class="column">
+                        <h3>🌐 Public Network</h3>
+                        <ul>
+                            <li>Load Balancer</li>
+                            <li>Frontend</li>
+                            <li>API Gateway</li>
+                            <li>K6 Testing</li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <h3>🔒 Private Network</h3>
+                        <ul>
+                            <li>Auth Service</li>
+                            <li>Products API</li>
+                            <li>Cart API</li>
+                            <li>All Databases</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="fragment"><strong>Security:</strong> Private network is completely isolated from external access</p>
+            </section>
+
+            <!-- Mobile Application -->
+            <section>
+                <h2>📱 Mobile Application</h2>
+                <div class="fragment">
+                    <h3>React Native Cross-Platform</h3>
+                    <ul>
+                        <li>🍎 iOS Native</li>
+                        <li>🤖 Android Native</li>
+                        <li>💾 Offline Capabilities (AsyncStorage)</li>
+                        <li>🔄 Real-time API Synchronization</li>
+                    </ul>
+                </div>
+                <div class="fragment small-text">
+                    <pre><code class="bash">
+# Mobile development
+npm install
+npx react-native run-ios     # iOS
+npx react-native run-android # Android
+                    </code></pre>
+                </div>
+            </section>
+
+            <!-- Quality Attributes -->
+            <section>
+                <h2>Quality Attributes Achieved</h2>
+                <div class="two-column small-text">
+                    <div class="column">
+                        <h3>🔒 Security</h3>
+                        <ul>
+                            <li>End-to-end TLS encryption</li>
+                            <li>JWT authentication</li>
+                            <li>Network isolation</li>
+                            <li>Rate limiting</li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <h3>⚡ Performance</h3>
+                        <ul>
+                            <li>Load balancing</li>
+                            <li>Horizontal scaling</li>
+                            <li>Health monitoring</li>
+                            <li>Fault tolerance</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Performance Metrics -->
+            <section>
+                <h2>Performance Metrics</h2>
+                <div class="small-text">
+                    <table>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Target</th>
+                            <th>Achievement</th>
+                        </tr>
+                        <tr>
+                            <td>Response Time (95th percentile)</td>
+                            <td>&lt; 2s</td>
+                            <td>✅ Achieved</td>
+                        </tr>
+                        <tr>
+                            <td>Error Rate</td>
+                            <td>&lt; 0.1%</td>
+                            <td>✅ Achieved</td>
+                        </tr>
+                        <tr>
+                            <td>Success Rate</td>
+                            <td>&gt; 95%</td>
+                            <td>✅ Achieved</td>
+                        </tr>
+                        <tr>
+                            <td>Availability</td>
+                            <td>&gt; 99.9%</td>
+                            <td>✅ Achieved</td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Project Structure -->
+            <section>
+                <h2>Project Structure</h2>
+                <div class="smaller-text">
+                    <pre><code class="text">
+TUSSI/
+├── api-gateway/              # ⭐ NEW - API Gateway Service
+├── frontend/                 # Next.js Frontend Application
+├── mobile-app/              # ⭐ NEW - React Native Mobile App
+├── services/                 # Microservices Directory
+│   ├── auth-service/        # Authentication Microservice
+│   ├── cart-api/            # Cart Management Microservice
+│   └── products-api/        # Products Catalog Microservice
+├── load-balancer/           # ⭐ NEW - Nginx Load Balancer
+├── tests/k6/               # ⭐ NEW - Load Testing
+├── kubernetes/             # K8s deployment configs
+├── docker-compose.yml      # Container orchestration
+└── README.md              # Documentation
+                    </code></pre>
+                </div>
+            </section>
+
+            <!-- API Endpoints -->
+            <section>
+                <h2>API Endpoints</h2>
+                <div class="small-text">
+                    <div class="two-column">
+                        <div class="column">
+                            <h3>🔐 Authentication</h3>
+                            <ul>
+                                <li>POST /api/auth/register</li>
+                                <li>POST /api/auth/login</li>
+                                <li>GET /api/auth/me</li>
+                            </ul>
+                            
+                            <h3>📦 Products</h3>
+                            <ul>
+                                <li>GET /api/products</li>
+                                <li>GET /api/products/{id}</li>
+                            </ul>
+                        </div>
+                        <div class="column">
+                            <h3>🛒 Cart</h3>
+                            <ul>
+                                <li>GET /api/cart</li>
+                                <li>POST /api/cart/add</li>
+                                <li>POST /api/cart/checkout</li>
+                            </ul>
+                            
+                            <h3>🏥 Health</h3>
+                            <ul>
+                                <li>GET /health</li>
+                                <li>GET /api/health</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Future Enhancements -->
+            <section>
+                <h2>Future Enhancements</h2>
+                <ul>
+                    <li class="fragment">☁️ Kubernetes Orchestration</li>
+                    <li class="fragment">📊 Advanced Monitoring (Prometheus, Grafana)</li>
+                    <li class="fragment">🔄 CI/CD Pipeline</li>
+                    <li class="fragment">🌍 Multi-region Deployment</li>
+                    <li class="fragment">🤖 Auto-scaling Policies</li>
+                    <li class="fragment">📈 Advanced Analytics</li>
+                </ul>
+            </section>
+
+            <!-- Conclusion -->
+            <section data-background-color="#ff1493">
+                <h2 style="color: #000;">Conclusion</h2>
+                <div style="color: #000;">
+                    <p class="fragment"><strong>Tussi</strong> demonstrates modern microservices architecture</p>
+                    <p class="fragment">✅ Scalable, Secure, and High-Performance</p>
+                    <p class="fragment">✅ Multi-platform Support (Web + Mobile)</p>
+                    <p class="fragment">✅ Production-ready with Monitoring & Testing</p>
+                    <p class="fragment">✅ Industry Best Practices Applied</p>
+                </div>
+            </section>
+
+            <!-- Thank You -->
+            <section data-background-color="#000000">
+                <img src="logo.png" alt="Tussi Logo" style="max-width: 200px;">
+                <h1 style="color: #ff1493;">Thank You!</h1>
+                <h2>Questions?</h2>
+                <p class="small-text">Team 1a - Software Architecture Project</p>
+                <p class="smaller-text">Xamir Ernesto Rojas Gamboa | Juan Sebastian Medina Pinto | Juan Manuel Pérez Ordoñez</p>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/plugin/notes/notes.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/plugin/markdown/markdown.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            transition: 'slide',
+            transitionSpeed: 'default',
+            backgroundTransition: 'fade',
+            controls: true,
+            progress: true,
+            center: true,
+            touch: true,
+            loop: false,
+            rtl: false,
+            fragments: true,
+            embedded: false,
+            help: true,
+            pause: true,
+            showNotes: false,
+            autoPlayMedia: null,
+            preloadIframes: null,
+            autoAnimate: true,
+            autoAnimateMatcher: null,
+            autoAnimateEasing: 'ease',
+            autoAnimateDuration: 1.0,
+            autoAnimateUnmatched: true,
+            autoAnimateStyles: [
+                'opacity',
+                'color',
+                'background-color',
+                'padding',
+                'font-size',
+                'line-height',
+                'letter-spacing',
+                'border-width',
+                'border-color',
+                'border-radius',
+                'outline',
+                'outline-offset'
+            ],
+            plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+        });
+    </script>
+</body>
+</html> 
