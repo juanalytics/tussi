@@ -814,30 +814,6 @@ The system ensures high availability for the API Gateway using an active redunda
 
 This "hot spare" approach minimizes downtime and ensures that the system can handle instance failures without impacting users.
 
-### Passive Redundancy (Warm Spare) Pattern
-
-For stateful components like the products database, the system uses a passive redundancy (or "warm spare") strategy focused on rapid recovery.
-- **Backup**: A complete dump of the products database is available in `products_dump.sql`. This serves as the "spare" component.
-- **Recovery Script**: A recovery script, `scripts/restore-products-db.sh`, is provided to automate the restoration process.
-- **Manual Intervention**: If the primary `products-db` container suffers from data corruption or a critical failure that requires a restore, an operator can execute the script to quickly rebuild the database state from the backup.
-
-This "warm spare" is not running continuously, so it doesn't consume resources. It is "warm" because the backup is ready and the restoration process is scripted, minimizing the recovery time objective (RTO). To recover the database, run:
-```bash
-./scripts/restore-products-db.sh
-```
-
-### Cold Spare (On-Demand Service) Pattern
-
-The system uses a cold spare pattern for on-demand services that are not required for core application functionality. The `k6` load testing service is implemented as a cold spare.
-- **Inactive by Default**: The `k6` service is defined in the `docker-compose.yml` but assigned to a `testing` profile. It remains completely inactive and consumes no resources during normal system operation.
-- **Manual Activation**: To bring the service online for performance testing, it must be activated manually by an operator. This is done by including the `testing` profile in the Docker Compose command.
-- **On-Demand Availability**: This pattern keeps the production environment lean and reduces the potential attack surface by not running unnecessary services, while still making powerful tools available on demand.
-
-To activate the `k6` load testing service, run:
-```bash
-docker-compose --profile testing up -d
-```
-
 ### Secure Channel Pattern Architectural Tactic: Encrypt Data (Resist Attack)
 
 To guarantee confidentiality and integrity, all data transmitted between clients and the API Gateway is encrypted using TLS/SSL (HTTPS). This application of the Secure Channel pattern is a critical security tactic to resist man-in-the-middle attacks and prevent eavesdropping on sensitive information, especially over untrusted networks.
@@ -849,6 +825,7 @@ The Load Balancer (Nginx) serves as the single entry point for all external traf
 ### Reverse Proxy Pattern Architectural Tactic: Limit Access (Resist Attack)
 
 The system implements a two-tier reverse proxy architecture:
+
 1. **Load Balancer**: Acts as the primary reverse proxy, handling SSL termination and routing to API Gateway instances
 2. **API Gateway**: Acts as an internal reverse proxy, forwarding authenticated requests to backend microservices
 
