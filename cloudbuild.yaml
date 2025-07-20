@@ -1,5 +1,9 @@
 timeout: "1200s"  # 20 minutes
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+
 steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/api-gateway:$SHORT_SHA', '.']
