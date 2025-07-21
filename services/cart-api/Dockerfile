@@ -2,11 +2,11 @@ FROM node:18-alpine
 
 WORKDIR /usr/src/app
 
-# Install dependencies
+# Copy package.json and package-lock.json first for better caching
 COPY package*.json ./
 RUN npm ci --only=production
 
-# Copy source code
+# Copy the rest of the source code
 COPY . .
 
 # Expose API port

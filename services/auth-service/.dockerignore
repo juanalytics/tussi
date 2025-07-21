@@ -1,8 +1,12 @@
-node_modules
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
 .git
 .gitignore
 docker-compose.yml
 tests
 docs
 *.md
-.env
+.env 
