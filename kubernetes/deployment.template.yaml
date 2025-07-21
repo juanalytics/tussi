@@ -28,8 +28,8 @@ spec:
               memory: "1Gi"
           env:
             - name: NEXT_PUBLIC_AUTH_API_URL
-              value: "https://api.example.com/auth"
+              value: "http://auth-service"
             - name: NEXT_PUBLIC_PRODUCTS_API_URL
-              value: "https://api.example.com/products"
+              value: "http://products-service"
             - name: NEXT_PUBLIC_CART_API_URL
-              value: "https://api.example.com/cart" 
+              value: "http://cart-service" 

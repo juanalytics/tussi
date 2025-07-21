@@ -13,3 +13,5 @@ sed "s/REPLACE_WITH_TAG/$LATEST_TAG/" deployment.template.yaml > deployment.yaml
 echo "✅ Updated deployment.yaml with latest tag: $LATEST_TAG"
 echo "You can now deploy it manually using:"
 echo "kubectl apply -f deployment.yaml && kubectl apply -f service.yaml"
+
+kubectl apply -f deployment.yaml && kubectl apply -f service.yaml
