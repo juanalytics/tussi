@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:REPLACE_WITH_TAG
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          env:
+            - name: NEXT_PUBLIC_AUTH_API_URL
+              value: "https://api.example.com/auth"
+            - name: NEXT_PUBLIC_PRODUCTS_API_URL
+              value: "https://api.example.com/products"
+            - name: NEXT_PUBLIC_CART_API_URL
+              value: "https://api.example.com/cart" 
