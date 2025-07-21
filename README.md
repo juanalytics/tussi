@@ -410,7 +410,7 @@ graph TD
 
 **Infrastructure:**
 
-- **Network Segmentation**: 
+- **Network Segmentation**:
   - **Public Network**: Load balancer, frontend, API Gateway, K6 testing
   - **Private Network**: All backend services and databases (internal=true, no external access)
 - **Storage**: Docker volumes for database persistence
@@ -769,6 +769,16 @@ The product database experiences lockups when there are concurrent massive reads
 
 ---
 
+## 5. Availability Tactics
+
+### Health Checks (Detect Faults)
+
+Health Endpoint Monitoring Provides a way to monitor the health or status of a system by exposing an endpoint that's specifically designed for that purpose. You can use this endpoint to manage your workload's health and for alerting and dashboarding. You can also use it as a signal for self-healing remediation
+
+### Transactions Scenario (Prevent Faults)
+
+Compensating Transaction Provides a mechanism to recover from failures by reversing the effects of previously applied actions. This pattern addresses malfunctions in critical workload paths by using compensation actions, which can involve processes like directly rolling back data changes, breaking transaction locks, or even executing native system behavior to reverse the effect.
+
 ## 5. Reliability Scenarios
 
 ### Replication Pattern Scenario
@@ -777,8 +787,8 @@ Create and Mantain copies (repliclas) of data or services across multiple compon
 
 By default, GKE does not do “synchronous replication” of its nodes, but manages the node pools as Compute Engine's **Managed Instance Groups (MIGs)** and maintains the desired state using an **eventual-consistent model**:
 
-* ** **Asynchronous and periodic**: the MIG controller continuously inspects (in periodic loops) how many VMs there should be based on your configuration and creates or deletes instances to bring the actual state closer to the desired state, without blocking requests or waiting for responses from all nodes at once.
-* Kubernetes control loops**: Similarly, Kubernetes (including cluster-autoscaler) works with “controllers” that read the desired state from the API, compare with the actual state and act asynchronously to reconcile differences, repeating this process at regular intervals ([Kubernetes]
+- ** **Asynchronous and periodic**: the MIG controller continuously inspects (in periodic loops) how many VMs there should be based on your configuration and creates or deletes instances to bring the actual state closer to the desired state, without blocking requests or waiting for responses from all nodes at once.
+- Kubernetes control loops**: Similarly, Kubernetes (including cluster-autoscaler) works with “controllers” that read the desired state from the API, compare with the actual state and act asynchronously to reconcile differences, repeating this process at regular intervals ([Kubernetes]
 
 Therefore, **node replication** (incorporation, repair or scaling) in GKE is **asynchronous** and is performed by **periodic reconciliation**, providing eventual consistency behavior.
 
@@ -833,6 +843,7 @@ The web application is built with Next.js and leverages Server-Side Rendering (S
 ### Active Redundancy (Hot Spare) Pattern
 
 The system ensures high availability for the API Gateway using an active redundancy pattern with hot spares.
+
 - **Replication**: The `api-gateway` service can be horizontally scaled to run multiple instances. To run 4 instances, for example, use the command: `docker-compose up -d --scale api-gateway=4`. All instances are active and running simultaneously.
 - **Load Balancing**: An Nginx load balancer sits in front of the API Gateway replicas and distributes incoming traffic among them. Docker's internal DNS resolves the `api-gateway` service name to the different container IPs, and Nginx uses this to perform round-robin load balancing.
 - **Fault Tolerance**: If one of the API Gateway instances fails or becomes unresponsive, Nginx will be unable to connect to it and will automatically stop routing traffic to that instance. Requests will be seamlessly redirected to the remaining healthy instances.
@@ -859,6 +870,7 @@ This dual-layer approach completely hides the internal network topology and prev
 ### Network Segmentation Pattern Architectural Tactic: Limit Access (Resist Attack)
 
 The system employs strict network segmentation using Docker's networking features:
+
 - **Public Network**: Contains load balancer, frontend, API Gateway replicas, and K6 testing - accessible from external sources
 - **Private Network**: Contains all backend services and databases with `internal: true` flag - completely isolated from external access
 - **Cross-Network Communication**: Only the API Gateway can bridge between networks, acting as a controlled gateway
@@ -1014,7 +1026,6 @@ The system includes automated load testing capabilities:
 docker-compose exec k6 k6 run /scripts/test.js
 ```
 
-
 **Description:**
 This load test exercises the `/products` endpoint through a controlled sequence of traffic patterns to validate performance, scalability, and resilience. It consists of the following seven stages (implemented in k6):
 
@@ -1041,9 +1052,9 @@ This load test exercises the `/products` endpoint through a controlled sequence 
 
 During the test, we collect key metrics and enforce these thresholds:
 
-* **95th-percentile response time** must remain below 2 s.
-* **Error rate** (HTTP failures) must stay under 0.1%.
-* **Success rate** (HTTP 2xx responses) must exceed 95%.
+- **95th-percentile response time** must remain below 2 s.
+- **Error rate** (HTTP failures) must stay under 0.1%.
+- **Success rate** (HTTP 2xx responses) must exceed 95%.
 
 ![load](load.png)
 ![load1](load1.png)
@@ -1052,6 +1063,7 @@ During the test, we collect key metrics and enforce these thresholds:
 The accompanying chart shows a 10-sample moving average of HTTP request durations, demonstrating how the endpoint’s latency evolves across each phase. This comprehensive profile uncovers potential performance regressions, validates SLAs, and ensures the products API can handle real-world traffic surges.
 
 **K6 Test Features:**
+
 - **Stress Testing**: Simulates high concurrent user loads
 - **Performance Metrics**: Response time, throughput, error rates
 - **Scalability Validation**: Tests system behavior under load
