@@ -7,13 +7,13 @@ RUN apk add --no-cache curl
 # Crear directorio de trabajo
 WORKDIR /app
 
-# Copiar package.json y package-lock.json
+# Copiar package.json y package-lock.json primero para aprovechar el cache
 COPY package*.json ./
 
 # Instalar dependencias
 RUN npm ci --only=production
 
-# Copiar código fuente
+# Copiar el resto del código fuente
 COPY . .
 
 # Crear usuario no-root

@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  frontend-dev:
+    build:
+      context: .
+      target: builder
+    image: tussi-frontend-dev
+    command: pnpm run dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app
+    environment:
+      - NEXT_PUBLIC_AUTH_API_URL
+      - NEXT_PUBLIC_PRODUCTS_API_URL
+      - NEXT_PUBLIC_CART_API_URL
+    # Optionally, add NODE_ENV=development
+    # environment:
+    #   - NODE_ENV=development
+
+  frontend-prod:
+    build:
+      context: .
+    image: tussi-frontend-prod
+    command: pnpm run start
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_AUTH_API_URL
+      - NEXT_PUBLIC_PRODUCTS_API_URL
+      - NEXT_PUBLIC_CART_API_URL
+    # Optionally, add NODE_ENV=production
+    # environment:
+    #   - NODE_ENV=production 

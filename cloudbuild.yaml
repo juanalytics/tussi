@@ -32,6 +32,10 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:$SHORT_SHA', '.']
     dir: 'frontend'
+    env:
+      - NEXT_PUBLIC_AUTH_API_URL=https://api.example.com/auth
+      - NEXT_PUBLIC_PRODUCTS_API_URL=https://api.example.com/products
+      - NEXT_PUBLIC_CART_API_URL=https://api.example.com/cart
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:$SHORT_SHA']
 
