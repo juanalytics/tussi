@@ -49,8 +49,4 @@ images:
   - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/auth-service:$SHORT_SHA'
   - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/cart-api:$SHORT_SHA'
   - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/products-api:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:$SHORT_SHA'
-
-volumes:
-  - name: 'kaniko-cache'
-    path: /cache 
+  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:$SHORT_SHA' 
