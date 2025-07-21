@@ -521,7 +521,7 @@ graph TD
 
 ### Security Scenarios
 
-#### Man in the middle Attack
+#### Man in the middle Attack (SSL)
 
 ```mermaid
 graph LR
@@ -553,7 +553,7 @@ An attacker on an insecure network (e.g., public Wi-Fi) attempts to perform a ma
 
 ![https](https.png)
 
-#### Attempt to Bypass API Gateway
+#### Attempt to Bypass API Gateway (Reverse Proxy)
 
 ```mermaid
 graph LR
@@ -583,7 +583,7 @@ A malicious actor, having discovered the potential internal IP address of a micr
 | **Response**           | The request fails because the private network is not exposed. The API Gateway is the only component listening for external traffic, and it validates, authenticates, and sanitizes all requests before forwarding them. |
 | **Response metric**    | The attack surface is minimized by exposing only one entry point. The number of directly accessible internal service endpoints from an external source is zero. |
 
-### Frontend Compromised
+### Frontend Compromised (Network Segmentation)
 
 ```mermaid
 graph LR
@@ -613,7 +613,7 @@ An attacker successfully exploits a vulnerability in the `frontend` service cont
 | **Response**           | The connection attempt from `frontend` to `auth-db` is blocked at the Docker network layer. Because the containers do not share a common network and the `private` network is isolated, no route exists between them. Only the API Gateway, which is connected to both, can bridge this gap. |
 | **Response metric**    | Lateral movement from the presentation tier to the data tier is prevented. The number of unauthorized network paths between the `public` and `private` networks is zero. The blast radius of the frontend compromise is contained. |
 
-#### Product Modification for Fraud (Auditability)
+#### Product Modification for Fraud (Event Sourcing)
 
 ```mermaid
 graph LR
@@ -647,7 +647,7 @@ An administrator, using legitimate credentials, secretly changes the price of a 
 
 ### Performance Scenarios
 
-#### API Gateway Instance Fail
+#### API Gateway Instance Fail (Replication)
 
 ```mermaid
 graph LR
@@ -677,7 +677,7 @@ During a period of high traffic, one of the four replicated API Gateway containe
 | **Response**           | The load balancer, which continuously monitors the health of upstream services, detects that an instance is down. It immediately removes the failed instance from the pool and routes all incoming traffic to the remaining healthy instances. |
 | **Response metric**    | System availability is maintained, with zero failed requests from the client's perspective after a brief connection-retry interval. The overall service experiences minimal to no degradation.             |
 
-#### Increase on Concurrent Users
+#### Increase on Concurrent Users (Load Balancer)
 
 ```mermaid
 graph LR
@@ -707,7 +707,7 @@ A successful marketing campaign results in a massive, sudden surge in concurrent
 | **Response**           | An operator scales the number of replicas for the `api-gateway` and `products-api` services (e.g., using `docker-compose up --scale api-gateway=8`). The load balancer automatically discovers the new instances as they become healthy and begins distributing the traffic among the expanded pool, thus reducing the load on each individual container. |
 | **Response metric**    | The average API response time remains below the 500ms target, and the CPU utilization across all instances is kept below 80%. The system successfully handles the increased load without a drop in performance.                                                                                                                                                   |
 
-#### Denial Of Service Attack
+#### Denial Of Service Attack (Rate Limiting)
 
 ```mermaid
 graph LR
@@ -737,7 +737,7 @@ A malicious actor or a poorly configured script begins to flood the `/api/auth/l
 | **Response**           | The API Gateway tracks the number of requests per IP. After the configured limit for authentication endpoints (5 requests per window) is exceeded, the gateway immediately begins rejecting subsequent requests from that IP with an HTTP 429 "Too Many Requests" error. |
 | **Response metric**    | The `auth-service` is protected from the flood and its resources are not exhausted. The service remains fully available to legitimate users. The percentage of malicious requests that are successfully blocked after the limit is reached is 100%. |
 
-#### Bottleneck on Write and Reads in Products database
+#### Bottleneck on Write and Reads in Products database (CQRS)
 
 ```mermaid
 graph LR
@@ -768,6 +768,31 @@ The product database experiences lockups when there are concurrent massive reads
 | **Response metric**    | Reads in < 350 ms; update confirmation in < 1.5 s; no deadlocks or write timeouts.      |
 
 ---
+
+## 5. Reliability Scenarios
+
+### Replication Pattern Scenario
+
+Create and Mantain copies (repliclas) of data or services across multiple components or nodes
+
+By default, GKE does not do “synchronous replication” of its nodes, but manages the node pools as Compute Engine's **Managed Instance Groups (MIGs)** and maintains the desired state using an **eventual-consistent model**:
+
+* ** **Asynchronous and periodic**: the MIG controller continuously inspects (in periodic loops) how many VMs there should be based on your configuration and creates or deletes instances to bring the actual state closer to the desired state, without blocking requests or waiting for responses from all nodes at once.
+* Kubernetes control loops**: Similarly, Kubernetes (including cluster-autoscaler) works with “controllers” that read the desired state from the API, compare with the actual state and act asynchronously to reconcile differences, repeating this process at regular intervals ([Kubernetes]
+
+Therefore, **node replication** (incorporation, repair or scaling) in GKE is **asynchronous** and is performed by **periodic reconciliation**, providing eventual consistency behavior.
+
+#### Active Redundancy (Hot Spare) Pattern
+
+On GKE, we implement an Active Redundancy (Hot Spare) pattern by running your service as at least two pod replicas—ideally spread across separate node pools or zones—that each ingest the same input stream (for example, by subscribing to the same Pub/Sub topic) and checkpoint state continuously to a shared, highly‑available datastore (Cloud Spanner or a regional Cloud SQL instance with synchronous replication). Both pods are kept “hot” and ready behind a single Kubernetes Service, so even though one is effectively “active” at any moment, its spare sibling has already processed all the same events and holds an up‑to‑date view of the state. If the primary pod or its node fails (detected instantly via liveness/readiness probes), Kubernetes immediately routes traffic to the surviving pod—which already has the latest state—ensuring failover with zero data loss and no disruption to your workload.
+
+#### Passive Redundancy (Warm Spare) Pattern
+
+We implement a Warm Spare by running one “standby” replica of your service on a dedicated node pool tainted with NoSchedule so it never accepts production traffic, but it still stays “warm” by subscribing to the same event streams or database change feeds and keeping its in‑memory state or cache up‑to‑date. The primary Deployment—with multiple replicas—is the only one selected by your Kubernetes Service, so it handles all live requests. If a health check or external monitor detects the primary is down, you simply remove the taint (or patch the Service’s selector) to promote the standby pod into the Service, instantly routing traffic to it. Because that pod has already been synchronizing state in the background, it can begin serving without data loss and with only a minimal hand‑off delay.
+
+### Service Discovery Pattern
+
+In GKE’s VPC‑native networking, each node automatically receives an alias IP range from the secondary subnet and each pod is assigned an IP from that block. When autoscaling adds new nodes, the control plane reserves a fresh alias IP range, updates the network routes, and pods can be scheduled immediately with new IPs. If a node fails, Auto Repair recreates the VM—reclaiming or reallocating its alias block—and Kubernetes transparently reschedules pods onto healthy nodes, updating their pod IPs as needed. During upgrades, GKE performs a surge upgrade by cordoning and draining old nodes, provisioning replacement nodes with new alias ranges, moving workloads over, and then removing the old nodes; throughout this process, Service ClusterIPs remain stable, ensuring uninterrupted connectivity without manual network reconfiguration.
 
 ## 5. Architectural Styles
 
