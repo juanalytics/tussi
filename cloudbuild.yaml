@@ -3,6 +3,12 @@ timeout: "1200s"  # 20 minutes
 options:
   logging: CLOUD_LOGGING_ONLY
 
+images:
+  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/api-gateway:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/auth-service:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/cart-api:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/products-api:$SHORT_SHA'
 
 steps:
   - name: 'gcr.io/cloud-builders/docker'
@@ -43,21 +49,4 @@ steps:
       ]
     volumes:
       - name: 'kaniko-cache'
-        path: /cache
-
-  # Dummy step to satisfy Cloud Build's volume requirement
-  - name: 'alpine'
-    entrypoint: 'sh'
-    args:
-      - '-c'
-      - 'ls /cache || true'
-    volumes:
-      - name: 'kaniko-cache'
-        path: /cache
-
-images:
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/api-gateway:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/auth-service:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/cart-api:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/products-api:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:$SHORT_SHA' 
+        path: /cache 
