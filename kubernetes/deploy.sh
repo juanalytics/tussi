@@ -14,6 +14,6 @@ echo "✅ Updated deployment.yaml with latest tag: $LATEST_TAG"
 echo "🚀 Deploying to GKE..."
 
 kubectl apply -f deployment.yaml
-kubectl apply -f service.yaml
+kubectl apply -f frontend-service.yaml
 
 echo "✅ Deployment applied. Use 'kubectl get services' to check external IP."
