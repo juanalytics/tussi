@@ -40,20 +40,6 @@ spec:
             cpu: "250m"
             memory: "256Mi"
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: api-gateway-service
-  namespace: tussi-services
-  labels:
-    app: api-gateway
-spec:
-  selector:
-    app: api-gateway
-  ports:
-  - port: 80
-    targetPort: 9000
----
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
