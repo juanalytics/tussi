@@ -1,9 +1,12 @@
 node_modules
-*.log
+.next
 .git
 .gitignore
 docker-compose.yml
 tests
 docs
 *.md
-.env 
+.env
+*.log
+coverage
+.DS_Store 

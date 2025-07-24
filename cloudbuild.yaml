@@ -3,6 +3,11 @@ timeout: "1200s"  # 20 minutes
 options:
   logging: CLOUD_LOGGING_ONLY
 
+images:
+  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/api-gateway:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/auth-service:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/cart-api:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/products-api:$SHORT_SHA'
 
 steps:
   - name: 'gcr.io/cloud-builders/docker'
@@ -29,15 +34,13 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/products-api:$SHORT_SHA']
 
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:$SHORT_SHA', '.']
-    dir: 'frontend'
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:$SHORT_SHA']
-
-images:
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/api-gateway:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/auth-service:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/cart-api:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/products-api:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:$SHORT_SHA' 
+  - name: 'gcr.io/kaniko-project/executor:latest'
+    args:
+      [
+        '--destination=us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:$SHORT_SHA',
+        '--context=dir://frontend',
+        '--dockerfile=frontend/Dockerfile',
+        '--build-arg', 'NEXT_PUBLIC_AUTH_API_URL=https://api.example.com/auth',
+        '--build-arg', 'NEXT_PUBLIC_PRODUCTS_API_URL=https://api.example.com/products',
+        '--build-arg', 'NEXT_PUBLIC_CART_API_URL=https://api.example.com/cart'
+      ] 
