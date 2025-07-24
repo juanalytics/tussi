@@ -25,9 +25,18 @@ spec:
           value: "password"
         - name: POSTGRES_DB
           value: "products"
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
         volumeMounts:
         - name: products-db-storage
-          mountPath: /var/lib/postgresql/data
+          mountPath: /var/lib/postgresql/data/pgdata
         livenessProbe:
           exec:
             command:
