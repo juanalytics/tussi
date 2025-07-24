@@ -3,13 +3,6 @@ timeout: "1200s"  # 20 minutes
 options:
   logging: CLOUD_LOGGING_ONLY
 
-images:
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/api-gateway:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/auth-service:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/cart-api:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/products-api:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:$SHORT_SHA'
-
 steps:
   # Build & push api-gateway with Kaniko cache
   - name: 'gcr.io/kaniko-project/executor:latest'
