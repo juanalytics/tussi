@@ -8,39 +8,73 @@ images:
   - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/auth-service:$SHORT_SHA'
   - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/cart-api:$SHORT_SHA'
   - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/products-api:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:$SHORT_SHA'
 
 steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/api-gateway:$SHORT_SHA', '.']
-    dir: 'api-gateway'
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/api-gateway:$SHORT_SHA']
+  # Build & push api-gateway with Kaniko cache
+  - name: 'gcr.io/kaniko-project/executor:latest'
+    args:
+      [
+        '--destination=us-central1-docker.pkg.dev/tussi-466501/microservices-repo/api-gateway:$SHORT_SHA',
+        '--destination=us-central1-docker.pkg.dev/tussi-466501/microservices-repo/api-gateway:latest',
+        '--context=dir://api-gateway',
+        '--dockerfile=Dockerfile',
+        '--cache=true',
+        '--cache-ttl=24h',
+        '--cache-repo=us-central1-docker.pkg.dev/tussi-466501/docker-cache'
+      ]
 
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/auth-service:$SHORT_SHA', '.']
-    dir: 'services/auth-service'
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/auth-service:$SHORT_SHA']
+  # Build & push auth-service with Kaniko cache
+  - name: 'gcr.io/kaniko-project/executor:latest'
+    args:
+      [
+        '--destination=us-central1-docker.pkg.dev/tussi-466501/microservices-repo/auth-service:$SHORT_SHA',
+        '--destination=us-central1-docker.pkg.dev/tussi-466501/microservices-repo/auth-service:latest',
+        '--context=dir://services/auth-service',
+        '--dockerfile=Dockerfile',
+        '--cache=true',
+        '--cache-ttl=24h',
+        '--cache-repo=us-central1-docker.pkg.dev/tussi-466501/docker-cache'
+      ]
 
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/cart-api:$SHORT_SHA', '.']
-    dir: 'services/cart-api'
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/cart-api:$SHORT_SHA']
+  # Build & push cart-api with Kaniko cache
+  - name: 'gcr.io/kaniko-project/executor:latest'
+    args:
+      [
+        '--destination=us-central1-docker.pkg.dev/tussi-466501/microservices-repo/cart-api:$SHORT_SHA',
+        '--destination=us-central1-docker.pkg.dev/tussi-466501/microservices-repo/cart-api:latest',
+        '--context=dir://services/cart-api',
+        '--dockerfile=Dockerfile',
+        '--cache=true',
+        '--cache-ttl=24h',
+        '--cache-repo=us-central1-docker.pkg.dev/tussi-466501/docker-cache'
+      ]
 
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/products-api:$SHORT_SHA', '.']
-    dir: 'services/products-api'
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/tussi-466501/microservices-repo/products-api:$SHORT_SHA']
+  # Build & push products-api with Kaniko cache
+  - name: 'gcr.io/kaniko-project/executor:latest'
+    args:
+      [
+        '--destination=us-central1-docker.pkg.dev/tussi-466501/microservices-repo/products-api:$SHORT_SHA',
+        '--destination=us-central1-docker.pkg.dev/tussi-466501/microservices-repo/products-api:latest',
+        '--context=dir://services/products-api',
+        '--dockerfile=Dockerfile',
+        '--cache=true',
+        '--cache-ttl=24h',
+        '--cache-repo=us-central1-docker.pkg.dev/tussi-466501/docker-cache'
+      ]
 
+  # Build & push frontend with Kaniko cache
   - name: 'gcr.io/kaniko-project/executor:latest'
     args:
       [
         '--destination=us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:$SHORT_SHA',
+        '--destination=us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:latest',
         '--context=dir://frontend',
         '--dockerfile=frontend/Dockerfile',
         '--build-arg', 'NEXT_PUBLIC_AUTH_API_URL=https://api.example.com/auth',
         '--build-arg', 'NEXT_PUBLIC_PRODUCTS_API_URL=https://api.example.com/products',
-        '--build-arg', 'NEXT_PUBLIC_CART_API_URL=https://api.example.com/cart'
+        '--build-arg', 'NEXT_PUBLIC_CART_API_URL=https://api.example.com/cart',
+        '--cache=true',
+        '--cache-ttl=24h',
+        '--cache-repo=us-central1-docker.pkg.dev/tussi-466501/docker-cache'
       ] 
