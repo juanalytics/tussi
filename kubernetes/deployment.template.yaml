@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:a66c26e
+          image: us-central1-docker.pkg.dev/tussi-466501/microservices-repo/frontend:REPLACE_WITH_TAG
           ports:
             - containerPort: 3000
           resources:
