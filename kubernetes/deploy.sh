@@ -49,10 +49,10 @@ echo "✅ Updated deployment files with latest tags."
 echo "🚀 Deploying to GKE..."
 
 kubectl apply -f deployment.yaml
+kubectl apply -f frontend-service.yaml
+# kubectl apply -f products-deployment.generated.yaml
 # kubectl apply -f auth-deployment.generated.yaml
 # kubectl apply -f cart-deployment.generated.yaml
-# kubectl apply -f products-deployment.generated.yaml
 # kubectl apply -f api-gateway-deployment.generated.yaml
-kubectl apply -f frontend-service.yaml
 
 echo "✅ Deployment applied. Use 'kubectl get services' to check external IP."
