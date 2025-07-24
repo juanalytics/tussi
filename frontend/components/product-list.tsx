@@ -17,10 +17,10 @@ interface Product {
 
 async function getProducts(page: number = 1, limit: number = 10): Promise<Product[]> {
   try {
-    console.log(process.env.NEXT_PUBLIC_PRODUCTS_API_URL)
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_PRODUCTS_API_URL}/products/`
     )
+
     console.log(response)
     if (!response.ok) {
       console.error("Failed to fetch products:", response.status, await response.text())
@@ -93,8 +93,8 @@ export default function ProductList({ page }: { page: number }) {
               <p className="mt-1 line-clamp-2 text-sm text-gray-600">{product.description}</p>
               <div className="mt-4 flex items-center justify-between">
                 <p className="text-xl font-bold text-pink-600">${product.price.toFixed(2)}</p>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="bg-pink-500 hover:bg-pink-600"
                   onClick={() => handleAddToCart(product)}
                   disabled={isLoadingCart}
