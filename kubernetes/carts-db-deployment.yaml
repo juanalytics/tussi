@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: carts-db
+  namespace: tussi-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: carts-db
+  template:
+    metadata:
+      labels:
+        app: carts-db
+    spec:
+      containers:
+      - name: carts-db
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: "root"
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: "rootpassword"
+        volumeMounts:
+        - name: carts-db-storage
+          mountPath: /data/db
+      volumes:
+      - name: carts-db-storage
+        persistentVolumeClaim:
+          claimName: carts-db-pvc 
