@@ -36,7 +36,7 @@ spec:
             cpu: "500m"
         volumeMounts:
         - name: products-db-storage
-          mountPath: /var/lib/postgresql/data/pgdata
+          mountPath: /var/lib/postgresql/data
         livenessProbe:
           exec:
             command:
