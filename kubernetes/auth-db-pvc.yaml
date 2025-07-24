@@ -4,6 +4,7 @@ metadata:
   name: auth-db-pvc
   namespace: tussi-services
 spec:
+  storageClassName: standard
   accessModes:
     - ReadWriteOnce
   resources:

@@ -4,6 +4,7 @@ metadata:
   name: products-db-pvc
   namespace: tussi-services
 spec:
+  storageClassName: standard
   accessModes:
     - ReadWriteOnce
   resources:

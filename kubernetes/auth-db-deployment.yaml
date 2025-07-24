@@ -28,6 +28,22 @@ spec:
         volumeMounts:
         - name: auth-db-storage
           mountPath: /var/lib/postgresql/data
+        livenessProbe:
+          exec:
+            command:
+              - pg_isready
+              - -U
+              - authuser
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+              - pg_isready
+              - -U
+              - authuser
+          initialDelaySeconds: 5
+          periodSeconds: 10
       volumes:
       - name: auth-db-storage
         persistentVolumeClaim:

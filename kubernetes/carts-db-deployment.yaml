@@ -26,6 +26,22 @@ spec:
         volumeMounts:
         - name: carts-db-storage
           mountPath: /data/db
+        livenessProbe:
+          exec:
+            command:
+              - mongosh
+              - --eval
+              - db.adminCommand('ping')
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+              - mongosh
+              - --eval
+              - db.adminCommand('ping')
+          initialDelaySeconds: 5
+          periodSeconds: 10
       volumes:
       - name: carts-db-storage
         persistentVolumeClaim:
