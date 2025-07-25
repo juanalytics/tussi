@@ -697,31 +697,143 @@ The product database experiences lockups when there are concurrent massive reads
 
 Create and Mantain copies (repliclas) of data or services across multiple components or nodes
 
-By default, GKE does not do “synchronous replication” of its nodes, but manages the node pools as Compute Engine's **Managed Instance Groups (MIGs)** and maintains the desired state using an **eventual-consistent model**:
+By default, GKE does not do "synchronous replication" of its nodes, but manages the node pools as Compute Engine's **Managed Instance Groups (MIGs)** and maintains the desired state using an **eventual-consistent model**:
 
 * **Asynchronous and periodic**: the MIG controller continuously inspects (in periodic loops) how many VMs there should be based on your configuration and creates or deletes instances to bring the actual state closer to the desired state, without blocking requests or waiting for responses from all nodes at once.
-* **Kubernetes control loops**: Similarly, Kubernetes (including cluster-autoscaler) works with “controllers” that read the desired state from the API, compare with the actual state and act asynchronously to reconcile differences, repeating this process at regular intervals ([Kubernetes]
+* **Kubernetes control loops**: Similarly, Kubernetes (including cluster-autoscaler) works with "controllers" that read the desired state from the API, compare with the actual state and act asynchronously to reconcile differences, repeating this process at regular intervals ([Kubernetes]
 
 Therefore, **node replication** (incorporation, repair or scaling) in GKE is **asynchronous** and is performed by **periodic reconciliation**, providing eventual consistency behavior.
 
 #### Active Redundancy (Hot Spare) Pattern
-
-On GKE, we implement an Active Redundancy (Hot Spare) pattern by running your service as at least two pod replicas—ideally spread across separate node pools or zones—that each ingest the same input stream (for example, by subscribing to the same Pub/Sub topic) and checkpoint state continuously to a shared, highly‑available datastore (Cloud Spanner or a regional Cloud SQL instance with synchronous replication). Both pods are kept “hot” and ready behind a single Kubernetes Service, so even though one is effectively “active” at any moment, its spare sibling has already processed all the same events and holds an up‑to‑date view of the state. If the primary pod or its node fails (detected instantly via liveness/readiness probes), Kubernetes immediately routes traffic to the surviving pod—which already has the latest state—ensuring failover with zero data loss and no disruption to your workload.
+```mermaid
+graph LR
+    A["<b>Stimulus Source:</b><br/>Internal Component"] --> B["<b>Stimulus:</b><br/>Primary instance fails health check"]
+    
+    B --> C_sub
+    
+    subgraph Environment
+        C_sub["<b>Artifact:</b><br/>Service Replica Set (e.g., Pods)"]
+    end
+    
+    C_sub --> D["<b>Response:</b><br/>Traffic is rerouted to hot spare instance"]
+    
+    D --> E["<b>Metric:</b><br/>Failover time < 500ms, Zero data loss"]
+```
+On GKE, we implement an Active Redundancy (Hot Spare) pattern by running your service as at least two pod replicas—ideally spread across separate node pools or zones—that each ingest the same input stream (for example, by subscribing to the same Pub/Sub topic) and checkpoint state continuously to a shared, highly-available datastore (Cloud Spanner or a regional Cloud SQL instance with synchronous replication). Both pods are kept "hot" and ready behind a single Kubernetes Service, so even though one is effectively "active" at any moment, its spare sibling has already processed all the same events and holds an up-to-date view of the state. If the primary pod or its node fails (detected instantly via liveness/readiness probes), Kubernetes immediately routes traffic to the surviving pod—which already has the latest state—ensuring failover with zero data loss and no disruption to your workload.
+| Part                   | Detail                                                                                                                                                                                                                                                                    |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | The primary pod/node serving live traffic fails its liveness probe due to a hardware or software fault.                                                                                                                                                                   |
+| **Source of stimulus** | An internal system event (e.g., node failure, pod crash).                                                                                                                                                                                                                   |
+| **Artifact**           | The Kubernetes Deployment with multiple replicas, a Service object for load balancing, and liveness/readiness probes.                                                                                                                                                         |
+| **Environment**        | A GKE cluster under normal operation. Replicas are running in a "hot" state, actively processing data in parallel.                                                                                                                                                        |
+| **Response**           | Kubernetes detects the failed probe and immediately stops sending traffic to the failed pod. The Service automatically reroutes new requests to one of the healthy "hot spare" pods, which already has the latest state. Kubernetes then initiates the process of replacing the failed pod. |
+| **Response metric**    | The failover is transparent to the client. The time to detect failure and reroute traffic is under 500ms. There is zero data loss since the spare was already synchronized.                                                                                                 |
 
 #### Passive Redundancy (Warm Spare) Pattern
-
-We implement a Warm Spare by running one “standby” replica of your service on a dedicated node pool tainted with NoSchedule so it never accepts production traffic, but it still stays “warm” by subscribing to the same event streams or database change feeds and keeping its in‑memory state or cache up‑to‑date. The primary Deployment—with multiple replicas—is the only one selected by your Kubernetes Service, so it handles all live requests. If a health check or external monitor detects the primary is down, you simply remove the taint (or patch the Service’s selector) to promote the standby pod into the Service, instantly routing traffic to it. Because that pod has already been synchronizing state in the background, it can begin serving without data loss and with only a minimal hand‑off delay.
+```mermaid
+graph LR
+    A["<b>Stimulus Source:</b><br/>Monitoring System"] --> B["<b>Stimulus:</b><br/>Primary service becomes unresponsive"]
+    
+    B --> C_sub
+    
+    subgraph Environment
+        C_sub["<b>Artifact:</b><br/>Standby Service Replica"]
+    end
+    
+    C_sub --> D["<b>Response:</b><br/>Promote warm spare to active"]
+    
+    D --> E["<b>Metric:</b><br/>Recovery Time Objective (RTO) < 2 minutes"]
+```
+We implement a Warm Spare by running one "standby" replica of your service on a dedicated node pool tainted with NoSchedule so it never accepts production traffic, but it still stays "warm" by subscribing to the same event streams or database change feeds and keeping its in-memory state or cache up-to-date. The primary Deployment—with multiple replicas—is the only one selected by your Kubernetes Service, so it handles all live requests. If a health check or external monitor detects the primary is down, you simply remove the taint (or patch the Service's selector) to promote the standby pod into the Service, instantly routing traffic to it. Because that pod has already been synchronizing state in the background, it can begin serving without data loss and with only a minimal hand-off delay.
+| Part                   | Detail                                                                                                                                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Stimulus**           | An external monitoring system detects that the primary service is completely unavailable (e.g., all primary pods are failing).                                                                                                                   |
+| **Source of stimulus** | A major failure in the primary service's node pool or a critical bug affecting all primary replicas.                                                                                                                                               |
+| **Artifact**           | A separate Kubernetes Deployment for the "warm spare" replica, node taints/tolerations to keep it isolated, and an operational runbook or automated script to trigger the promotion.                                                              |
+| **Environment**        | Production. The primary service is handling all traffic, while the warm spare is running but not receiving production requests.                                                                                                                  |
+| **Response**           | An operator or an automated system is alerted. The promotion process is initiated: the `NoSchedule` taint is removed from the standby node pool, or the Service selector is updated to include the warm spare. The spare begins receiving traffic. |
+| **Response metric**    | The Recovery Time Objective (RTO) is met (e.g., service is restored in under 2 minutes). Data loss is minimal to none, as the warm spare was synchronizing state.                                                                              |
 
 ### Service Discovery Pattern
+```mermaid
+graph LR
+    A["<b>Stimulus Source:</b><br/>API Gateway"] --> B["<b>Stimulus:</b><br/>Request to 'products-api'"]
+    
+    B --> C_sub
+    
+    subgraph Environment
+        C_sub["<b>Artifact:</b><br/>Kubernetes DNS (CoreDNS)"]
+    end
+    
+    C_sub --> D["<b>Response:</b><br/>DNS resolves service name to pod IP"]
+    
+    D --> E["<b>Metric:</b><br/>Successful name resolution < 10ms"]
+```
+In GKE's VPC-native networking, each node automatically receives an alias IP range from the secondary subnet and each pod is assigned an IP from that block. When autoscaling adds new nodes, the control plane reserves a fresh alias IP range, updates the network routes, and pods can be scheduled immediately with new IPs. If a node fails, Auto Repair recreates the VM—reclaiming or reallocating its alias block—and Kubernetes transparently reschedules pods onto healthy nodes, updating their pod IPs as needed. During upgrades, GKE performs a surge upgrade by cordoning and draining old nodes, provisioning replacement nodes with new alias ranges, moving workloads over, and then removing the old nodes; throughout this process, Service ClusterIPs remain stable, ensuring uninterrupted connectivity without manual network reconfiguration.
+| Part                   | Detail                                                                                                                                  |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | The API Gateway needs to send a request to the Products service and uses its logical name, `http://products-api`, to establish a connection. |
+| **Source of stimulus** | An internal application component (API Gateway) making a routine service-to-service call.                                                 |
+| **Artifact**           | The Kubernetes internal DNS service (CoreDNS), which maintains mappings between service names and their corresponding ClusterIPs.            |
+| **Environment**        | A running GKE cluster where services are defined via Kubernetes Service objects.                                                        |
+| **Response**           | The API Gateway's DNS resolver queries CoreDNS. CoreDNS resolves the name `products-api` to its stable ClusterIP. Kubernetes then uses `iptables` or IPVS to forward the request to one of the healthy backend pods for the service. |
+| **Response metric**    | The service name is successfully and correctly resolved to an IP address. DNS lookup latency is negligible (e.g., <10ms). The connection to the service is established successfully. |
+### Cluster Pattern
+```mermaid
+graph LR
+    A["<b>Stimulus Source:</b><br/>GKE Node Pool"] --> B["<b>Stimulus:</b><br/>Node failure detected"]
+    
+    B --> C_sub
+    
+    subgraph Environment
+        C_sub["<b>Artifact:</b><br/>Managed Instance Group (MIG)"]
+    end
+    
+    C_sub --> D["<b>Response:</b><br/>MIG autorepair recreates the node"]
+    
+    D --> E["<b>Metric:</b><br/>Node recovery within minutes, zero manual intervention"]
+```
+![Cluster in GKE](cluster.png)
+| Part                   | Detail                                                                                                                             |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | A Compute Engine VM acting as a GKE node becomes unresponsive and fails its health checks.                                         |
+| **Source of stimulus** | An underlying hardware failure, OS-level corruption, or other critical issue within the VM.                                        |
+| **Artifact**           | The GKE node pool, which is backed by a Compute Engine Managed Instance Group (MIG) configured with auto-healing policies.          |
+| **Environment**        | A production GKE cluster.                                                                                                          |
+| **Response**           | The MIG's health checker detects the unhealthy node. It automatically triggers the auto-healing process: the faulty VM is terminated, and a new, identical VM is created to replace it. The new node joins the GKE cluster, and Kubernetes begins scheduling pods onto it. |
+| **Response metric**    | The cluster's capacity is automatically restored without any manual intervention. The time to provision and register the new node is within the expected range (typically a few minutes). Workload disruption is minimized as Kubernetes reschedules pods that were on the failed node. |
 
-In GKE’s VPC‑native networking, each node automatically receives an alias IP range from the secondary subnet and each pod is assigned an IP from that block. When autoscaling adds new nodes, the control plane reserves a fresh alias IP range, updates the network routes, and pods can be scheduled immediately with new IPs. If a node fails, Auto Repair recreates the VM—reclaiming or reallocating its alias block—and Kubernetes transparently reschedules pods onto healthy nodes, updating their pod IPs as needed. During upgrades, GKE performs a surge upgrade by cordoning and draining old nodes, provisioning replacement nodes with new alias ranges, moving workloads over, and then removing the old nodes; throughout this process, Service ClusterIPs remain stable, ensuring uninterrupted connectivity without manual network reconfiguration.
-
+### Transaction Pattern
+```mermaid
+graph LR
+    A["<b>Stimulus Source:</b><br/>Cart Service"] --> B["<b>Stimulus:</b><br/>Payment fails after stock deduction"]
+    
+    B --> C_sub
+    
+    subgraph Environment
+        C_sub["<b>Artifact:</b><br/>Checkout Process Logic"]
+    end
+    
+    C_sub --> D["<b>Response:</b><br/>Trigger compensating transaction to revert stock"]
+    
+    D --> E["<b>Metric:</b><br/>Data consistency restored, no resource locks"]
+```
+Compensating Transaction Provides a mechanism to recover from failures by reversing the effects of previously applied actions. This pattern addresses malfunctions in critical workload paths by using compensation actions, which can involve processes like directly rolling back data changes, breaking transaction locks, or even executing native system behavior to reverse the effect.
+| Part                   | Detail                                                                                                                                                                                               |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | A user is completing a checkout. The system successfully deducts an item from the `products-api` inventory, but the subsequent call to the payment processing service fails.                             |
+| **Source of stimulus** | A failure in a downstream service (payment processor) or a network timeout.                                                                                                                          |
+| **Artifact**           | The `cart-api` checkout logic, which orchestrates calls to multiple services (`products-api`, payment service). It must include error handling and the logic for the compensating action.               |
+| **Environment**        | Production, during a multi-step, distributed transaction (Saga).                                                                                                                                     |
+| **Response**           | The `cart-api`, upon detecting the payment failure, invokes a compensating transaction. It sends a specific request to the `products-api` (e.g., `POST /api/products/{id}/add-stock`) to add the previously deducted item back into inventory, effectively reversing the initial operation. |
+| **Response metric**    | The system's data is restored to a consistent state. The product inventory is corrected. The user is notified of the payment failure, but the system does not remain in an inconsistent state (e.g., item sold but no payment received). |
 ## 6. Interoperability Analysis
 
 This analysis describes how the different components of the Tussi system communicate and work together.
 
 ### Interfaces
 The system's components interact primarily through well-defined, synchronous HTTP-based APIs, following RESTful principles.
+
 - **External Interfaces (Client-Facing):** The Web and Mobile clients interact with the system through a single public interface exposed by the **Load Balancer** over HTTPS (port 443). This interface is, in turn, served by the **API Gateway**, which provides a unified API for all backend functionalities.
 - **Internal Interfaces (Service-to-Service):**
     - The **API Gateway** communicates with backend microservices (`Auth`, `Products`, `Cart`) over a private network using their respective RESTful HTTP APIs.
@@ -759,7 +871,35 @@ The system is designed to handle responses, including errors and failures, grace
     - The **API Gateway** includes **rate-limiting** middleware, which responds with an **HTTP 429 "Too Many Requests"** status to protect backend services from denial-of-service attacks or traffic spikes.
 - **Health Checks:** All microservices expose a `/health` endpoint that can be used by monitoring systems (and the load balancer) to verify their operational status.
 
-## 7. Architectural Styles
+## 7. Interoperability Scenario: White-Labeling via Reverse Proxy
+
+A third-party client wants to use the Tussi platform to sell their own products but under their own brand (`my-brand.com`). To achieve this, the client's domain must be the one visible to end-users. Tussi enables this by allowing the client to set up a reverse proxy (e.g., using a Cloudflare Worker or Nginx) that forwards requests from `my-brand.com` to the Tussi application, which then serves the content, making it appear as if it originates from the client's domain.
+
+```mermaid
+graph LR
+    A["<b>Stimulus Source:</b><br/>End User"] --> B["<b>Stimulus:</b><br/>Request to 'my-brand.com'"]
+    
+    B --> C_sub
+    
+    subgraph Environment
+        C_sub["<b>Artifact:</b><br/>Reverse Proxy (Cloudflare Worker)"]
+    end
+    
+    C_sub --> D["<b>Response:</b><br/>Proxy fetches content from Tussi and serves it under 'my-brand.com'"]
+    
+    D --> E["<b>Metric:</b><br/>Seamless branding, <50ms proxy latency"]
+```
+
+| Part                   | Detail                                                                                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Stimulus**           | An end-user sends an HTTP request to `https://my-brand.com/products`.                                                                                                                            |
+| **Source of stimulus** | An external end-user browsing the third-party client's branded storefront.                                                                                                                         |
+| **Artifact**           | A reverse proxy configuration (e.g., a Cloudflare Worker script) managed by the third-party client. This proxy is configured to route all incoming requests to the Tussi application's public endpoint. |
+| **Environment**        | The public internet. The user has no knowledge of the underlying Tussi platform.                                                                                                                   |
+| **Response**           | The reverse proxy receives the request. It internally makes a request to the Tussi Load Balancer (`https://tussi.com/products`), preserving the original path. Tussi's backend processes the request and returns the product page HTML. The reverse proxy receives this response and serves it back to the end-user, ensuring the URL in the browser remains `https://my-brand.com/products`. |
+| **Response metric**    | The white-labeling is successful; the end-user only ever interacts with `my-brand.com`. The latency added by the reverse proxy is minimal (e.g., < 50ms). The user experience is seamless.      |
+
+## 8. Architectural Styles
 
 ### Layered (N Tier)
 
@@ -777,7 +917,7 @@ The backend is decomposed into a set of independently deployable microservices. 
 
 Tussi embraces a polyglot approach for both programming languages and data persistence. Services are built with the technology best suited for their function: Python with FastAPI for the Auth and Products services, and Node.js for the API Gateway and Cart service. Similarly, the data architecture uses both PostgreSQL for structured, relational data (Users, Products) and MongoDB for flexible, document-based data (Shopping Cart).
 
-## 8. Architectural Patterns
+## 9. Architectural Patterns
 
 ### API Gateway Pattern
 
@@ -834,7 +974,7 @@ This segmentation ensures that even if the frontend or API Gateway is compromise
 
 To manage system resources and maintain performance under heavy load, a load balancer is used to horizontally scale stateless services. By maintaining multiple copies of components like the API Gateway and distributing traffic among them, the system can handle a larger volume of concurrent computations, ensuring that response times remain low and preventing any single instance from becoming a bottleneck.
 
-## 9. Prototype Deployment
+## 10. Prototype Deployment
 
 ### Prerequisites
 
@@ -947,7 +1087,7 @@ curl http://localhost:8002/health    # Cart API
   - Products API: <http://localhost:8001/docs> (Development only)
   - Cart API: <http://localhost:8002/docs> (Development only)
 
-## 10. Testing
+## 11. Testing
 
 ### API Testing
 
@@ -1014,7 +1154,7 @@ During the test, we collect key metrics and enforce these thresholds:
 ![load1](load1.png)
 ![load2](load2.png)
 
-The accompanying chart shows a 10-sample moving average of HTTP request durations, demonstrating how the endpoint’s latency evolves across each phase. This comprehensive profile uncovers potential performance regressions, validates SLAs, and ensures the products API can handle real-world traffic surges.
+The accompanying chart shows a 10-sample moving average of HTTP request durations, demonstrating how the endpoint's latency evolves across each phase. This comprehensive profile uncovers potential performance regressions, validates SLAs, and ensures the products API can handle real-world traffic surges.
 
 **K6 Test Features:**
 - **Stress Testing**: Simulates high concurrent user loads
@@ -1038,7 +1178,7 @@ The accompanying chart shows a 10-sample moving average of HTTP request duration
 - **Mobile Connectivity**: Built-in health checks within mobile app
 - **SSL Certificate Status**: Automated certificate validation
 
-## 11. Monitoring and Troubleshooting
+## 12. Monitoring and Troubleshooting
 
 ### Application Logs
 
@@ -1140,7 +1280,7 @@ docker-compose exec products-db pg_isready -U user -d products
 docker-compose exec carts-db mongosh --eval "db.adminCommand('ping')"
 ```
 
-## 12. Project Structure
+## 13. Project Structure
 
 ```sh
 TUSSI/
@@ -1287,7 +1427,7 @@ TUSSI/
 - Database per service pattern clearly implemented
 - Mobile local storage for offline capabilities
 
-## 13. References
+## 14. References
 
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Next.js Documentation](https://nextjs.org/docs)
