@@ -221,58 +221,6 @@ Este sistema comprende dos clientes, un balanceador de carga, cuatro servicios y
 #### Layered (Tier & Layer) View
 
 ![Layered View](layered-diagram.png)
-graph TB
-  subgraph "Tier 1: Presentation"
-    WebClient["Web Client<br>(Next.js)"]
-    MobileClient["Mobile Client<br>(React Native)"]
-  end
-
-  subgraph "Tier 2: Communication"
-    APIGateway["API Gateway<br>(Node.js/Express)"]
-  end
-
-  subgraph "Tier 3: Logic"
-    subgraph "L1: Controllers"
-      AuthCtrl["Auth Controller"]
-      ProdCtrl["Products Controller"]
-      CartCtrl["Cart Controller"]
-    end
-    subgraph "L2: Services"
-      AuthSvc["Auth Service"]
-      ProdSvc["Products Service"]
-      CartSvc["Cart Service"]
-    end
-    subgraph "L3: Models"
-      UserModel["User Model<br>(ORM/ODM)"]
-      ProductModel["Product Model<br>(ORM/ODM)"]
-      CartModel["Cart Model<br>(ODM)"]
-    end
-  end
-
-  subgraph "Tier 4: Data"
-    AuthDB[("Auth DB<br>(PostgreSQL)")]
-    ProdDB[("Products DB<br>(PostgreSQL)")]
-    CartDB[("Cart DB<br>(MongoDB)")]
-    MobileStore[("Mobile Local<br>Storage")]
-  end
-
-  WebClient      -->|HTTP| APIGateway
-  MobileClient   -->|HTTP| APIGateway
-  APIGateway     -->|REST| AuthCtrl
-  APIGateway     -->|REST| ProdCtrl
-  APIGateway     -->|REST| CartCtrl
-  AuthCtrl       -->|calls| AuthSvc
-  ProdCtrl       -->|calls| ProdSvc
-  CartCtrl       -->|calls| CartSvc
-  AuthSvc        -->|uses| UserModel
-  ProdSvc        -->|uses| ProductModel
-  CartSvc        -->|uses| CartModel
-  UserModel      -->|persists| AuthDB
-  ProductModel   -->|persists| ProdDB
-  CartModel      -->|persists| CartDB
-  MobileClient   -->|caches| MobileStore
-
-```
 
 ##### **Tier 1: Presentation**
 
