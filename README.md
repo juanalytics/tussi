@@ -334,7 +334,7 @@ Container Orchestration Pattern with Docker Compose, network segmentation, and l
 
 **Infrastructure:**
 
-- **Network Segmentation**:
+- **Network Segmentation**: 
   - **Public Network**: Load balancer, frontend, API Gateway, K6 testing
   - **Private Network**: All backend services and databases (internal=true, no external access)
 - **Storage**: Docker volumes for database persistence
@@ -854,8 +854,8 @@ The system's components interact primarily through well-defined, synchronous HTT
 
 - **External Interfaces (Client-Facing):** The Web and Mobile clients interact with the system through a single public interface exposed by the **Load Balancer** over HTTPS (port 443). This interface is, in turn, served by the **API Gateway**, which provides a unified API for all backend functionalities.
 - **Internal Interfaces (Service-to-Service):**
-      - The **API Gateway** communicates with backend microservices (`Auth`, `Products`, `Cart`) over a private network using their respective RESTful HTTP APIs.
-      - Each microservice communicates with its dedicated database using a specific TCP-based protocol via its database driver (PostgreSQL or MongoDB driver).
+    - The **API Gateway** communicates with backend microservices (`Auth`, `Products`, `Cart`) over a private network using their respective RESTful HTTP APIs.
+    - Each microservice communicates with its dedicated database using a specific TCP-based protocol via its database driver (PostgreSQL or MongoDB driver).
 - **API Endpoints:** The interfaces are defined by specific endpoints, such as `POST /api/auth/login`, `GET /api/products`, and `POST /api/cart/add`.
 
 ### Context
@@ -895,8 +895,8 @@ The system is designed to handle responses, including errors and failures, grace
 - **Standard HTTP Status Codes:** The APIs use standard HTTP status codes to indicate the outcome of a request (e.g., `200 OK`, `201 Created`, `400 Bad Request`, `401 Unauthorized`, `404 Not Found`).
 - **Error Payloads:** Failed requests are accompanied by a JSON payload containing a descriptive error message to aid in debugging on the client side.
 - **Fault Tolerance:**
-      - The **Load Balancer** continuously monitors the health of the API Gateway instances. If an instance becomes unresponsive, it is automatically removed from the routing pool, and traffic is redirected to healthy instances (**Active Redundancy** pattern).
-      - The **API Gateway** includes **rate-limiting** middleware, which responds with an **HTTP 429 "Too Many Requests"** status to protect backend services from denial-of-service attacks or traffic spikes.
+    - The **Load Balancer** continuously monitors the health of the API Gateway instances. If an instance becomes unresponsive, it is automatically removed from the routing pool, and traffic is redirected to healthy instances (**Active Redundancy** pattern).
+    - The **API Gateway** includes **rate-limiting** middleware, which responds with an **HTTP 429 "Too Many Requests"** status to protect backend services from denial-of-service attacks or traffic spikes.
 - **Health Checks:** All microservices expose a `/health` endpoint that can be used by monitoring systems (and the load balancer) to verify their operational status.
 
 ## 7. Interoperability Scenario: White-Labeling via Reverse Proxy
@@ -1414,13 +1414,74 @@ TUSSI/
 - Database per service pattern clearly implemented
 - Mobile local storage for offline capabilities
 
-## 14. References
+## 14. Performance Analysis
 
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [React Native Documentation](https://reactnative.dev/docs/getting-started)
-- [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [API Gateway Pattern](https://microservices.io/patterns/apigateway.html)
-- [Microservices Patterns](https://microservices.io/patterns/index.html)
-- [React Native AsyncStorage](https://react-native-async-storage.github.io/async-storage/)
-- [Cross-Platform Development Best Practices](https://reactnative.dev/docs/platformspecific-code)
+### Test Environment Configuration
+
+The performance tests were executed in a controlled local environment with the following specifications to ensure consistent and reliable results:
+
+| Component    | Specification                |
+|:------------|:----------------------------|
+| **CPU**     | Apple M4 (10 cores)         |
+| **RAM**     | 24 GB                       |
+| **Storage** | 512 GB SSD                  |
+| **Network** | 60 Mbps bandwidth           |
+| **GPU**     | 10 cores                    |
+| **Software** | Docker Desktop, k6 v0.50.0  |
+
+The service under test was the `products-api` (FastAPI/Python) running in a Docker container, accessed directly through Docker's internal network to eliminate proxy latency.
+
+### Test Methodology
+
+#### Primary Objectives
+
+1. **Response Time Measurement** for critical operations:
+   - **Write Operations:** `POST /products/`
+   - **Read Operations:** `GET /products/?limit=500`
+2. **Concurrency Limits:** Determine maximum concurrent users before performance degradation
+3. **Bottleneck Identification:** Locate performance constraints in read/write operations
+4. **Knee Point Analysis:** Find the inflection point where response time increases disproportionately
+
+#### Test Scenarios
+
+A comprehensive k6 test script (`products-performance-test.js`) was developed to simulate various load patterns:
+
+1. **Load Testing:** Progressive VU increase to simulate organic traffic growth
+2. **Stress & Peak Testing:** Extreme load conditions and sudden spikes
+3. **Isolation Testing:** Parallel read/write scenarios for independent impact analysis
+
+### Performance Results
+
+The latest test execution demonstrated exceptional performance across all metrics:
+
+| Metric              |  Overall Result |  Read Scenario | Creation Scenario |
+| :------------------ | :-------------: | :------------: | :---------------: |
+| **Total Requests**  |      18,563     |     14,303     |       4,260       |
+| **Failed Requests** | **0.67%** (126) | **0.55%** (80) |   **1.08%** (46)  |
+| **P95 Duration**    |   **87.79 ms**  |  **77.26 ms**  |   **118.03 ms**   |
+| **Throughput**      |    30.8 req/s   |        –       |         –         |
+
+#### Key Performance Indicators
+
+- **Latency Performance:** Achieved a global P95 of only **88 ms**, significantly below the 800 ms threshold
+- **Error Rate:** Maintained below 1%, with most errors being timeouts rather than application failures
+- **Scalability:** Successfully handled up to 130 concurrent users before reaching capacity limits
+
+### System Behavior Analysis
+
+#### Load Response Characteristics
+
+The system demonstrated exceptional stability under increasing load:
+
+1. **Consistent Performance:** Maintained low latency (< 120 ms) up to 100-130 concurrent users
+2. **Graceful Degradation:** Instead of gradual performance decline, the system maintained efficiency until reaching capacity
+3. **Resource Utilization:** Showed optimal resource usage until absolute limits were reached
+
+#### Knee Point Analysis
+
+![Knee Point Graph](knee_point_graph.png)
+
+The performance curve analysis revealed:
+
+- **Flat Response Curve:** Maintained consistent performance across increasing load
+- **Timeout Behavior:** Clean failure mode through timeouts rather than degraded performance
