@@ -475,8 +475,6 @@ An attacker on an insecure network (e.g., public Wi-Fi) attempts to perform a ma
 | **Response**           | The system enforces HTTPS-only communication. All data in transit is encrypted via TLS, rendering any intercepted traffic unreadable to the attacker.                    |
 | **Response metric**    | Data confidentiality and integrity are preserved. The percentage of non-encrypted connections should be 0%. Attempts to connect via HTTP are automatically rejected or upgraded. |
 
-![https](https.png)
-
 #### Attempt to Bypass API Gateway (Reverse Proxy)
 
 ```mermaid
@@ -701,8 +699,8 @@ Create and Mantain copies (repliclas) of data or services across multiple compon
 
 By default, GKE does not do “synchronous replication” of its nodes, but manages the node pools as Compute Engine's **Managed Instance Groups (MIGs)** and maintains the desired state using an **eventual-consistent model**:
 
-* ** **Asynchronous and periodic**: the MIG controller continuously inspects (in periodic loops) how many VMs there should be based on your configuration and creates or deletes instances to bring the actual state closer to the desired state, without blocking requests or waiting for responses from all nodes at once.
-* Kubernetes control loops**: Similarly, Kubernetes (including cluster-autoscaler) works with “controllers” that read the desired state from the API, compare with the actual state and act asynchronously to reconcile differences, repeating this process at regular intervals ([Kubernetes]
+* **Asynchronous and periodic**: the MIG controller continuously inspects (in periodic loops) how many VMs there should be based on your configuration and creates or deletes instances to bring the actual state closer to the desired state, without blocking requests or waiting for responses from all nodes at once.
+* **Kubernetes control loops**: Similarly, Kubernetes (including cluster-autoscaler) works with “controllers” that read the desired state from the API, compare with the actual state and act asynchronously to reconcile differences, repeating this process at regular intervals ([Kubernetes]
 
 Therefore, **node replication** (incorporation, repair or scaling) in GKE is **asynchronous** and is performed by **periodic reconciliation**, providing eventual consistency behavior.
 
