@@ -12,11 +12,21 @@ REMOTE_PORT=5432
 DB_USER="user"
 DB_NAME="products"
 SQL_FILE="../products_dump.sql"
+CONVERTED_SQL_FILE="../products_dump-utf8.sql"
 
 # Check if SQL file exists
 if [ ! -f "$SQL_FILE" ]; then
   echo "❌ SQL file not found: $SQL_FILE"
   exit 1
+fi
+
+# Detect encoding
+ENCODING=$(file -bi "$SQL_FILE" | sed 's/.*charset=//')
+
+if [ "$ENCODING" != "utf-8" ]; then
+  echo "⚠️  Converting $SQL_FILE from $ENCODING to UTF-8..."
+  iconv -f "$ENCODING" -t UTF-8 "$SQL_FILE" -o "$CONVERTED_SQL_FILE"
+  SQL_FILE="$CONVERTED_SQL_FILE"
 fi
 
 # Start port-forwarding in the background
