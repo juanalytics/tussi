@@ -48,11 +48,40 @@ sed "s/REPLACE_WITH_TAG/$API_GATEWAY_TAG/" api-gateway-deployment.yaml > api-gat
 echo "✅ Updated deployment files with latest tags."
 echo "🚀 Deploying to GKE..."
 
+# Apply namespace and storageclass first (if not already applied)
+kubectl apply -f namespaces.yml
+kubectl apply -f storageclass.yml
+
+# Apply PVCs for databases
+kubectl apply -f auth-db-pvc.yaml
+kubectl apply -f products-db-pvc.yaml
+kubectl apply -f carts-db-pvc.yaml
+
+# Apply database deployments and services
+kubectl apply -f auth-db-deployment.yaml
+kubectl apply -f auth-db-service.yaml
+kubectl apply -f products-db-deployment.yaml
+kubectl apply -f products-db-service.yaml
+kubectl apply -f carts-db-deployment.yaml
+kubectl apply -f carts-db-service.yaml
+
+# Apply microservice deployments and services
+kubectl apply -f kubernetes/auth-deployment.generated.yaml
+kubectl apply -f kubernetes/auth-service.yaml
+kubectl apply -f kubernetes/products-deployment.generated.yaml
+kubectl apply -f kubernetes/products-service.yaml
+kubectl apply -f kubernetes/cart-deployment.generated.yaml
+kubectl apply -f kubernetes/cart-service.yaml
+
+# Apply API gateway deployment and service
+kubectl apply -f api-gateway-deployment.generated.yaml
+kubectl apply -f api-gateway-service.yaml
+
+# Apply frontend deployment and service
 kubectl apply -f deployment.yaml
 kubectl apply -f frontend-service.yaml
-# kubectl apply -f products-deployment.generated.yaml
-# kubectl apply -f auth-deployment.generated.yaml
-# kubectl apply -f cart-deployment.generated.yaml
-# kubectl apply -f api-gateway-deployment.generated.yaml
+
+# Optionally apply ingress if needed
+# kubectl apply -f ingress.yml
 
 echo "✅ Deployment applied. Use 'kubectl get services' to check external IP."
