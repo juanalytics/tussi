@@ -19,7 +19,7 @@ spec:
         - name: cart-service
           image: us-central1-docker.pkg.dev/tussi-466501/microservices-repo/cart-api:REPLACE_WITH_TAG
           ports:
-            - containerPort: 4002
+            - containerPort: 8000
           resources:
             requests:
               cpu: "100m"
@@ -28,4 +28,29 @@ spec:
               cpu: "250m"
               memory: "512Mi"
           env:
-            # Add any required environment variables here 
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "8000"
+            - name: MONGO_URI
+              value: "mongodb://root:rootpassword@carts-db:27017/cart-service?authSource=admin"
+            - name: MONGO_USER
+              value: "root"
+            - name: MONGO_PASSWORD
+              value: "rootpassword"
+            - name: MONGO_DB
+              value: "cart-service"
+            - name: AUTH_SERVICE_URL
+              value: "http://auth-service:8000"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10 

@@ -11,5 +11,5 @@ spec:
     app: cart-service
   ports:
     - protocol: TCP
-      port: 4002
-      targetPort: 4002 
+      port: 8000
+      targetPort: 8000 

@@ -19,7 +19,7 @@ spec:
         - name: auth-service
           image: us-central1-docker.pkg.dev/tussi-466501/microservices-repo/auth-service:REPLACE_WITH_TAG
           ports:
-            - containerPort: 4000
+            - containerPort: 8000
           resources:
             requests:
               cpu: "100m"
@@ -28,4 +28,23 @@ spec:
               cpu: "250m"
               memory: "512Mi"
           env:
-            # Add any required environment variables here 
+            - name: DATABASE_URL
+              value: "postgresql://authuser:supersecret@auth-db:5432/auth"
+            - name: JWT_SECRET
+              value: "supersecretkey"
+            - name: JWT_EXPIRATION
+              value: "36000"
+            - name: NODE_ENV
+              value: "production"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10 

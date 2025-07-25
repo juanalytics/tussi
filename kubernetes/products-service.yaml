@@ -11,5 +11,5 @@ spec:
     app: products-service
   ports:
     - protocol: TCP
-      port: 4001
-      targetPort: 4001 
+      port: 8000
+      targetPort: 8000 
