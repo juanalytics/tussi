@@ -220,7 +220,7 @@ Este sistema comprende dos clientes, un balanceador de carga, cuatro servicios y
 
 #### Layered (Tier & Layer) View
 
-```mermaid
+![Layered View](layered-diagram.png)
 graph TB
   subgraph "Tier 1: Presentation"
     WebClient["Web Client<br>(Next.js)"]
@@ -271,6 +271,7 @@ graph TB
   ProductModel   -->|persists| ProdDB
   CartModel      -->|persists| CartDB
   MobileClient   -->|caches| MobileStore
+
 ```
 
 ##### **Tier 1: Presentation**
@@ -399,70 +400,9 @@ Container Orchestration Pattern with Docker Compose, network segmentation, and l
 
 #### Decomposition View
 
-![decompositoon](decomposition.png)
+![functionalities vs modules](decomposition.png)
 
-```mermaid
-graph TD
-    subgraph "Tussi E-commerce Platform"
-        subgraph "Module: Presentation"
-            subgraph "Web Client (Next.js)"
-                wc1["User Authentication (Login, Register pages)"]
-                wc2["Product Discovery (Lists, Detail pages)"]
-                wc3["Shopping Cart Management"]
-                wc4["Responsive UI Components"]
-            end
-            subgraph "Mobile Client (React Native)"
-                mc1["User Authentication (Login, Register screens)"]
-                mc2["Product Discovery (Lists, Detail screens)"]
-                mc3["Shopping Cart Management"]
-                mc4["Offline Capabilities (AsyncStorage)"]
-            end
-        end
-
-        subgraph "Module: Gateway"
-            subgraph "API Gateway (Node.js)"
-                gw1["Request Routing (to backend services)"]
-                gw2["Authentication Middleware (JWT Validation)"]
-                gw3["Rate Limiting & Security Policies"]
-                gw4["Centralized Logging & Health Checks"]
-                gw5["Endpoint Aggregation (/api/search)"]
-            end
-        end
-
-        subgraph "Module: Business Services"
-            subgraph "Authentication Service (FastAPI)"
-                subgraph "User Management"
-                    auth_reg["Register User"]
-                    auth_profile["Get User Profile"]
-                end
-                subgraph "Session Management"
-                    auth_login["Login User (issue JWT)"]
-                    auth_verify["Verify JWT (used by gateway)"]
-                end
-            end
-            subgraph "Products Service (FastAPI)"
-                subgraph "Product Catalog"
-                    prod_crud["Create, Read, Update, Delete Products"]
-                    prod_list["List Products (with pagination)"]
-                end
-            end
-            subgraph "Cart Service (Node.js)"
-                subgraph "Cart Operations"
-                    cart_get["Get User's Cart"]
-                    cart_add["Add/Update Item in Cart"]
-                    cart_remove["Remove Item from Cart"]
-                    cart_clear["Clear Cart"]
-                end
-            end
-        end
-
-        subgraph "Module: Data Persistence"
-            db_auth["Auth DB (PostgreSQL)<br/>Stores user credentials and profiles"]
-            db_prod["Products DB (PostgreSQL)<br/>Stores product catalog and inventory"]
-            db_cart["Cart DB (MongoDB)<br/>Stores shopping cart sessions and items"]
-        end
-    end
-```
+![Decomposition Diagram](decomposition-diagram.png)
 
 **Module Descriptions:**
 
@@ -498,20 +438,7 @@ graph TD
 
 #### Man in the middle Attack (SSL)
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>External Component"] --> B["<b>Stimulus:</b><br/>Attempt to intercept data in transit"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Communication Channel (TLS/SSL)"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>Data travels encrypted, preventing unauthorized reading"]
-    
-    D --> E["<b>Metric:</b><br/>Data Confidentiality + Integrity"]
-```
+![SSL](ssl.png)
 
 **Description:**
 
@@ -528,20 +455,7 @@ An attacker on an insecure network (e.g., public Wi-Fi) attempts to perform a ma
 
 #### Attempt to Bypass API Gateway (Reverse Proxy)
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>External Client"] --> B["<b>Stimulus:</b><br/>Request to an internal microservice"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Reverse Proxy (API Gateway)"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>The proxy validates and routes the request; the client never directly accesses the service"]
-    
-    D --> E["<b>Metric:</b><br/>Reduced Service Exposure + Isolation"]
-```
+![Reverse Proxy](reverse-proxy.png)
 
 **Description:**
 
@@ -558,20 +472,7 @@ A malicious actor, having discovered the potential internal IP address of a micr
 
 ### Frontend Compromised (Network Segmentation)
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>Attacker in compromised container"] --> B["<b>Stimulus:</b><br/>Attempt lateral movement to database"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Docker Networks (npublic and private)"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>Docker network rules block traffic between isolated networks"]
-    
-    D --> E["<b>Metric:</b><br/>Zero connectivity between frontend and database networks"]
-```
+![Network Segmentation](networks.png)
 
 **Description:**
 
@@ -588,20 +489,7 @@ An attacker successfully exploits a vulnerability in the `frontend` service cont
 
 #### Product Modification for Fraud (Event Sourcing)
 
-```mermaid
-graph LR
-    A["<b>Stimulus source:</b><br/> Legitimate administrator"] --> B["<b>Stimulus:</b><br/>Secret price modification"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>products-api + products-db"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/> Immutable change log"]
-    
-    D --> E["<b>Metric:</b><br/>Complete and verifiable history"]
-```
+![Event Sourcing](event-sourcing.png)
 
 **Description:**
 
@@ -622,20 +510,7 @@ An administrator, using legitimate credentials, secretly changes the price of a 
 
 #### API Gateway Instance Fail (Replication)
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>Internal Failure"] --> B["<b>Stimulus:</b><br/>API Gateway instance crashes"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Load Balancer + Replicated API Gateways"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>Load balancer detects failure and redirects traffic to healthy instances"]
-    
-    D --> E["<b>Metric:</b><br/>High Availability (>99.9%)"]
-```
+![Replication](replication.png)
 
 **Description:**
 
@@ -652,20 +527,7 @@ During a period of high traffic, one of the four replicated API Gateway containe
 
 #### Increase on Concurrent Users (Load Balancer)
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>External Clients"] --> B["<b>Stimulus:</b><br/>Sudden surge in user traffic"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Container Orchestrator + Load Balancer"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>Additional service instances are deployed and traffic is distributed"]
-    
-    D --> E["<b>Metric:</b><br/>Sustained Response Time + Resource Utilization"]
-```
+![Load Balancer](load-balancer.png)
 
 **Description:**
 
@@ -682,20 +544,7 @@ A successful marketing campaign results in a massive, sudden surge in concurrent
 
 #### Denial Of Service Attack (Rate Limiting)
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>Malicious Client/Script"] --> B["<b>Stimulus:</b><br/>Request flood to a specific endpoint"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>API Gateway Rate Limiting Middleware"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>Excessive requests from the source are blocked with HTTP 429"]
-    
-    D --> E["<b>Metric:</b><br/>Service Availability + Blocked Malicious Requests"]
-```
+![DOS](dos.png)
 
 **Description:**
 
@@ -712,20 +561,7 @@ A malicious actor or a poorly configured script begins to flood the `/api/auth/l
 
 #### Bottleneck on Write and Reads in Products database (CQRS)
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>Concurrent Reads + Writes"] --> B["<b>Stimulus:</b><br/> Update Stock and Select Products"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>products-api + products-db"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/> Handle Reads and Writes"]
-    
-    D --> E["<b>Metric:</b><br/> <350ms Read ; <1,5s Write "]
-```
+![CQRS](cqrs.png)
 
 ---
 
@@ -757,20 +593,7 @@ Therefore, **node replication** (incorporation, repair or scaling) in GKE is **a
 
 ### Active Redundancy (Hot Spare) Pattern
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>Internal Component"] --> B["<b>Stimulus:</b><br/>Primary instance fails health check"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Service Replica Set (e.g., Pods)"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>Traffic is rerouted to hot spare instance"]
-    
-    D --> E["<b>Metric:</b><br/>Failover time < 500ms, Zero data loss"]
-```
+![Hot Spare](hot-spare.png)
 
 | Part                   | Detail                                                                                                                                                                                                                                                                    |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -785,20 +608,7 @@ On GKE, we implement an Active Redundancy (Hot Spare) pattern by running your se
 
 ### Passive Redundancy (Warm Spare) Pattern
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>Monitoring System"] --> B["<b>Stimulus:</b><br/>Primary service becomes unresponsive"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Standby Service Replica"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>Promote warm spare to active"]
-    
-    D --> E["<b>Metric:</b><br/>Recovery Time Objective (RTO) < 2 minutes"]
-```
+![Warm Spare](warm-spare.png)
 
 | Part                   | Detail                                                                                                                                                                                                                                           |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -813,20 +623,7 @@ We implement a Warm Spare by running one "standby" replica of your service on a 
 
 ### Service Discovery Pattern
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>API Gateway"] --> B["<b>Stimulus:</b><br/>Request to 'products-api'"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Kubernetes DNS (CoreDNS)"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>DNS resolves service name to pod IP"]
-    
-    D --> E["<b>Metric:</b><br/>Successful name resolution < 10ms"]
-```
+![Service Discovery](service-discovery.png)
 
 | Part                   | Detail                                                                                                                                  |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
@@ -841,20 +638,7 @@ In GKE's VPC-native networking, each node automatically receives an alias IP ran
 
 ### Cluster Pattern
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>GKE Node Pool"] --> B["<b>Stimulus:</b><br/>Node failure detected"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Managed Instance Group (MIG)"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>MIG autorepair recreates the node"]
-    
-    D --> E["<b>Metric:</b><br/>Node recovery within minutes, zero manual intervention"]
-```
+![Cluster Scenario](cluster-scenario.png)
 
 | Part                   | Detail                                                                                                                             |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -867,20 +651,7 @@ graph LR
 
 ### Transaction Pattern
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>Cart Service"] --> B["<b>Stimulus:</b><br/>Payment fails after stock deduction"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Checkout Process Logic"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>Trigger compensating transaction to revert stock"]
-    
-    D --> E["<b>Metric:</b><br/>Data consistency restored, no resource locks"]
-```
+![Transaction](transaction.png)
 
 | Part                   | Detail                                                                                                                                                                                               |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -905,8 +676,8 @@ The system's components interact primarily through well-defined, synchronous HTT
 
 - **External Interfaces (Client-Facing):** The Web and Mobile clients interact with the system through a single public interface exposed by the **Load Balancer** over HTTPS (port 443). This interface is, in turn, served by the **API Gateway**, which provides a unified API for all backend functionalities.
 - **Internal Interfaces (Service-to-Service):**
-    - The **API Gateway** communicates with backend microservices (`Auth`, `Products`, `Cart`) over a private network using their respective RESTful HTTP APIs.
-    - Each microservice communicates with its dedicated database using a specific TCP-based protocol via its database driver (PostgreSQL or MongoDB driver).
+  - The **API Gateway** communicates with backend microservices (`Auth`, `Products`, `Cart`) over a private network using their respective RESTful HTTP APIs.
+  - Each microservice communicates with its dedicated database using a specific TCP-based protocol via its database driver (PostgreSQL or MongoDB driver).
 - **API Endpoints:** The interfaces are defined by specific endpoints, such as `POST /api/auth/login`, `GET /api/products`, and `POST /api/cart/add`.
 
 ### Context
@@ -946,28 +717,15 @@ The system is designed to handle responses, including errors and failures, grace
 - **Standard HTTP Status Codes:** The APIs use standard HTTP status codes to indicate the outcome of a request (e.g., `200 OK`, `201 Created`, `400 Bad Request`, `401 Unauthorized`, `404 Not Found`).
 - **Error Payloads:** Failed requests are accompanied by a JSON payload containing a descriptive error message to aid in debugging on the client side.
 - **Fault Tolerance:**
-    - The **Load Balancer** continuously monitors the health of the API Gateway instances. If an instance becomes unresponsive, it is automatically removed from the routing pool, and traffic is redirected to healthy instances (**Active Redundancy** pattern).
-    - The **API Gateway** includes **rate-limiting** middleware, which responds with an **HTTP 429 "Too Many Requests"** status to protect backend services from denial-of-service attacks or traffic spikes.
+  - The **Load Balancer** continuously monitors the health of the API Gateway instances. If an instance becomes unresponsive, it is automatically removed from the routing pool, and traffic is redirected to healthy instances (**Active Redundancy** pattern).
+  - The **API Gateway** includes **rate-limiting** middleware, which responds with an **HTTP 429 "Too Many Requests"** status to protect backend services from denial-of-service attacks or traffic spikes.
 - **Health Checks:** All microservices expose a `/health` endpoint that can be used by monitoring systems (and the load balancer) to verify their operational status.
 
 ## 7. Interoperability Scenario: White-Labeling via Reverse Proxy
 
 A third-party client wants to use the Tussi platform to sell their own products but under their own brand (`my-brand.com`). To achieve this, the client's domain must be the one visible to end-users. Tussi enables this by allowing the client to set up a reverse proxy (e.g., using a Cloudflare Worker or Nginx) that forwards requests from `my-brand.com` to the Tussi application, which then serves the content, making it appear as if it originates from the client's domain.
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>End User"] --> B["<b>Stimulus:</b><br/>Request to 'my-brand.com'"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Reverse Proxy (Cloudflare Worker)"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>Proxy fetches content from Tussi and serves it under 'my-brand.com'"]
-    
-    D --> E["<b>Metric:</b><br/>Seamless branding, <50ms proxy latency"]
-```
+![Cloudflare reverse](cloudflare-reverse.png)
 
 | Part                   | Detail                                                                                                                                                                                           |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
