@@ -334,7 +334,7 @@ Container Orchestration Pattern with Docker Compose, network segmentation, and l
 
 **Infrastructure:**
 
-- **Network Segmentation**:
+- **Network Segmentation**: 
   - **Public Network**: Load balancer, frontend, API Gateway, K6 testing
   - **Private Network**: All backend services and databases (internal=true, no external access)
 - **Storage**: Docker volumes for database persistence
@@ -704,7 +704,7 @@ By default, GKE does not do "synchronous replication" of its nodes, but manages 
 
 Therefore, **node replication** (incorporation, repair or scaling) in GKE is **asynchronous** and is performed by **periodic reconciliation**, providing eventual consistency behavior.
 
-#### Active Redundancy (Hot Spare) Pattern
+### Active Redundancy (Hot Spare) Pattern
 
 ```mermaid
 graph LR
@@ -732,7 +732,7 @@ graph LR
 
 On GKE, we implement an Active Redundancy (Hot Spare) pattern by running your service as at least two pod replicas—ideally spread across separate node pools or zones—that each ingest the same input stream (for example, by subscribing to the same Pub/Sub topic) and checkpoint state continuously to a shared, highly-available datastore (Cloud Spanner or a regional Cloud SQL instance with synchronous replication). Both pods are kept "hot" and ready behind a single Kubernetes Service, so even though one is effectively "active" at any moment, its spare sibling has already processed all the same events and holds an up-to-date view of the state. If the primary pod or its node fails (detected instantly via liveness/readiness probes), Kubernetes immediately routes traffic to the surviving pod—which already has the latest state—ensuring failover with zero data loss and no disruption to your workload.
 
-#### Passive Redundancy (Warm Spare) Pattern
+### Passive Redundancy (Warm Spare) Pattern
 
 ```mermaid
 graph LR
@@ -814,7 +814,6 @@ graph LR
 | **Response**           | The MIG's health checker detects the unhealthy node. It automatically triggers the auto-healing process: the faulty VM is terminated, and a new, identical VM is created to replace it. The new node joins the GKE cluster, and Kubernetes begins scheduling pods onto it. |
 | **Response metric**    | The cluster's capacity is automatically restored without any manual intervention. The time to provision and register the new node is within the expected range (typically a few minutes). Workload disruption is minimized as Kubernetes reschedules pods that were on the failed node. |
 
-
 ### Transaction Pattern
 
 ```mermaid
@@ -842,6 +841,8 @@ graph LR
 | **Response metric**    | The system's data is restored to a consistent state. The product inventory is corrected. The user is notified of the payment failure, but the system does not remain in an inconsistent state (e.g., item sold but no payment received). |
 
 Compensating Transaction Provides a mechanism to recover from failures by reversing the effects of previously applied actions. This pattern addresses malfunctions in critical workload paths by using compensation actions, which can involve processes like directly rolling back data changes, breaking transaction locks, or even executing native system behavior to reverse the effect.
+
+---
 
 ## 6. Interoperability Analysis
 
@@ -954,7 +955,7 @@ The API Gateway serves as a single, unified entry point for all client requests.
 
 To ensure high availability and performance, the system employs a load balancer (Nginx) to distribute incoming traffic across multiple replicated instances of services like the API Gateway. It uses a round-robin strategy to balance the load, and by monitoring the health of each instance, it can automatically route traffic away from failed instances, thus preventing downtime.
 
-#### Database per service Pattern
+### Database per service Pattern
 
 Each microservice has exclusive ownership of its own database, which is kept private and is not directly accessible by other services. The Auth and Products services each connect to a dedicated PostgreSQL instance, while the Cart Service uses its own MongoDB instance. This pattern guarantees loose coupling and allows each service to choose the most appropriate data model and technology.
 
@@ -999,7 +1000,7 @@ The system employs strict network segmentation using Docker's networking feature
 
 This segmentation ensures that even if the frontend or API Gateway is compromised, attackers cannot directly access backend services or databases, containing the blast radius of potential breaches.
 
-### Performance Tactics Load Balancer Pattern Architectural Tactic: Maintain Multiple Copies of Computations (Manage Resources)
+### Performance Tactics Load Balancer Pattern - Architectural Tactic: Maintain Multiple Copies of Computations (Manage Resources)
 
 To manage system resources and maintain performance under heavy load, a load balancer is used to horizontally scale stateless services. By maintaining multiple copies of components like the API Gateway and distributing traffic among them, the system can handle a larger volume of concurrent computations, ensuring that response times remain low and preventing any single instance from becoming a bottleneck.
 
