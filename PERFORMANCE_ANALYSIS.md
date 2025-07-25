@@ -1,91 +1,87 @@
+# Performance Test Analysis – Products Service
 
-# Análisis de Pruebas de Rendimiento - Servicio de Productos
+## 1. Test Environment Setup
 
-## 1. Configuración del Entorno de Pruebas
+The tests were run in a controlled local environment with the following hardware resources to ensure result consistency:
 
-Las pruebas se ejecutaron en un entorno local controlado con los siguientes recursos de hardware para garantizar la consistencia de los resultados.
+* **CPU:** Apple M4 (10 cores)
+* **RAM:** 24 GB
+* **Storage:** 512 GB SSD
+* **Network:** 60 Mbps bandwidth
+* **GPU:** 10 cores
+* **Software:** Docker Desktop, k6 v0.50.0
+* **Service Under Test:** `products-api` (FastAPI/Python) running in a Docker container, accessed directly via Docker’s internal network to eliminate proxy latency.
 
--   **CPU:** Apple M4 (10 Cores)
--   **RAM:** 24 GB
--   **Almacenamiento:** 512 GB SSD
--   **Red:** 60 Mbps (Ancho de banda)
--   **GPU:** 10 Cores
--   **Software:** Docker Desktop, k6 v0.50.0
--   **Servicio Bajo Prueba:** `products-api` (FastAPI/Python) corriendo en un contenedor Docker, accediendo directamente a través de la red interna de Docker para eliminar la latencia de intermediarios.
+## 2. Test Methodology and Objectives
 
-## 2. Metodología y Objetivos de la Prueba
+### Objectives
 
-### Objetivos
+The primary goal of this test is to evaluate the performance, scalability, and robustness of the product microservice under various load conditions. The specific objectives are:
 
-El objetivo principal de esta prueba es evaluar el rendimiento, la escalabilidad y la robustez del microservicio de productos bajo diversas condiciones de carga. Los objetivos específicos son:
+1. **Measure response time** for critical operations:
 
-1.  **Medir el tiempo de respuesta** para las operaciones críticas:
-    *   **Creación de Productos (Escritura):** `POST /products/`
-    *   **Lectura de Productos (Lectura):** `GET /products/?limit=500`
-2.  **Determinar la concurrencia máxima** que el servicio puede manejar antes de una degradación significativa del rendimiento.
-3.  **Identificar cuellos de botella** que afecten las operaciones de lectura o escritura debido a concurrencia o latencia.
-4.  **Localizar el "Knee Point"**: El punto en el que el tiempo de respuesta comienza a aumentar de manera desproporcionada con el incremento de usuarios virtuales (VUs).
+   * **Product Creation (Write):** `POST /products/`
+   * **Product Retrieval (Read):** `GET /products/?limit=500`
+2. **Determine the maximum concurrency** the service can handle before significant performance degradation occurs.
+3. **Identify bottlenecks** affecting read or write operations due to concurrency or latency.
+4. **Locate the “Knee Point”:** the point at which response time begins to increase disproportionately as virtual users (VUs) grow.
 
-### Tipos de Pruebas Realizadas
+### Types of Tests Performed
 
-Se diseñó un script de k6 (`products-performance-test.js`) que combina múltiples escenarios y etapas para simular un comportamiento realista y encontrar los límites del sistema:
+A k6 script (`products-performance-test.js`) was designed to combine multiple scenarios and stages to simulate realistic behavior and uncover system limits:
 
--   **Pruebas de Carga (Load Testing):** Se incrementó gradualmente el número de VUs para simular un crecimiento normal del tráfico y observar cómo responde el sistema.
--   **Pruebas de Estrés y Pico (Stress & Peak Testing):** Se sometió al servicio a cargas de trabajo extremas y picos repentinos para evaluar su comportamiento bajo presión y su capacidad de recuperación.
--   **Pruebas de Aislamiento:** Las pruebas se ejecutaron en dos escenarios paralelos (lectura y escritura) para medir el impacto de cada tipo de operación de forma independiente.
+* **Load Testing:** Gradually ramped up the number of VUs to simulate normal traffic growth and observe system response.
+* **Stress & Peak Testing:** Subjected the service to extreme loads and sudden spikes to evaluate behavior under pressure and recovery ability.
+* **Isolation Tests:** Ran two parallel scenarios (read and write) to measure the impact of each operation type independently.
 
-## 3. Resumen de Resultados (Última Ejecución)
+## 3. Summary of Results (Latest Run)
 
-La siguiente tabla resume las métricas clave obtenidas de la última y más exitosa ejecución de la prueba. **Todos los umbrales de rendimiento definidos se cumplieron (`✓`)**, lo que indica un rendimiento excelente del sistema bajo las condiciones de la prueba.
+The table below summarizes the key metrics from the most recent and successful test run. **All defined performance thresholds were met (✓), indicating excellent system performance under test conditions.**
 
-| Métrica | Resultado General | Escenario de Lectura | Escenario de Creación |
-| :--- | :---: | :---: | :---: |
-| **Peticiones Totales** | 18,563 | 14,303 | 4,260 |
-| **Peticiones Fallidas** | **0.67%** (126) | **0.55%** (80) | **1.08%** (46) |
-| **Duración P95** | **87.79 ms** | **77.26 ms** | **118.03 ms** |
-| **Throughput** | 30.8 reqs/s | - | - |
+| Metric              |  Overall Result |  Read Scenario | Creation Scenario |
+| :------------------ | :-------------: | :------------: | :---------------: |
+| **Total Requests**  |      18,563     |     14,303     |       4,260       |
+| **Failed Requests** | **0.67%** (126) | **0.55%** (80) |   **1.08%** (46)  |
+| **P95 Duration**    |   **87.79 ms**  |  **77.26 ms**  |   **118.03 ms**   |
+| **Throughput**      |    30.8 req/s   |        –       |         –         |
 
-**Nota:** Aunque se observaron algunos `request timeouts` en los picos más altos de carga, la gran mayoría de las solicitudes se procesaron con una latencia muy baja, resultando en un P95 excelente.
+**Note:** Although some request timeouts were observed at the highest load peaks, the vast majority of requests were processed with very low latency, resulting in an excellent P95.
 
-## 4. Análisis Detallado
+## 4. Detailed Analysis
 
-### Rendimiento General
+### Overall Performance
 
--   **Excelente Latencia:** El sistema demostró una latencia excepcionalmente baja en todos los niveles de carga, con un P95 global de solo **88 ms**. Esto está muy por debajo del umbral de 800 ms y demuestra que el servicio es muy rápido para la mayoría de las solicitudes.
--   **Baja Tasa de Errores:** La tasa de fallos se mantuvo por debajo del 1%, lo que es un indicador de robustez. La mayoría de los errores se debieron a timeouts en lugar de fallos de la aplicación.
+* **Excellent Latency:** The system demonstrated exceptionally low latency at all load levels, with a global P95 of only **88 ms**—well below the 800 ms threshold—showing the service is very fast for most requests.
+* **Low Error Rate:** The failure rate stayed below 1%, indicating robustness. Most errors were due to timeouts rather than application faults.
 
-### Pruebas de Estrés y Pico (>80 VUs)
+### Stress and Peak Testing (> 80 VUs)
 
--   **Límites del Sistema:** A pesar del excelente rendimiento promedio, la aparición de timeouts durante los picos de carga (cuando se acercaba a los 130 VUs) indica que nos estamos acercando al límite de capacidad del sistema con la configuración actual.
--   **Cuello de Botella:** El patrón de timeouts bajo carga máxima sigue sugiriendo que el principal cuello de botella reside en la capacidad de manejar un alto volumen de transacciones concurrentes a nivel de base de datos o de workers de la aplicación, como se teorizó anteriormente.
+* **System Limits:** Despite outstanding average performance, the appearance of timeouts during peak loads (around 130 VUs) indicates we are approaching the system’s capacity limits under the current configuration.
+* **Bottleneck:** The timeout pattern under maximum load suggests the main bottleneck lies in handling a high volume of concurrent transactions—likely at the database connection or application worker level, as previously theorized.
 
-## 5. Gráfica del "Knee Point" (Datos Reales)
+## 5. “Knee Point” Graph (Real Data)
 
-La siguiente gráfica, generada automáticamente a partir de los resultados de la prueba, visualiza la relación entre el número de usuarios y el tiempo de respuesta (P95).
+The following graph, generated automatically from the test results, visualizes the relationship between the number of users and response time (P95).
 
-![Gráfica del Knee Point](knee_point_graph.png)
+![Knee Point Graph](knee_point_graph.png)
 
-**Análisis del Knee Point:**
+**Knee Point Analysis:**
 
--   **Curva Plana, Rendimiento Sostenido:** A diferencia de las pruebas anteriores, la última ejecución muestra una curva de rendimiento casi plana. El tiempo de respuesta (P95) se mantuvo consistentemente bajo (< 120 ms) incluso cuando el número de usuarios virtuales aumentó a 100-130.
--   **Sin "Knee Point" Claro:** En esta prueba exitosa, no se observa un "Knee Point" dramático. En lugar de una inflexión brusca, vemos un sistema que maneja la carga de manera muy eficiente y solo comienza a fallar (con timeouts) cuando se le lleva a su límite absoluto, pero sin una degradación gradual de la latencia. Esto es indicativo de una arquitectura muy eficiente.
+* **Flat Curve, Sustained Performance:** Unlike earlier tests, this run shows an almost flat performance curve. The P95 response time remained consistently low (< 120 ms) even as virtual users increased to 100–130.
+* **No Clear “Knee Point”:** In this successful run, there is no dramatic inflection point. Instead of a sharp knee, the system handles the load very efficiently and only begins to fail (with timeouts) when pushed to its absolute limit—without a gradual rise in latency. This reflects a highly efficient architecture.
 
-## 6. Conclusiones y Recomendaciones
+## 6. Conclusions and Recommendations
 
-El servicio `products-api` es **robusto y de alto rendimiento**, superando todos los umbrales definidos. La latencia es excelente y la tasa de errores es mínima. El sistema escala muy bien hasta su límite máximo, donde comienza a rechazar peticiones por timeout en lugar de experimentar una degradación gradual.
+The `products-api` service is **robust and high-performing**, surpassing all defined thresholds. Latency is excellent and the error rate is minimal. The system scales very well up to its maximum, at which point it rejects additional requests via timeouts rather than experiencing gradual latency degradation.
 
-Aunque el rendimiento es excelente, las siguientes recomendaciones siguen siendo válidas para aumentar aún más la capacidad y la resiliencia del sistema en un entorno de producción a gran escala.
+Although performance is already excellent, the following recommendations will further enhance capacity and resilience in a large-scale production environment.
 
-### Recomendaciones Priorizadas
+### Prioritized Recommendations
 
-1.  **Ajustar Workers de Uvicorn (Impacto Alto):** Aumentar el número de workers de Uvicorn (ej. `uvicorn --workers 4 ...`) es probablemente la optimización más sencilla y con mayor impacto para mejorar el manejo de la concurrencia a nivel de aplicación.
+1. **Adjust Uvicorn Workers (High Impact):** Increase the number of Uvicorn workers (e.g., `uvicorn --workers 4 ...`) for a simple yet impactful concurrency boost at the application level.
+2. **Database Optimization (Medium Impact):**
 
-2.  **Optimización de la Base de Datos (Impacto Medio):**
-    *   **Pool de Conexiones:** Asegurarse de que el pool de conexiones de SQLAlchemy esté configurado para un número adecuado de conexiones es vital para la producción.
-    *   **Análisis de Consultas:** Aunque las consultas son rápidas, una revisión con `EXPLAIN ANALYZE` podría revelar micro-optimizaciones.
-
-3.  **Implementar Caching (Largo Plazo):**
-    *   Para una escala aún mayor, una capa de caché con **Redis** para el endpoint de lectura sigue siendo la mejor estrategia para reducir la carga de la base de datos y aumentar masivamente el throughput.
-
-4.  **Monitoreo Continuo:**
-    *   Implementar monitoreo en producción para observar estas métricas (latencia P95, tasa de errores, timeouts) en tiempo real es crucial para detectar degradaciones antes de que afecten a los usuarios. 
+   * **Connection Pooling:** Ensure SQLAlchemy’s connection pool is sized appropriately for production.
+   * **Query Analysis:** Run `EXPLAIN ANALYZE` on critical queries to identify micro-optimizations.
+3. **Implement Caching (Long Term):** Add a Redis cache layer for the read endpoint to offload the database and dramatically increase throughput.
+4. **Continuous Monitoring:** Deploy real-time monitoring of P95 latency, error rates, and timeouts in production to catch degradations before they impact users.

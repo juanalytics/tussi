@@ -260,7 +260,7 @@ Container Orchestration Pattern with Docker Compose, network segmentation, and l
 
 **Deployment Units:**
 
-- **Load Balancer Container:** ⭐ **NEW**
+- **Load Balancer Container:**
   - Image: Custom Nginx build
   - Ports: `80:80` (HTTP redirect), `443:443` (HTTPS)
   - Dependencies: `api-gateway`
@@ -275,14 +275,14 @@ Container Orchestration Pattern with Docker Compose, network segmentation, and l
   - Environment: `NEXT_PUBLIC_API_GATEWAY_URL=https://localhost:443`
   - Network: `public`
 
-- **Mobile Application:** ⭐ **NEW**
+- **Mobile Application:**
   - Platform: iOS/Android Native
   - Distribution: App Store/Google Play Store
   - Dependencies: Load Balancer (HTTPS endpoint)
   - Environment: `API_GATEWAY_URL=https://api.tussi.com` (production)
   - Local Storage: AsyncStorage for offline capabilities
 
-- **API Gateway Container:** ⭐ **NEW**
+- **API Gateway Container:**
   - Image: Custom Node.js build
   - Replicas: 4 instances for high availability
   - Dependencies: `auth-service`, `products-api`, `cart-api`
@@ -296,7 +296,7 @@ Container Orchestration Pattern with Docker Compose, network segmentation, and l
   - Health Check: `curl -f http://localhost:9000/health`
   - Networks: `public` (receives from load balancer), `private` (communicates with services)
 
-- **K6 Load Testing Container:** ⭐ **NEW**
+- **K6 Load Testing Container:**
   - Image: `grafana/k6`
   - Ports: `6565:6565`
   - Volume: `./tests/k6:/scripts`
@@ -1091,11 +1091,11 @@ curl http://localhost:8002/health    # Cart API
 
 | Service         | External Port | Internal Port | Network  | Description |
 |:----------------|:--------------|:--------------|:---------|:------------|
-| **Load Balancer** | **80, 443**   | **80, 443**   | public   | **Nginx SSL Termination & Load Balancing** ⭐ **NEW** |
+| **Load Balancer** | **80, 443**   | **80, 443**   | public   | **Nginx SSL Termination & Load Balancing** |
 | **Frontend**    | 3000          | 3000          | public   | Next.js SSR Web Application |
-| **Mobile App**  | N/A           | N/A           | N/A      | **Native iOS/Android Application** ⭐ **NEW** |
-| **API Gateway** | N/A           | **9000**      | public, private | **Main API Gateway (4 replicas)** ⭐ **NEW** |
-| **K6 Testing**  | 6565          | 6565          | public   | **Load Testing Service** ⭐ **NEW** |
+| **Mobile App**  | N/A           | N/A           | N/A      | **Native iOS/Android Application** |
+| **API Gateway** | N/A           | **9000**      | public, private | **Main API Gateway (4 replicas)** |
+| **K6 Testing**  | 6565          | 6565          | public   | **Load Testing Service** |
 | Auth Service    | 8000*         | 8000          | private  | Authentication & Authorization |
 | Products API    | 8001*         | 8000          | private  | Product Catalog Management |
 | Cart API        | 8002*         | 8000          | private  | Shopping Cart Operations |
@@ -1107,10 +1107,10 @@ curl http://localhost:8002/health    # Cart API
 
 ### Access Points
 
-- **Primary Access** (Production): <https://localhost:443> (Load Balancer) ⭐ **NEW**
+- **Primary Access** (Production): <https://localhost:443> (Load Balancer)
 - **Web Application**: <http://localhost:3000>
-- **Mobile Application**: Available on iOS/Android devices ⭐ **NEW**
-- **Load Testing**: <http://localhost:6565> (K6 Dashboard) ⭐ **NEW**
+- **Mobile Application**: Available on iOS/Android devices
+- **Load Testing**: <http://localhost:6565> (K6 Dashboard)
 - **API Documentation**:
   - Gateway: <https://localhost:443/docs> (Production) or <http://localhost:9000/docs> (Development)
   - Auth Service: <http://localhost:8000/docs> (Development only)
@@ -1140,7 +1140,7 @@ All API endpoints are accessible through the Load Balancer and API Gateway from 
 - `POST /api/cart/add`
 - `POST /api/cart/checkout`
 
-### Load Testing with K6 ⭐ **NEW**
+### Load Testing with K6
 
 The system includes automated load testing capabilities:
 
@@ -1148,49 +1148,6 @@ The system includes automated load testing capabilities:
 # Run K6 load tests
 docker-compose exec k6 k6 run /scripts/test.js
 ```
-
-**Description:**
-This load test exercises the `/products` endpoint through a controlled sequence of traffic patterns to validate performance, scalability, and resilience. It consists of the following seven stages (implemented in k6):
-
-1. **Warm-up** (30 s, 5 VUs)
-   Gently primes caches, JIT compilation, and connection pools.
-
-2. **Ramp-up** (1 m, 20 VUs)
-   Gradually increases load to steady state to detect any early bottlenecks.
-
-3. **Sustained Load** (3 m, 20 VUs)
-   Holds constant traffic to verify stable throughput under normal conditions.
-
-4. **Stress Test** (2 m, 50 VUs)
-   Pushes the service beyond typical load to identify breakpoints and resource exhaustion.
-
-5. **Spike Test** (1 m, 100 VUs)
-   Sudden surge to validate autoscaling, throttling, or graceful degradation.
-
-6. **Recovery** (2 m, 20 VUs)
-   Drops back to sustained load level to observe recovery time and service stabilization.
-
-7. **Cool-down** (30 s, 0 VUs)
-   Ensures connections shutdown cleanly and there are no lingering errors.
-
-During the test, we collect key metrics and enforce these thresholds:
-
-- **95th-percentile response time** must remain below 2 s.
-- **Error rate** (HTTP failures) must stay under 0.1%.
-- **Success rate** (HTTP 2xx responses) must exceed 95%.
-
-![load](load.png)
-![load1](load1.png)
-![load2](load2.png)
-
-The accompanying chart shows a 10-sample moving average of HTTP request durations, demonstrating how the endpoint's latency evolves across each phase. This comprehensive profile uncovers potential performance regressions, validates SLAs, and ensures the products API can handle real-world traffic surges.
-
-**K6 Test Features:**
-
-- **Stress Testing**: Simulates high concurrent user loads
-- **Performance Metrics**: Response time, throughput, error rates
-- **Scalability Validation**: Tests system behavior under load
-- **Load Balancer Testing**: Validates traffic distribution across API Gateway replicas
 
 ### Mobile App Testing
 
@@ -1322,7 +1279,7 @@ TUSSI/
 ├── README.md                      # This documentation
 ├── scripts/                       # Utility scripts
 │   └── restore-products-db.sh     # DB restore script
-├── api-gateway/                   # ⭐ NEW - API Gateway Service
+├── api-gateway/                   # API Gateway Service
 │   ├── node_modules/
 │   │   ├── Dockerfile
 │   │   ├── package-lock.json
@@ -1346,7 +1303,7 @@ TUSSI/
 │   │   ├── tailwind.config.ts
 │   │   ├── tsconfig.json
 │   │   └── web-app-manifest-512x512.png
-│   ├── mobile-app/                   # ⭐ NEW - React Native Mobile Application
+│   ├── mobile-app/                   # React Native Mobile Application
 │   │   ├── android/                 # Android-specific files
 │   │   │   ├── app/
 │   │   │   ├── gradle/
