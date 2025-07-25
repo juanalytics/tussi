@@ -222,16 +222,16 @@ graph TB
   MobileClient   -->|caches| MobileStore
 ```
 
-**Tier 1: Presentation**
+##### **Tier 1: Presentation**
 
 - **Web Client:** Next.js/React app running in the browser.
 - **Mobile Client:** React Native app on iOS/Android.
 
-**Tier 2: Communication**
+##### **Tier 2: Communication**
 
 - **API Gateway:** Node.js/Express service that centralizes routing, JWT auth, rate-limiting, CORS, load balancing and health checks for all client traffic.
 
-**Tier 3: Logic**
+##### **Tier 3: Logic**
 
 - **L1 Controllers (Routing Layer):**
 
@@ -243,7 +243,7 @@ graph TB
 
   - ORM/ODM schemas and repository interfaces for each domain entity (User, Product, Cart), isolating persistence logic.
 
-**Tier 4: Data**
+##### **Tier 4: Data**
 
 - **Auth DB:** PostgreSQL instance for user credentials and auth metadata.
 - **Products DB:** PostgreSQL instance for product catalog and inventory.
@@ -334,7 +334,7 @@ Container Orchestration Pattern with Docker Compose, network segmentation, and l
 
 **Infrastructure:**
 
-- **Network Segmentation**: 
+- **Network Segmentation**:
   - **Public Network**: Load balancer, frontend, API Gateway, K6 testing
   - **Private Network**: All backend services and databases (internal=true, no external access)
 - **Storage**: Docker volumes for database persistence
@@ -420,7 +420,7 @@ graph TD
 - **Business Services Module**: A set of domain-specific microservices that implement the core business logic. This includes an **Authentication Service** (FastAPI) for user registration and login, a **Products Service** (FastAPI) for catalog management, and a **Cart Service** (Node.js) for shopping cart operations.
 - **Data Persistence Module**: Implements a polyglot persistence strategy using multiple databases. It includes a PostgreSQL database for the **Auth Service**, another PostgreSQL database for the **Products Service**, and a MongoDB database for the **Cart Service**. This ensures data isolation and allows each service to use the most appropriate database technology.
 
-**Functionalities Description**
+#### **Functionalities Description**
 
 - **User Management & Authentication**:
   - Secure user registration and login via the Authentication Service.
@@ -854,8 +854,8 @@ The system's components interact primarily through well-defined, synchronous HTT
 
 - **External Interfaces (Client-Facing):** The Web and Mobile clients interact with the system through a single public interface exposed by the **Load Balancer** over HTTPS (port 443). This interface is, in turn, served by the **API Gateway**, which provides a unified API for all backend functionalities.
 - **Internal Interfaces (Service-to-Service):**
-  - The **API Gateway** communicates with backend microservices (`Auth`, `Products`, `Cart`) over a private network using their respective RESTful HTTP APIs.
-  - Each microservice communicates with its dedicated database using a specific TCP-based protocol via its database driver (PostgreSQL or MongoDB driver).
+      - The **API Gateway** communicates with backend microservices (`Auth`, `Products`, `Cart`) over a private network using their respective RESTful HTTP APIs.
+      - Each microservice communicates with its dedicated database using a specific TCP-based protocol via its database driver (PostgreSQL or MongoDB driver).
 - **API Endpoints:** The interfaces are defined by specific endpoints, such as `POST /api/auth/login`, `GET /api/products`, and `POST /api/cart/add`.
 
 ### Context
@@ -895,8 +895,8 @@ The system is designed to handle responses, including errors and failures, grace
 - **Standard HTTP Status Codes:** The APIs use standard HTTP status codes to indicate the outcome of a request (e.g., `200 OK`, `201 Created`, `400 Bad Request`, `401 Unauthorized`, `404 Not Found`).
 - **Error Payloads:** Failed requests are accompanied by a JSON payload containing a descriptive error message to aid in debugging on the client side.
 - **Fault Tolerance:**
-  - The **Load Balancer** continuously monitors the health of the API Gateway instances. If an instance becomes unresponsive, it is automatically removed from the routing pool, and traffic is redirected to healthy instances (**Active Redundancy** pattern).
-  - The **API Gateway** includes **rate-limiting** middleware, which responds with an **HTTP 429 "Too Many Requests"** status to protect backend services from denial-of-service attacks or traffic spikes.
+      - The **Load Balancer** continuously monitors the health of the API Gateway instances. If an instance becomes unresponsive, it is automatically removed from the routing pool, and traffic is redirected to healthy instances (**Active Redundancy** pattern).
+      - The **API Gateway** includes **rate-limiting** middleware, which responds with an **HTTP 429 "Too Many Requests"** status to protect backend services from denial-of-service attacks or traffic spikes.
 - **Health Checks:** All microservices expose a `/health` endpoint that can be used by monitoring systems (and the load balancer) to verify their operational status.
 
 ## 7. Interoperability Scenario: White-Labeling via Reverse Proxy
@@ -951,10 +951,6 @@ Tussi embraces a polyglot approach for both programming languages and data persi
 
 The API Gateway serves as a single, unified entry point for all client requests. It is responsible for routing traffic to the appropriate downstream microservice and centralizing cross-cutting concerns like JWT-based authentication, rate limiting, CORS policies, and centralized logging. This simplifies client logic and provides a robust control plane for the backend.
 
-### Microservices Pattern
-
-The backend is decomposed into a set of independently deployable microservices. Each service (e.g., Authentication, Products, Cart) is aligned with a specific business capability, manages its own database, and runs in a separate Docker container. This pattern enhances scalability, fault isolation, and technological flexibility, as each service can be developed and updated without impacting others.
-
 ### Load Balancer Pattern: Round Robin Implementation
 
 To ensure high availability and performance, the system employs a load balancer (Nginx) to distribute incoming traffic across multiple replicated instances of services like the API Gateway. It uses a round-robin strategy to balance the load, and by monitoring the health of each instance, it can automatically route traffic away from failed instances, thus preventing downtime.
@@ -963,11 +959,11 @@ To ensure high availability and performance, the system employs a load balancer 
 
 Each microservice has exclusive ownership of its own database, which is kept private and is not directly accessible by other services. The Auth and Products services each connect to a dedicated PostgreSQL instance, while the Cart Service uses its own MongoDB instance. This pattern guarantees loose coupling and allows each service to choose the most appropriate data model and technology.
 
-### Server-Side Rendering Pattern
+### Server side rendering
 
 The web application is built with Next.js and leverages Server-Side Rendering (SSR). When a user requests a page, it is rendered on the server into full HTML and then sent to the client. This pattern improves initial page load times and provides a better user experience, while also being highly beneficial for Search Engine Optimization (SEO).
 
-### Active Redundancy (Hot Spare) Pattern
+### Active Redundancy Pattern (Hot Spare)
 
 The system ensures high availability for the API Gateway using an active redundancy pattern with hot spares.
 
@@ -1007,26 +1003,6 @@ This segmentation ensures that even if the frontend or API Gateway is compromise
 ### Performance Tactics Load Balancer Pattern - Architectural Tactic: Maintain Multiple Copies of Computations (Manage Resources)
 
 To manage system resources and maintain performance under heavy load, a load balancer is used to horizontally scale stateless services. By maintaining multiple copies of components like the API Gateway and distributing traffic among them, the system can handle a larger volume of concurrent computations, ensuring that response times remain low and preventing any single instance from becoming a bottleneck.
-
-### Event Sourcing Pattern
-
-To maintain a complete and verifiable history of critical changes, particularly for sensitive operations like product price modifications, the system can implement an Event Sourcing pattern. Instead of merely storing the current state, all changes to application state are captured as a sequence of immutable events. This provides an audit trail and allows for reconstructing past states.
-
-### CQRS Pattern
-
-To optimize for scenarios with high read and write loads, particularly for the product database, the system can adopt the Command Query Responsibility Segregation (CQRS) pattern. This involves separating the model for updating information (Command side) from the model for reading information (Query side). This allows for independent scaling and optimization of read and write operations, preventing bottlenecks caused by concurrent access patterns.
-
-### Service Discovery Pattern
-
-For internal service-to-service communication within the containerized environment, a Service Discovery Pattern is employed. This allows services to find and communicate with each other without hardcoding network locations. In a Kubernetes environment, this is typically handled by the built-in DNS service, enabling services to resolve logical names (e.g., `products-api`) to dynamic IP addresses of running instances.
-
-### Cluster Pattern
-
-The system leverages a Cluster Pattern, where multiple nodes and instances work together as a single, unified computing resource to provide high availability and scalability. In a GKE environment, this is managed through node pools and Managed Instance Groups (MIGs) that automatically handle node recreation and workload rescheduling in case of failures, ensuring continuous operation.
-
-### Compensating Transaction Pattern
-
-To ensure data consistency in distributed transactions, especially when an operation in a multi-step process fails, the Compensating Transaction Pattern is utilized. This involves designing a reverse action for each step in a distributed transaction. If a subsequent step fails, compensating transactions are executed to undo the effects of previously completed steps, effectively rolling back the entire logical transaction and restoring the system to a consistent state. This prevents partial updates and ensures data integrity in complex workflows like a checkout process where stock might be deducted before payment confirmation.
 
 ## 10. Prototype Deployment
 
