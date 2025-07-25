@@ -832,8 +832,6 @@ graph LR
     D --> E["<b>Metric:</b><br/>Data consistency restored, no resource locks"]
 ```
 
-Compensating Transaction Provides a mechanism to recover from failures by reversing the effects of previously applied actions. This pattern addresses malfunctions in critical workload paths by using compensation actions, which can involve processes like directly rolling back data changes, breaking transaction locks, or even executing native system behavior to reverse the effect.
-
 | Part                   | Detail                                                                                                                                                                                               |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Stimulus**           | A user is completing a checkout. The system successfully deducts an item from the `products-api` inventory, but the subsequent call to the payment processing service fails.                             |
@@ -842,6 +840,8 @@ Compensating Transaction Provides a mechanism to recover from failures by revers
 | **Environment**        | Production, during a multi-step, distributed transaction (Saga).                                                                                                                                     |
 | **Response**           | The `cart-api`, upon detecting the payment failure, invokes a compensating transaction. It sends a specific request to the `products-api` (e.g., `POST /api/products/{id}/add-stock`) to add the previously deducted item back into inventory, effectively reversing the initial operation. |
 | **Response metric**    | The system's data is restored to a consistent state. The product inventory is corrected. The user is notified of the payment failure, but the system does not remain in an inconsistent state (e.g., item sold but no payment received). |
+
+Compensating Transaction Provides a mechanism to recover from failures by reversing the effects of previously applied actions. This pattern addresses malfunctions in critical workload paths by using compensation actions, which can involve processes like directly rolling back data changes, breaking transaction locks, or even executing native system behavior to reverse the effect.
 
 ## 6. Interoperability Analysis
 
