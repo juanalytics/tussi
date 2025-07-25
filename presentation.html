@@ -141,8 +141,8 @@
 
             <section>
                 <h3>Component-and-Connector View</h3>
-                <p>A system comprising two clients, a load balancer, four services, and three databases, connected by
-                    ten connectors.</p>
+                <p>A system comprising two clients, a load balancer, four services, and three databases, connected
+                    by ten connectors.</p>
             </section>
 
             <section>
@@ -314,7 +314,9 @@
 
             <section>
                 <h3>Security Scenarios - Man in the Middle Attack</h3>
-                <p>Protection against data interception through SSL/TLS encryption.</p>
+                <p>An attacker on an insecure network (e.g., public Wi-Fi) attempts to perform a man-in-the-middle
+                    (MITM) attack to intercept sensitive data, such as login credentials or personal information,
+                    being transmitted between a user's device and the Tussi backend.</p>
             </section>
 
             <section>
@@ -337,8 +339,8 @@
                     </tr>
                     <tr>
                         <td>Artifact</td>
-                        <td>The communication channel between the client and the Load Balancer/API Gateway, secured with
-                            TLS/SSL.</td>
+                        <td>The communication channel between the client and the Load Balancer/API Gateway, secured
+                            with TLS/SSL.</td>
                     </tr>
                     <tr>
                         <td>Environment</td>
@@ -360,7 +362,9 @@
 
             <section>
                 <h3>Security Scenarios - API Gateway Bypass</h3>
-                <p>Prevention of direct microservice access through reverse proxy pattern.</p>
+                <p>A malicious actor, having discovered the potential internal IP address of a microservice,
+                    attempts to bypass the API Gateway and communicate directly with the products-api to exploit a
+                    potential vulnerability that the gateway's security filters would otherwise block.</p>
             </section>
 
             <section>
@@ -384,19 +388,19 @@
                     </tr>
                     <tr>
                         <td>Artifact</td>
-                        <td>The API Gateway, which serves as the single entry point, and the network configuration that
-                            isolates backend services.</td>
+                        <td>The API Gateway, which serves as the single entry point, and the network configuration
+                            that isolates backend services.</td>
                     </tr>
                     <tr>
                         <td>Environment</td>
-                        <td>Production. Backend services are running in a private network, inaccessible from the public
-                            internet.</td>
+                        <td>Production. Backend services are running in a private network, inaccessible from the
+                            public internet.</td>
                     </tr>
                     <tr>
                         <td>Response</td>
-                        <td>The request fails because the private network is not exposed. The API Gateway is the only
-                            component listening for external traffic, and it validates, authenticates, and sanitizes all
-                            requests before forwarding them.</td>
+                        <td>The request fails because the private network is not exposed. The API Gateway is the
+                            only component listening for external traffic, and it validates, authenticates, and
+                            sanitizes all requests before forwarding them.</td>
                     </tr>
                     <tr>
                         <td>Response metric</td>
@@ -432,9 +436,9 @@
                     </tr>
                     <tr>
                         <td>Artifact</td>
-                        <td>The Docker network configuration in docker-compose.yml, which defines two distinct networks:
-                            public for external-facing services and private (with internal: true) for the backend and
-                            databases.</td>
+                        <td>The Docker network configuration in docker-compose.yml, which defines two distinct
+                            networks: public for external-facing services and private (with internal: true) for the
+                            backend and databases.</td>
                     </tr>
                     <tr>
                         <td>Environment</td>
@@ -444,8 +448,8 @@
                     <tr>
                         <td>Response</td>
                         <td>The connection attempt from frontend to auth-db is blocked at the Docker network layer.
-                            Because the containers do not share a common network and the private network is isolated, no
-                            route exists between them.</td>
+                            Because the containers do not share a common network and the private network is
+                            isolated, no route exists between them.</td>
                     </tr>
                     <tr>
                         <td>Response metric</td>
@@ -488,13 +492,13 @@
                     </tr>
                     <tr>
                         <td>Response</td>
-                        <td>The system must immutably log every price change, including user, previous value, new value,
-                            and timestamp.</td>
+                        <td>The system must immutably log every price change, including user, previous value, new
+                            value, and timestamp.</td>
                     </tr>
                     <tr>
                         <td>Response metric</td>
-                        <td>Ability to generate a complete change history; prove that the price changed from X to Y and
-                            then from Y to X, with no possibility of tampering.</td>
+                        <td>Ability to generate a complete change history; prove that the price changed from X to Y
+                            and then from Y to X, with no possibility of tampering.</td>
                     </tr>
                 </table>
             </section>
@@ -534,9 +538,9 @@
                     </tr>
                     <tr>
                         <td>Response</td>
-                        <td>The system automatically detects the failure, marks the primary instance as unhealthy, and
-                            routes traffic to a healthy secondary instance. The load balancer continuously monitors the
-                            health of all API Gateway instances.</td>
+                        <td>The system automatically detects the failure, marks the primary instance as unhealthy,
+                            and routes traffic to a healthy secondary instance. The load balancer continuously
+                            monitors the health of all API Gateway instances.</td>
                     </tr>
                     <tr>
                         <td>Response metric</td>
@@ -618,8 +622,8 @@
                     </tr>
                     <tr>
                         <td>Artifact</td>
-                        <td>The API Gateway's rate limiting configuration, its ability to detect and block suspicious
-                            requests, and the load balancer's ability to route legitimate traffic.</td>
+                        <td>The API Gateway's rate limiting configuration, its ability to detect and block
+                            suspicious requests, and the load balancer's ability to route legitimate traffic.</td>
                     </tr>
                     <tr>
                         <td>Environment</td>
@@ -627,20 +631,22 @@
                     </tr>
                     <tr>
                         <td>Response</td>
-                        <td>The API Gateway and load balancer work together to block the overwhelming requests. The rate
-                            limiter prevents the system from being overwhelmed by legitimate traffic, while the load
-                            balancer ensures that the remaining requests are distributed evenly.</td>
+                        <td>The API Gateway and load balancer work together to block the overwhelming requests. The
+                            rate limiter prevents the system from being overwhelmed by legitimate traffic, while the
+                            load balancer ensures that the remaining requests are distributed evenly.</td>
                     </tr>
                     <tr>
                         <td>Response metric</td>
-                        <td>The system remains responsive and available, with minimal impact on user experience.</td>
+                        <td>The system remains responsive and available, with minimal impact on user experience.
+                        </td>
                     </tr>
                 </table>
             </section>
 
             <section>
                 <h3>Performance Scenarios - Database Bottleneck</h3>
-                <p>Managing database bottlenecks through Command Query Responsibility Segregation.</p>
+                <p>The product database experiences lockups when there are concurrent massive reads and simultaneous
+                    stock updates.</p>
             </section>
 
             <section>
@@ -664,7 +670,8 @@
                     </tr>
                     <tr>
                         <td>Artifact</td>
-                        <td>The products-api service and products-db database, configured for read-heavy workloads.</td>
+                        <td>The products-api service and products-db database, configured for read-heavy workloads.
+                        </td>
                     </tr>
                     <tr>
                         <td>Environment</td>
@@ -672,8 +679,8 @@
                     </tr>
                     <tr>
                         <td>Response</td>
-                        <td>The read operation is routed to a dedicated read replica, which handles the majority of read
-                            requests. The primary database handles write operations and complex queries.</td>
+                        <td>The read operation is routed to a dedicated read replica, which handles the majority of
+                            read requests. The primary database handles write operations and complex queries.</td>
                     </tr>
                     <tr>
                         <td>Response metric</td>
@@ -721,8 +728,8 @@
                     </tr>
                     <tr>
                         <td>Artifact</td>
-                        <td>The Kubernetes Deployment with multiple replicas, a Service object for load balancing, and
-                            liveness/readiness probes.</td>
+                        <td>The Kubernetes Deployment with multiple replicas, a Service object for load balancing,
+                            and liveness/readiness probes.</td>
                     </tr>
                     <tr>
                         <td>Environment</td>
@@ -731,15 +738,16 @@
                     </tr>
                     <tr>
                         <td>Response</td>
-                        <td>Kubernetes detects the failed probe and immediately stops sending traffic to the failed pod.
-                            The Service automatically reroutes new requests to one of the healthy "hot spare" pods,
-                            which already has the latest state. Kubernetes then initiates the process of replacing the
-                            failed pod.</td>
+                        <td>Kubernetes detects the failed probe and immediately stops sending traffic to the failed
+                            pod. The Service automatically reroutes new requests to one of the healthy "hot spare"
+                            pods, which already has the latest state. Kubernetes then initiates the process of
+                            replacing the failed pod.</td>
                     </tr>
                     <tr>
                         <td>Response metric</td>
-                        <td>The failover is transparent to the client. The time to detect failure and reroute traffic is
-                            under 500ms. There is zero data loss since the spare was already synchronized.</td>
+                        <td>The failover is transparent to the client. The time to detect failure and reroute
+                            traffic is under 500ms. There is zero data loss since the spare was already
+                            synchronized.</td>
                     </tr>
                 </table>
             </section>
@@ -766,25 +774,25 @@
                     </tr>
                     <tr>
                         <td>Source of stimulus</td>
-                        <td>A major failure in the primary service's node pool or a critical bug affecting all primary
-                            replicas.</td>
+                        <td>A major failure in the primary service's node pool or a critical bug affecting all
+                            primary replicas.</td>
                     </tr>
                     <tr>
                         <td>Artifact</td>
-                        <td>A separate Kubernetes Deployment for the "warm spare" replica, node taints/tolerations to
-                            keep it isolated, and an operational runbook or automated script to trigger the promotion.
-                        </td>
+                        <td>A separate Kubernetes Deployment for the "warm spare" replica, node taints/tolerations
+                            to keep it isolated, and an operational runbook or automated script to trigger the
+                            promotion.</td>
                     </tr>
                     <tr>
                         <td>Environment</td>
-                        <td>Production. The primary service is handling all traffic, while the warm spare is running but
-                            not receiving production requests.</td>
+                        <td>Production. The primary service is handling all traffic, while the warm spare is running
+                            but not receiving production requests.</td>
                     </tr>
                     <tr>
                         <td>Response</td>
                         <td>An operator or an automated system is alerted. The promotion process is initiated: the
-                            NoSchedule taint is removed from the standby node pool, or the Service selector is updated
-                            to include the warm spare. The spare begins receiving traffic.</td>
+                            NoSchedule taint is removed from the standby node pool, or the Service selector is
+                            updated to include the warm spare. The spare begins receiving traffic.</td>
                     </tr>
                     <tr>
                         <td>Response metric</td>
@@ -796,10 +804,10 @@
 
             <section>
                 <h3>Service Discovery Pattern</h3>
-                <p>In GKE's VPC-native networking, each node automatically receives an alias IP range from the secondary
-                    subnet and each pod is assigned an IP from that block. When autoscaling adds new nodes, the control
-                    plane reserves a fresh alias IP range, updates the network routes, and pods can be scheduled
-                    immediately with new IPs.</p>
+                <p>In GKE's VPC-native networking, each node automatically receives an alias IP range from the
+                    secondary subnet and each pod is assigned an IP from that block. When autoscaling adds new
+                    nodes, the control plane reserves a fresh alias IP range, updates the network routes, and pods
+                    can be scheduled immediately with new IPs.</p>
             </section>
 
             <section>
@@ -814,13 +822,13 @@
                     </tr>
                     <tr>
                         <td>Stimulus</td>
-                        <td>The API Gateway needs to send a request to the Products service and uses its logical name,
-                            http://products-api, to establish a connection.</td>
+                        <td>The API Gateway needs to send a request to the Products service and uses its logical
+                            name, http://products-api, to establish a connection.</td>
                     </tr>
                     <tr>
                         <td>Source of stimulus</td>
-                        <td>An internal application component (API Gateway) making a routine service-to-service call.
-                        </td>
+                        <td>An internal application component (API Gateway) making a routine service-to-service
+                            call.</td>
                     </tr>
                     <tr>
                         <td>Artifact</td>
@@ -833,25 +841,26 @@
                     </tr>
                     <tr>
                         <td>Response</td>
-                        <td>The API Gateway's DNS resolver queries CoreDNS. CoreDNS resolves the name products-api to
-                            its stable ClusterIP. Kubernetes then uses iptables or IPVS to forward the request to one of
-                            the healthy backend pods for the service.</td>
+                        <td>The API Gateway's DNS resolver queries CoreDNS. CoreDNS resolves the name products-api
+                            to its stable ClusterIP. Kubernetes then uses iptables or IPVS to forward the request to
+                            one of the healthy backend pods for the service.</td>
                     </tr>
                     <tr>
                         <td>Response metric</td>
-                        <td>The service name is successfully and correctly resolved to an IP address. DNS lookup latency
-                            is negligible (e.g., <10ms). The connection to the service is established successfully.</td>
+                        <td>The service name is successfully and correctly resolved to an IP address. DNS lookup
+                            latency is negligible (e.g., <10ms). The connection to the service is established
+                                successfully.</td>
                     </tr>
                 </table>
             </section>
 
             <section>
                 <h3>Cluster Pattern</h3>
-                <p>Coordinated service management for high availability.</p>
+                <img src="cluster-scenario.png" alt="Cluster Pattern" class="architecture-diagram">
             </section>
 
             <section>
-                <img src="cluster-scenario.png" alt="Cluster Scenario" class="architecture-diagram">
+                <img src="cluster.png" alt="Cluster deploy" class="architecture-diagram">
             </section>
 
             <section>
@@ -862,13 +871,13 @@
                     </tr>
                     <tr>
                         <td>Stimulus</td>
-                        <td>A Compute Engine VM acting as a GKE node becomes unresponsive and fails its health checks.
-                        </td>
+                        <td>A Compute Engine VM acting as a GKE node becomes unresponsive and fails its health
+                            checks.</td>
                     </tr>
                     <tr>
                         <td>Source of stimulus</td>
-                        <td>An underlying hardware failure, OS-level corruption, or other critical issue within the VM.
-                        </td>
+                        <td>An underlying hardware failure, OS-level corruption, or other critical issue within the
+                            VM.</td>
                     </tr>
                     <tr>
                         <td>Artifact</td>
@@ -883,15 +892,15 @@
                         <td>Response</td>
                         <td>The MIG's health checker detects the unhealthy node. It automatically triggers the
                             auto-healing process: the faulty VM is terminated, and a new, identical VM is created to
-                            replace it. The new node joins the GKE cluster, and Kubernetes begins scheduling pods onto
-                            it.</td>
+                            replace it. The new node joins the GKE cluster, and Kubernetes begins scheduling pods
+                            onto it.</td>
                     </tr>
                     <tr>
                         <td>Response metric</td>
-                        <td>The cluster's capacity is automatically restored without any manual intervention. The time
-                            to provision and register the new node is within the expected range (typically a few
-                            minutes). Workload disruption is minimized as Kubernetes reschedules pods that were on the
-                            failed node.</td>
+                        <td>The cluster's capacity is automatically restored without any manual intervention. The
+                            time to provision and register the new node is within the expected range (typically a
+                            few minutes). Workload disruption is minimized as Kubernetes reschedules pods that were
+                            on the failed node.</td>
                     </tr>
                 </table>
             </section>
@@ -923,9 +932,9 @@
                     </tr>
                     <tr>
                         <td>Artifact</td>
-                        <td>The cart-api checkout logic, which orchestrates calls to multiple services (products-api,
-                            payment service). It must include error handling and the logic for the compensating action.
-                        </td>
+                        <td>The cart-api checkout logic, which orchestrates calls to multiple services
+                            (products-api, payment service). It must include error handling and the logic for the
+                            compensating action.</td>
                     </tr>
                     <tr>
                         <td>Environment</td>
@@ -934,15 +943,15 @@
                     <tr>
                         <td>Response</td>
                         <td>The cart-api, upon detecting the payment failure, invokes a compensating transaction. It
-                            sends a specific request to the products-api (e.g., POST /api/products/{id}/add-stock) to
-                            add the previously deducted item back into inventory, effectively reversing the initial
-                            operation.</td>
+                            sends a specific request to the products-api (e.g., POST /api/products/{id}/add-stock)
+                            to add the previously deducted item back into inventory, effectively reversing the
+                            initial operation.</td>
                     </tr>
                     <tr>
                         <td>Response metric</td>
-                        <td>The system's data is restored to a consistent state. The product inventory is corrected. The
-                            user is notified of the payment failure, but the system does not remain in an inconsistent
-                            state (e.g., item sold but no payment received).</td>
+                        <td>The system's data is restored to a consistent state. The product inventory is corrected.
+                            The user is notified of the payment failure, but the system does not remain in an
+                            inconsistent state (e.g., item sold but no payment received).</td>
                     </tr>
                 </table>
             </section>
@@ -1019,8 +1028,8 @@
                 <h3>Thank You</h3>
                 <div class="team-member">
                     <p>Team 1a - Software Architecture Project</p>
-                    <p class="tiny-text">Xamir Ernesto Rojas Gamboa | Juan Sebastian Medina Pinto | Juan Manuel Pérez
-                        Ordoñez</p>
+                    <p class="tiny-text">Xamir Ernesto Rojas Gamboa | Juan Sebastian Medina Pinto | Juan Manuel
+                        Pérez Ordoñez</p>
                 </div>
             </section>
 
@@ -1055,6 +1064,41 @@
             autoAnimateEasing: 'ease',
             autoAnimateDuration: 1.0,
             autoAnimateUnmatched: true,
+            // Add these settings to enforce horizontal-only navigation
+            navigationMode: 'linear',
+            disableLayout: false,
+            display: 'block',
+            width: '100%',
+            height: '100%',
+            margin: 0,
+            minScale: 1,
+            maxScale: 1,
+            // Remove any vertical slides configuration
+            slideNumber: false,
+            overview: true,
+            // Force horizontal-only transitions
+            mouseWheel: false,
+            keyboard: {
+                // Disable up/down navigation
+                38: null, // up
+                40: null  // down
+            },
+            autoSlide: 0,
+            autoSlideStoppable: true,
+            autoSlideMethod: Reveal.navigateNext,
+            defaultTiming: 120,
+            totalTime: 0,
+            minimumTimePerSlide: 0,
+            hideInactiveCursor: true,
+            hideCursorTime: 5000,
+            hideAddressBar: true,
+            previewLinks: false,
+            transition: 'slide', // you can use none/fade/slide/convex/concave/zoom
+            transitionSpeed: 'default', // default/fast/slow
+            backgroundTransition: 'fade',
+            viewDistance: 3,
+            mobileViewDistance: 2,
+            display: 'block',
             autoAnimateStyles: [
                 'opacity',
                 'color',
