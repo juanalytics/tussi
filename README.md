@@ -1,5 +1,56 @@
 # Artifact
 
+## Table of Contents
+
+1. [Team](#1-team)
+2. [Software System](#2-software-system)
+   - [Name](#name)
+   - [Logo](#logo)
+   - [Description](#description)
+   - [Key Features](#key-features-of-second-prototype)
+   - [Justification](#justification-for-tussis-name-and-design)
+3. [Architectural Structure](#3-architectural-structure)
+   - [Component-and-Connector View](#component-and-connector-view)
+   - [Deployment Structure](#deployment-structure)
+   - [Decomposition Structure](#decomposition-structure)
+4. [Quality Properties](#4-quality-properties)
+   - [Security Scenarios](#security-scenarios)
+   - [Performance Scenarios](#performance-scenarios)
+5. [Reliability Scenarios](#5-reliability-scenarios)
+   - [Replication Pattern](#replication-pattern-scenario)
+   - [Active Redundancy Pattern](#active-redundancy-hot-spare-pattern)
+   - [Passive Redundancy Pattern](#passive-redundancy-warm-spare-pattern)
+   - [Service Discovery Pattern](#service-discovery-pattern)
+   - [Cluster Pattern](#cluster-pattern)
+   - [Transaction Pattern](#transaction-pattern)
+6. [Interoperability Analysis](#6-interoperability-analysis)
+   - [Interfaces](#interfaces)
+   - [Context](#context)
+   - [Exposition](#exposition)
+   - [Consumption](#consumption)
+   - [Discovery](#discovery)
+   - [Response Handling](#handling-of-the-response)
+7. [Interoperability Scenario](#7-interoperability-scenario-white-labeling-via-reverse-proxy)
+8. [Architectural Styles](#8-architectural-styles)
+9. [Architectural Patterns](#9-architectural-patterns)
+10. [Prototype Deployment](#10-prototype-deployment)
+    - [Prerequisites](#prerequisites)
+    - [Local Deployment Instructions](#local-deployment-instructions)
+    - [Services Configuration](#services-configuration)
+    - [Access Points](#access-points)
+11. [Testing](#11-testing)
+    - [API Testing](#api-testing)
+    - [Load Testing with K6](#load-testing-with-k6)
+    - [Mobile App Testing](#mobile-app-testing)
+    - [Health Monitoring](#health-monitoring)
+12. [Monitoring and Troubleshooting](#12-monitoring-and-troubleshooting)
+13. [Project Structure](#13-project-structure)
+14. [Performance Analysis](#14-performance-analysis)
+    - [Test Environment](#test-environment-configuration)
+    - [Test Methodology](#test-methodology)
+    - [Performance Results](#performance-results)
+    - [System Behavior Analysis](#system-behavior-analysis)
+
 ## 1. Team
 
 **Name:** 1a  
@@ -165,97 +216,22 @@ Este sistema comprende dos clientes, un balanceador de carga, cuatro servicios y
 
 #### C&C Diagram
 
-```mermaid
-graph LR
-    WebClient[Component-1<br/>Web Client]
-    MobileClient[Component-2<br/>Mobile Client]
-    LoadBalancer[Component-3<br/>Load Balancer<br/>Nginx]
-    APIGateway[Component-4<br/>API Gateway Service<br/>4 replicas]
-    AuthService[Component-5<br/>Auth Service]
-    ProductsAPI[Component-6<br/>Products API]
-    CartAPI[Component-7<br/>Cart API]
-    AuthDB[(Component-8<br/>PostgreSQL)]
-    ProductsDB[(Component-9<br/>PostgreSQL)]
-    CartDB[(Component-10<br/>MongoDB)]
-    K6[K6 Load Testing]
-
-    WebClient -- "HTTPS c1" --> LoadBalancer
-    MobileClient -- "HTTPS c2" --> LoadBalancer
-    K6 -- "HTTP c10" --> LoadBalancer
-    LoadBalancer -- "HTTP c3" --> APIGateway
-    APIGateway -- "HTTP c4" --> AuthService
-    APIGateway -- "HTTP c5" --> ProductsAPI
-    APIGateway -- "HTTP c6" --> CartAPI
-    AuthService -- "TCP 5432 c7" --> AuthDB
-    ProductsAPI -- "TCP 5433 c8" --> ProductsDB
-    CartAPI -- "TCP 27017 c9" --> CartDB
-```
+![C&C Diagram](c&c-h.png)
 
 #### Layered (Tier & Layer) View
 
-```mermaid
-graph TB
-  subgraph "Tier 1: Presentation"
-    WebClient["Web Client<br>(Next.js)"]
-    MobileClient["Mobile Client<br>(React Native)"]
-  end
+![Layered View](layered-diagram.png)
 
-  subgraph "Tier 2: Communication"
-    APIGateway["API Gateway<br>(Node.js/Express)"]
-  end
-
-  subgraph "Tier 3: Logic"
-    subgraph "L1: Controllers"
-      AuthCtrl["Auth Controller"]
-      ProdCtrl["Products Controller"]
-      CartCtrl["Cart Controller"]
-    end
-    subgraph "L2: Services"
-      AuthSvc["Auth Service"]
-      ProdSvc["Products Service"]
-      CartSvc["Cart Service"]
-    end
-    subgraph "L3: Models"
-      UserModel["User Model<br>(ORM/ODM)"]
-      ProductModel["Product Model<br>(ORM/ODM)"]
-      CartModel["Cart Model<br>(ODM)"]
-    end
-  end
-
-  subgraph "Tier 4: Data"
-    AuthDB[("Auth DB<br>(PostgreSQL)")]
-    ProdDB[("Products DB<br>(PostgreSQL)")]
-    CartDB[("Cart DB<br>(MongoDB)")]
-    MobileStore[("Mobile Local<br>Storage")]
-  end
-
-  WebClient      -->|HTTP| APIGateway
-  MobileClient   -->|HTTP| APIGateway
-  APIGateway     -->|REST| AuthCtrl
-  APIGateway     -->|REST| ProdCtrl
-  APIGateway     -->|REST| CartCtrl
-  AuthCtrl       -->|calls| AuthSvc
-  ProdCtrl       -->|calls| ProdSvc
-  CartCtrl       -->|calls| CartSvc
-  AuthSvc        -->|uses| UserModel
-  ProdSvc        -->|uses| ProductModel
-  CartSvc        -->|uses| CartModel
-  UserModel      -->|persists| AuthDB
-  ProductModel   -->|persists| ProdDB
-  CartModel      -->|persists| CartDB
-  MobileClient   -->|caches| MobileStore
-```
-
-**Tier 1: Presentation**
+##### **Tier 1: Presentation**
 
 - **Web Client:** Next.js/React app running in the browser.
 - **Mobile Client:** React Native app on iOS/Android.
 
-**Tier 2: Communication**
+##### **Tier 2: Communication**
 
 - **API Gateway:** Node.js/Express service that centralizes routing, JWT auth, rate-limiting, CORS, load balancing and health checks for all client traffic.
 
-**Tier 3: Logic**
+##### **Tier 3: Logic**
 
 - **L1 Controllers (Routing Layer):**
 
@@ -267,7 +243,7 @@ graph TB
 
   - ORM/ODM schemas and repository interfaces for each domain entity (User, Product, Cart), isolating persistence logic.
 
-**Tier 4: Data**
+##### **Tier 4: Data**
 
 - **Auth DB:** PostgreSQL instance for user credentials and auth metadata.
 - **Products DB:** PostgreSQL instance for product catalog and inventory.
@@ -280,63 +256,11 @@ graph TB
 
 Container Orchestration Pattern with Docker Compose, network segmentation, and load balancing for high availability.
 
-```mermaid
-graph TD
-    subgraph "Docker Host"
-        subgraph "Public Network"
-            LoadBalancerContainer["Load Balancer Container<br>(Nginx, Ports 80/443)"]
-            FrontendContainer["Frontend Container<br>(Port 3000)"]
-            APIGatewayContainer["API Gateway Container<br>(4 replicas, Port 9000)"]
-            K6Container["K6 Load Testing<br>(Port 6565)"]
-        end
-
-        subgraph "Private Network (Internal Only)"
-            AuthServiceContainer["Auth Service Container<br>(Port 8000)"]
-            ProductsAPIContainer["Products API Container<br>(Port 8001)"]
-            CartAPIContainer["Cart API Container<br>(Port 8002)"]
-            AuthDBContainer["Auth DB Container<br>(PostgreSQL, Port 5432)"]
-            ProductsDBContainer["Products DB Container<br>(PostgreSQL, Port 5433)"]
-            CartDBContainer["Cart DB Container<br>(MongoDB, Port 27017)"]
-        end
-
-        LoadBalancerContainer -- "SSL Termination & Load Balancing" --> APIGatewayContainer
-        FrontendContainer -- "Depends on" --> APIGatewayContainer
-        APIGatewayContainer -- "Reverse Proxy" --> AuthServiceContainer
-        APIGatewayContainer -- "Reverse Proxy" --> ProductsAPIContainer
-        APIGatewayContainer -- "Reverse Proxy" --> CartAPIContainer
-        AuthServiceContainer -- "Depends on" --> AuthDBContainer
-        ProductsAPIContainer -- "Depends on" --> ProductsDBContainer
-        CartAPIContainer -- "Depends on" --> CartDBContainer
-        K6Container -- "Load Testing" --> LoadBalancerContainer
-    end
-
-    subgraph "Client Devices"
-        UserDevice["User Device<br>(Browser)"]
-        MobileDevice["Mobile Device<br>(iOS/Android)"]
-        TestingDevice["Testing Environment<br>(K6 Scripts)"]
-    end
-
-    UserDevice -- "HTTPS/HTTP" --> LoadBalancerContainer
-    UserDevice -- "HTTPS/HTTP" --> FrontendContainer
-    MobileDevice -- "HTTPS/HTTP" --> LoadBalancerContainer
-    TestingDevice -- "HTTP" --> K6Container
-
-    subgraph "App Stores"
-        AppStore["App Store / Google Play"]
-    end
-
-    MobileDevice -- "Installs from" --> AppStore
-
-    subgraph "SSL/TLS"
-        SSLCerts["SSL Certificates<br>(./ssl volume)"]
-    end
-
-    SSLCerts -- "Mounted to" --> LoadBalancerContainer
-```
+![Deployment](deployment-diagram.png)
 
 **Deployment Units:**
 
-- **Load Balancer Container:** ⭐ **NEW**
+- **Load Balancer Container:**
   - Image: Custom Nginx build
   - Ports: `80:80` (HTTP redirect), `443:443` (HTTPS)
   - Dependencies: `api-gateway`
@@ -351,14 +275,14 @@ graph TD
   - Environment: `NEXT_PUBLIC_API_GATEWAY_URL=https://localhost:443`
   - Network: `public`
 
-- **Mobile Application:** ⭐ **NEW**
+- **Mobile Application:**
   - Platform: iOS/Android Native
   - Distribution: App Store/Google Play Store
   - Dependencies: Load Balancer (HTTPS endpoint)
   - Environment: `API_GATEWAY_URL=https://api.tussi.com` (production)
   - Local Storage: AsyncStorage for offline capabilities
 
-- **API Gateway Container:** ⭐ **NEW**
+- **API Gateway Container:**
   - Image: Custom Node.js build
   - Replicas: 4 instances for high availability
   - Dependencies: `auth-service`, `products-api`, `cart-api`
@@ -372,7 +296,7 @@ graph TD
   - Health Check: `curl -f http://localhost:9000/health`
   - Networks: `public` (receives from load balancer), `private` (communicates with services)
 
-- **K6 Load Testing Container:** ⭐ **NEW**
+- **K6 Load Testing Container:**
   - Image: `grafana/k6`
   - Ports: `6565:6565`
   - Volume: `./tests/k6:/scripts`
@@ -424,70 +348,9 @@ graph TD
 
 #### Decomposition View
 
-![decompositoon](decomposition.png)
+![functionalities vs modules](decomposition.png)
 
-```mermaid
-graph TD
-    subgraph "Tussi E-commerce Platform"
-        subgraph "Module: Presentation"
-            subgraph "Web Client (Next.js)"
-                wc1["User Authentication (Login, Register pages)"]
-                wc2["Product Discovery (Lists, Detail pages)"]
-                wc3["Shopping Cart Management"]
-                wc4["Responsive UI Components"]
-            end
-            subgraph "Mobile Client (React Native)"
-                mc1["User Authentication (Login, Register screens)"]
-                mc2["Product Discovery (Lists, Detail screens)"]
-                mc3["Shopping Cart Management"]
-                mc4["Offline Capabilities (AsyncStorage)"]
-            end
-        end
-
-        subgraph "Module: Gateway"
-            subgraph "API Gateway (Node.js)"
-                gw1["Request Routing (to backend services)"]
-                gw2["Authentication Middleware (JWT Validation)"]
-                gw3["Rate Limiting & Security Policies"]
-                gw4["Centralized Logging & Health Checks"]
-                gw5["Endpoint Aggregation (/api/search)"]
-            end
-        end
-
-        subgraph "Module: Business Services"
-            subgraph "Authentication Service (FastAPI)"
-                subgraph "User Management"
-                    auth_reg["Register User"]
-                    auth_profile["Get User Profile"]
-                end
-                subgraph "Session Management"
-                    auth_login["Login User (issue JWT)"]
-                    auth_verify["Verify JWT (used by gateway)"]
-                end
-            end
-            subgraph "Products Service (FastAPI)"
-                subgraph "Product Catalog"
-                    prod_crud["Create, Read, Update, Delete Products"]
-                    prod_list["List Products (with pagination)"]
-                end
-            end
-            subgraph "Cart Service (Node.js)"
-                subgraph "Cart Operations"
-                    cart_get["Get User's Cart"]
-                    cart_add["Add/Update Item in Cart"]
-                    cart_remove["Remove Item from Cart"]
-                    cart_clear["Clear Cart"]
-                end
-            end
-        end
-
-        subgraph "Module: Data Persistence"
-            db_auth["Auth DB (PostgreSQL)<br/>Stores user credentials and profiles"]
-            db_prod["Products DB (PostgreSQL)<br/>Stores product catalog and inventory"]
-            db_cart["Cart DB (MongoDB)<br/>Stores shopping cart sessions and items"]
-        end
-    end
-```
+![Decomposition Diagram](decomposition-diagram.png)
 
 **Module Descriptions:**
 
@@ -496,7 +359,7 @@ graph TD
 - **Business Services Module**: A set of domain-specific microservices that implement the core business logic. This includes an **Authentication Service** (FastAPI) for user registration and login, a **Products Service** (FastAPI) for catalog management, and a **Cart Service** (Node.js) for shopping cart operations.
 - **Data Persistence Module**: Implements a polyglot persistence strategy using multiple databases. It includes a PostgreSQL database for the **Auth Service**, another PostgreSQL database for the **Products Service**, and a MongoDB database for the **Cart Service**. This ensures data isolation and allows each service to use the most appropriate database technology.
 
-**Functionalities Description**
+#### **Functionalities Description**
 
 - **User Management & Authentication**:
   - Secure user registration and login via the Authentication Service.
@@ -523,20 +386,7 @@ graph TD
 
 #### Man in the middle Attack (SSL)
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>External Component"] --> B["<b>Stimulus:</b><br/>Attempt to intercept data in transit"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Communication Channel (TLS/SSL)"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>Data travels encrypted, preventing unauthorized reading"]
-    
-    D --> E["<b>Metric:</b><br/>Data Confidentiality + Integrity"]
-```
+![SSL](ssl.png)
 
 **Description:**
 
@@ -551,24 +401,9 @@ An attacker on an insecure network (e.g., public Wi-Fi) attempts to perform a ma
 | **Response**           | The system enforces HTTPS-only communication. All data in transit is encrypted via TLS, rendering any intercepted traffic unreadable to the attacker.                    |
 | **Response metric**    | Data confidentiality and integrity are preserved. The percentage of non-encrypted connections should be 0%. Attempts to connect via HTTP are automatically rejected or upgraded. |
 
-![https](https.png)
-
 #### Attempt to Bypass API Gateway (Reverse Proxy)
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>External Client"] --> B["<b>Stimulus:</b><br/>Request to an internal microservice"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Reverse Proxy (API Gateway)"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>The proxy validates and routes the request; the client never directly accesses the service"]
-    
-    D --> E["<b>Metric:</b><br/>Reduced Service Exposure + Isolation"]
-```
+![Reverse Proxy](reverse-proxy.png)
 
 **Description:**
 
@@ -585,20 +420,7 @@ A malicious actor, having discovered the potential internal IP address of a micr
 
 ### Frontend Compromised (Network Segmentation)
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>Attacker in compromised container"] --> B["<b>Stimulus:</b><br/>Attempt lateral movement to database"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Docker Networks (npublic and private)"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>Docker network rules block traffic between isolated networks"]
-    
-    D --> E["<b>Metric:</b><br/>Zero connectivity between frontend and database networks"]
-```
+![Network Segmentation](networks.png)
 
 **Description:**
 
@@ -615,20 +437,7 @@ An attacker successfully exploits a vulnerability in the `frontend` service cont
 
 #### Product Modification for Fraud (Event Sourcing)
 
-```mermaid
-graph LR
-    A["<b>Stimulus source:</b><br/> Legitimate administrator"] --> B["<b>Stimulus:</b><br/>Secret price modification"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>products-api + products-db"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/> Immutable change log"]
-    
-    D --> E["<b>Metric:</b><br/>Complete and verifiable history"]
-```
+![Event Sourcing](event-sourcing.png)
 
 **Description:**
 
@@ -649,20 +458,7 @@ An administrator, using legitimate credentials, secretly changes the price of a 
 
 #### API Gateway Instance Fail (Replication)
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>Internal Failure"] --> B["<b>Stimulus:</b><br/>API Gateway instance crashes"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Load Balancer + Replicated API Gateways"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>Load balancer detects failure and redirects traffic to healthy instances"]
-    
-    D --> E["<b>Metric:</b><br/>High Availability (>99.9%)"]
-```
+![Replication](replication.png)
 
 **Description:**
 
@@ -679,20 +475,7 @@ During a period of high traffic, one of the four replicated API Gateway containe
 
 #### Increase on Concurrent Users (Load Balancer)
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>External Clients"] --> B["<b>Stimulus:</b><br/>Sudden surge in user traffic"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>Container Orchestrator + Load Balancer"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>Additional service instances are deployed and traffic is distributed"]
-    
-    D --> E["<b>Metric:</b><br/>Sustained Response Time + Resource Utilization"]
-```
+![Load Balancer](load-balancer.png)
 
 **Description:**
 
@@ -709,20 +492,7 @@ A successful marketing campaign results in a massive, sudden surge in concurrent
 
 #### Denial Of Service Attack (Rate Limiting)
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>Malicious Client/Script"] --> B["<b>Stimulus:</b><br/>Request flood to a specific endpoint"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>API Gateway Rate Limiting Middleware"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/>Excessive requests from the source are blocked with HTTP 429"]
-    
-    D --> E["<b>Metric:</b><br/>Service Availability + Blocked Malicious Requests"]
-```
+![DOS](dos.png)
 
 **Description:**
 
@@ -739,20 +509,7 @@ A malicious actor or a poorly configured script begins to flood the `/api/auth/l
 
 #### Bottleneck on Write and Reads in Products database (CQRS)
 
-```mermaid
-graph LR
-    A["<b>Stimulus Source:</b><br/>Concurrent Reads + Writes"] --> B["<b>Stimulus:</b><br/> Update Stock and Select Products"]
-    
-    B --> C_sub
-    
-    subgraph Environment
-        C_sub["<b>Artifact:</b><br/>products-api + products-db"]
-    end
-    
-    C_sub --> D["<b>Response:</b><br/> Handle Reads and Writes"]
-    
-    D --> E["<b>Metric:</b><br/> <350ms Read ; <1,5s Write "]
-```
+![CQRS](cqrs.png)
 
 ---
 
@@ -775,26 +532,159 @@ The product database experiences lockups when there are concurrent massive reads
 
 Create and Mantain copies (repliclas) of data or services across multiple components or nodes
 
-By default, GKE does not do “synchronous replication” of its nodes, but manages the node pools as Compute Engine's **Managed Instance Groups (MIGs)** and maintains the desired state using an **eventual-consistent model**:
+By default, GKE does not do "synchronous replication" of its nodes, but manages the node pools as Compute Engine's **Managed Instance Groups (MIGs)** and maintains the desired state using an **eventual-consistent model**:
 
-* ** **Asynchronous and periodic**: the MIG controller continuously inspects (in periodic loops) how many VMs there should be based on your configuration and creates or deletes instances to bring the actual state closer to the desired state, without blocking requests or waiting for responses from all nodes at once.
-* Kubernetes control loops**: Similarly, Kubernetes (including cluster-autoscaler) works with “controllers” that read the desired state from the API, compare with the actual state and act asynchronously to reconcile differences, repeating this process at regular intervals ([Kubernetes]
+- **Asynchronous and periodic**: the MIG controller continuously inspects (in periodic loops) how many VMs there should be based on your configuration and creates or deletes instances to bring the actual state closer to the desired state, without blocking requests or waiting for responses from all nodes at once.
+- **Kubernetes control loops**: Similarly, Kubernetes (including cluster-autoscaler) works with "controllers" that read the desired state from the API, compare with the actual state and act asynchronously to reconcile differences, repeating this process at regular intervals ([Kubernetes]
 
 Therefore, **node replication** (incorporation, repair or scaling) in GKE is **asynchronous** and is performed by **periodic reconciliation**, providing eventual consistency behavior.
 
-#### Active Redundancy (Hot Spare) Pattern
+### Active Redundancy (Hot Spare) Pattern
 
-On GKE, we implement an Active Redundancy (Hot Spare) pattern by running your service as at least two pod replicas—ideally spread across separate node pools or zones—that each ingest the same input stream (for example, by subscribing to the same Pub/Sub topic) and checkpoint state continuously to a shared, highly‑available datastore (Cloud Spanner or a regional Cloud SQL instance with synchronous replication). Both pods are kept “hot” and ready behind a single Kubernetes Service, so even though one is effectively “active” at any moment, its spare sibling has already processed all the same events and holds an up‑to‑date view of the state. If the primary pod or its node fails (detected instantly via liveness/readiness probes), Kubernetes immediately routes traffic to the surviving pod—which already has the latest state—ensuring failover with zero data loss and no disruption to your workload.
+![Hot Spare](hot-spare.png)
 
-#### Passive Redundancy (Warm Spare) Pattern
+| Part                   | Detail                                                                                                                                                                                                                                                                    |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | The primary pod/node serving live traffic fails its liveness probe due to a hardware or software fault.                                                                                                                                                                   |
+| **Source of stimulus** | An internal system event (e.g., node failure, pod crash).                                                                                                                                                                                                                   |
+| **Artifact**           | The Kubernetes Deployment with multiple replicas, a Service object for load balancing, and liveness/readiness probes.                                                                                                                                                         |
+| **Environment**        | A GKE cluster under normal operation. Replicas are running in a "hot" state, actively processing data in parallel.                                                                                                                                                        |
+| **Response**           | Kubernetes detects the failed probe and immediately stops sending traffic to the failed pod. The Service automatically reroutes new requests to one of the healthy "hot spare" pods, which already has the latest state. Kubernetes then initiates the process of replacing the failed pod. |
+| **Response metric**    | The failover is transparent to the client. The time to detect failure and reroute traffic is under 500ms. There is zero data loss since the spare was already synchronized.                                                                                                 |
 
-We implement a Warm Spare by running one “standby” replica of your service on a dedicated node pool tainted with NoSchedule so it never accepts production traffic, but it still stays “warm” by subscribing to the same event streams or database change feeds and keeping its in‑memory state or cache up‑to‑date. The primary Deployment—with multiple replicas—is the only one selected by your Kubernetes Service, so it handles all live requests. If a health check or external monitor detects the primary is down, you simply remove the taint (or patch the Service’s selector) to promote the standby pod into the Service, instantly routing traffic to it. Because that pod has already been synchronizing state in the background, it can begin serving without data loss and with only a minimal hand‑off delay.
+On GKE, we implement an Active Redundancy (Hot Spare) pattern by running your service as at least two pod replicas—ideally spread across separate node pools or zones—that each ingest the same input stream (for example, by subscribing to the same Pub/Sub topic) and checkpoint state continuously to a shared, highly-available datastore (Cloud Spanner or a regional Cloud SQL instance with synchronous replication). Both pods are kept "hot" and ready behind a single Kubernetes Service, so even though one is effectively "active" at any moment, its spare sibling has already processed all the same events and holds an up-to-date view of the state. If the primary pod or its node fails (detected instantly via liveness/readiness probes), Kubernetes immediately routes traffic to the surviving pod—which already has the latest state—ensuring failover with zero data loss and no disruption to your workload.
+
+### Passive Redundancy (Warm Spare) Pattern
+
+![Warm Spare](warm-spare.png)
+
+| Part                   | Detail                                                                                                                                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Stimulus**           | An external monitoring system detects that the primary service is completely unavailable (e.g., all primary pods are failing).                                                                                                                   |
+| **Source of stimulus** | A major failure in the primary service's node pool or a critical bug affecting all primary replicas.                                                                                                                                               |
+| **Artifact**           | A separate Kubernetes Deployment for the "warm spare" replica, node taints/tolerations to keep it isolated, and an operational runbook or automated script to trigger the promotion.                                                              |
+| **Environment**        | Production. The primary service is handling all traffic, while the warm spare is running but not receiving production requests.                                                                                                                  |
+| **Response**           | An operator or an automated system is alerted. The promotion process is initiated: the `NoSchedule` taint is removed from the standby node pool, or the Service selector is updated to include the warm spare. The spare begins receiving traffic. |
+| **Response metric**    | The Recovery Time Objective (RTO) is met (e.g., service is restored in under 2 minutes). Data loss is minimal to none, as the warm spare was synchronizing state.                                                                              |
+
+We implement a Warm Spare by running one "standby" replica of your service on a dedicated node pool tainted with NoSchedule so it never accepts production traffic, but it still stays "warm" by subscribing to the same event streams or database change feeds and keeping its in-memory state or cache up-to-date. The primary Deployment—with multiple replicas—is the only one selected by your Kubernetes Service, so it handles all live requests. If a health check or external monitor detects the primary is down, you simply remove the taint (or patch the Service's selector) to promote the standby pod into the Service, instantly routing traffic to it. Because that pod has already been synchronizing state in the background, it can begin serving without data loss and with only a minimal hand-off delay.
 
 ### Service Discovery Pattern
 
-In GKE’s VPC‑native networking, each node automatically receives an alias IP range from the secondary subnet and each pod is assigned an IP from that block. When autoscaling adds new nodes, the control plane reserves a fresh alias IP range, updates the network routes, and pods can be scheduled immediately with new IPs. If a node fails, Auto Repair recreates the VM—reclaiming or reallocating its alias block—and Kubernetes transparently reschedules pods onto healthy nodes, updating their pod IPs as needed. During upgrades, GKE performs a surge upgrade by cordoning and draining old nodes, provisioning replacement nodes with new alias ranges, moving workloads over, and then removing the old nodes; throughout this process, Service ClusterIPs remain stable, ensuring uninterrupted connectivity without manual network reconfiguration.
+![Service Discovery](service-discovery.png)
 
-## 5. Architectural Styles
+| Part                   | Detail                                                                                                                                  |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | The API Gateway needs to send a request to the Products service and uses its logical name, `http://products-api`, to establish a connection. |
+| **Source of stimulus** | An internal application component (API Gateway) making a routine service-to-service call.                                                 |
+| **Artifact**           | The Kubernetes internal DNS service (CoreDNS), which maintains mappings between service names and their corresponding ClusterIPs.            |
+| **Environment**        | A running GKE cluster where services are defined via Kubernetes Service objects.                                                        |
+| **Response**           | The API Gateway's DNS resolver queries CoreDNS. CoreDNS resolves the name `products-api` to its stable ClusterIP. Kubernetes then uses `iptables` or IPVS to forward the request to one of the healthy backend pods for the service. |
+| **Response metric**    | The service name is successfully and correctly resolved to an IP address. DNS lookup latency is negligible (e.g., <10ms). The connection to the service is established successfully. |
+
+In GKE's VPC-native networking, each node automatically receives an alias IP range from the secondary subnet and each pod is assigned an IP from that block. When autoscaling adds new nodes, the control plane reserves a fresh alias IP range, updates the network routes, and pods can be scheduled immediately with new IPs. If a node fails, Auto Repair recreates the VM—reclaiming or reallocating its alias block—and Kubernetes transparently reschedules pods onto healthy nodes, updating their pod IPs as needed. During upgrades, GKE performs a surge upgrade by cordoning and draining old nodes, provisioning replacement nodes with new alias ranges, moving workloads over, and then removing the old nodes; throughout this process, Service ClusterIPs remain stable, ensuring uninterrupted connectivity without manual network reconfiguration.
+
+### Cluster Pattern
+
+![Cluster Scenario](cluster-scenario.png)
+
+| Part                   | Detail                                                                                                                             |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | A Compute Engine VM acting as a GKE node becomes unresponsive and fails its health checks.                                         |
+| **Source of stimulus** | An underlying hardware failure, OS-level corruption, or other critical issue within the VM.                                        |
+| **Artifact**           | The GKE node pool, which is backed by a Compute Engine Managed Instance Group (MIG) configured with auto-healing policies.          |
+| **Environment**        | A production GKE cluster.                                                                                                          |
+| **Response**           | The MIG's health checker detects the unhealthy node. It automatically triggers the auto-healing process: the faulty VM is terminated, and a new, identical VM is created to replace it. The new node joins the GKE cluster, and Kubernetes begins scheduling pods onto it. |
+| **Response metric**    | The cluster's capacity is automatically restored without any manual intervention. The time to provision and register the new node is within the expected range (typically a few minutes). Workload disruption is minimized as Kubernetes reschedules pods that were on the failed node. |
+
+### Transaction Pattern
+
+![Transaction](transaction.png)
+
+| Part                   | Detail                                                                                                                                                                                               |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stimulus**           | A user is completing a checkout. The system successfully deducts an item from the `products-api` inventory, but the subsequent call to the payment processing service fails.                             |
+| **Source of stimulus** | A failure in a downstream service (payment processor) or a network timeout.                                                                                                                          |
+| **Artifact**           | The `cart-api` checkout logic, which orchestrates calls to multiple services (`products-api`, payment service). It must include error handling and the logic for the compensating action.               |
+| **Environment**        | Production, during a multi-step, distributed transaction (Saga).                                                                                                                                     |
+| **Response**           | The `cart-api`, upon detecting the payment failure, invokes a compensating transaction. It sends a specific request to the `products-api` (e.g., `POST /api/products/{id}/add-stock`) to add the previously deducted item back into inventory, effectively reversing the initial operation. |
+| **Response metric**    | The system's data is restored to a consistent state. The product inventory is corrected. The user is notified of the payment failure, but the system does not remain in an inconsistent state (e.g., item sold but no payment received). |
+
+Compensating Transaction Provides a mechanism to recover from failures by reversing the effects of previously applied actions. This pattern addresses malfunctions in critical workload paths by using compensation actions, which can involve processes like directly rolling back data changes, breaking transaction locks, or even executing native system behavior to reverse the effect.
+
+---
+
+## 6. Interoperability Analysis
+
+This analysis describes how the different components of the Tussi system communicate and work together.
+
+### Interfaces
+
+The system's components interact primarily through well-defined, synchronous HTTP-based APIs, following RESTful principles.
+
+- **External Interfaces (Client-Facing):** The Web and Mobile clients interact with the system through a single public interface exposed by the **Load Balancer** over HTTPS (port 443). This interface is, in turn, served by the **API Gateway**, which provides a unified API for all backend functionalities.
+- **Internal Interfaces (Service-to-Service):**
+  - The **API Gateway** communicates with backend microservices (`Auth`, `Products`, `Cart`) over a private network using their respective RESTful HTTP APIs.
+  - Each microservice communicates with its dedicated database using a specific TCP-based protocol via its database driver (PostgreSQL or MongoDB driver).
+- **API Endpoints:** The interfaces are defined by specific endpoints, such as `POST /api/auth/login`, `GET /api/products`, and `POST /api/cart/add`.
+
+### Context
+
+Communication context includes the data format, communication protocols, and security information exchanged between components.
+
+- **Data Format:** The payload for all RESTful API calls is **JSON**, ensuring language-agnostic data exchange between Python (FastAPI), Node.js (Express), and client-side JavaScript/TypeScript.
+- **Protocol:** Communication relies on the **HTTP/1.1** protocol. For external communication, **HTTPS (HTTP over TLS)** is enforced by the Load Balancer to ensure data confidentiality and integrity.
+- **Security Context:** For protected endpoints, a **JSON Web Token (JWT)** is required. The client sends the JWT in the `Authorization: Bearer <token>` header, which is validated by the API Gateway before forwarding the request to the appropriate backend service.
+
+### Exposition
+
+Interfaces are exposed through network listeners, with a clear separation between public and private networks.
+
+- **Public Exposition:** The **Load Balancer** is the only component exposed to the public internet, listening on ports **80** (for HTTP to HTTPS redirection) and **443** (for HTTPS). The **Frontend** web application is also publicly accessible on port **3000**.
+- **Private Exposition:** All backend microservices (`Auth`, `Products`, `Cart`) and databases are deployed in a **private network**, completely isolated from external access. They expose their services on internal ports (`8000`, `8001`, `8002`, etc.), accessible only to other components within the Docker network, primarily the API Gateway. This is a direct application of the **Reverse Proxy** pattern to limit access.
+
+### Consumption
+
+Components consume interfaces based on a client-server model.
+
+- **Client Consumption:** The **Web Client** (Next.js) and **Mobile Client** (React Native) are the primary consumers of the public-facing API exposed by the API Gateway. They make HTTP requests to fetch data, authenticate users, and manage shopping carts.
+- **Gateway Consumption:** The **API Gateway** acts as a client to the backend microservices. It consumes their individual REST APIs and aggregates the responses if needed. For example, it calls the `Auth Service` to verify credentials or the `Products Service` to fetch product data.
+- **Service Consumption:** Each microservice consumes its own database interface to persist and retrieve data (e.g., the `Cart Service` consumes the MongoDB driver interface to interact with the `Cart DB`).
+
+### Discovery
+
+Service discovery is handled differently for external clients and internal services.
+
+- **Client-Side Discovery:** The Web and Mobile clients discover the backend through a **statically configured URL** in their environment variables (e.g., `NEXT_PUBLIC_API_GATEWAY_URL`). This URL points to the public address of the Load Balancer.
+- **Server-Side Discovery:** For internal service-to-service communication, the system relies on **Docker's built-in DNS service**. The API Gateway and other services use the service names defined in `docker-compose.yml` (e.g., `http://auth-service:8000`, `http://products-api:8001`) to resolve the IP addresses of the microservice containers. The Load Balancer also uses this mechanism to discover and route traffic to the replicated API Gateway instances.
+
+### Handling of the response
+
+The system is designed to handle responses, including errors and failures, gracefully to ensure reliability and provide clear feedback.
+
+- **Standard HTTP Status Codes:** The APIs use standard HTTP status codes to indicate the outcome of a request (e.g., `200 OK`, `201 Created`, `400 Bad Request`, `401 Unauthorized`, `404 Not Found`).
+- **Error Payloads:** Failed requests are accompanied by a JSON payload containing a descriptive error message to aid in debugging on the client side.
+- **Fault Tolerance:**
+  - The **Load Balancer** continuously monitors the health of the API Gateway instances. If an instance becomes unresponsive, it is automatically removed from the routing pool, and traffic is redirected to healthy instances (**Active Redundancy** pattern).
+  - The **API Gateway** includes **rate-limiting** middleware, which responds with an **HTTP 429 "Too Many Requests"** status to protect backend services from denial-of-service attacks or traffic spikes.
+- **Health Checks:** All microservices expose a `/health` endpoint that can be used by monitoring systems (and the load balancer) to verify their operational status.
+
+## 7. Interoperability Scenario: White-Labeling via Reverse Proxy
+
+A third-party client wants to use the Tussi platform to sell their own products but under their own brand (`my-brand.com`). To achieve this, the client's domain must be the one visible to end-users. Tussi enables this by allowing the client to set up a reverse proxy (e.g., using a Cloudflare Worker or Nginx) that forwards requests from `my-brand.com` to the Tussi application, which then serves the content, making it appear as if it originates from the client's domain.
+
+![Cloudflare reverse](cloudflare-reverse.png)
+
+| Part                   | Detail                                                                                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Stimulus**           | An end-user sends an HTTP request to `https://my-brand.com/products`.                                                                                                                            |
+| **Source of stimulus** | An external end-user browsing the third-party client's branded storefront.                                                                                                                         |
+| **Artifact**           | A reverse proxy configuration (e.g., a Cloudflare Worker script) managed by the third-party client. This proxy is configured to route all incoming requests to the Tussi application's public endpoint. |
+| **Environment**        | The public internet. The user has no knowledge of the underlying Tussi platform.                                                                                                                   |
+| **Response**           | The reverse proxy receives the request. It internally makes a request to the Tussi Load Balancer (`https://tussi.com/products`), preserving the original path. Tussi's backend processes the request and returns the product page HTML. The reverse proxy receives this response and serves it back to the end-user, ensuring the URL in the browser remains `https://my-brand.com/products`. |
+| **Response metric**    | The white-labeling is successful; the end-user only ever interacts with `my-brand.com`. The latency added by the reverse proxy is minimal (e.g., < 50ms). The user experience is seamless.      |
+
+## 8. Architectural Styles
 
 ### Layered (N Tier)
 
@@ -812,7 +702,7 @@ The backend is decomposed into a set of independently deployable microservices. 
 
 Tussi embraces a polyglot approach for both programming languages and data persistence. Services are built with the technology best suited for their function: Python with FastAPI for the Auth and Products services, and Node.js for the API Gateway and Cart service. Similarly, the data architecture uses both PostgreSQL for structured, relational data (Users, Products) and MongoDB for flexible, document-based data (Shopping Cart).
 
-## 6. Architectural Patterns
+## 9. Architectural Patterns
 
 ### API Gateway Pattern
 
@@ -822,7 +712,7 @@ The API Gateway serves as a single, unified entry point for all client requests.
 
 To ensure high availability and performance, the system employs a load balancer (Nginx) to distribute incoming traffic across multiple replicated instances of services like the API Gateway. It uses a round-robin strategy to balance the load, and by monitoring the health of each instance, it can automatically route traffic away from failed instances, thus preventing downtime.
 
-#### Database per service Pattern
+### Database per service Pattern
 
 Each microservice has exclusive ownership of its own database, which is kept private and is not directly accessible by other services. The Auth and Products services each connect to a dedicated PostgreSQL instance, while the Cart Service uses its own MongoDB instance. This pattern guarantees loose coupling and allows each service to choose the most appropriate data model and technology.
 
@@ -830,9 +720,10 @@ Each microservice has exclusive ownership of its own database, which is kept pri
 
 The web application is built with Next.js and leverages Server-Side Rendering (SSR). When a user requests a page, it is rendered on the server into full HTML and then sent to the client. This pattern improves initial page load times and provides a better user experience, while also being highly beneficial for Search Engine Optimization (SEO).
 
-### Active Redundancy (Hot Spare) Pattern
+### Active Redundancy Pattern (Hot Spare)
 
 The system ensures high availability for the API Gateway using an active redundancy pattern with hot spares.
+
 - **Replication**: The `api-gateway` service can be horizontally scaled to run multiple instances. To run 4 instances, for example, use the command: `docker-compose up -d --scale api-gateway=4`. All instances are active and running simultaneously.
 - **Load Balancing**: An Nginx load balancer sits in front of the API Gateway replicas and distributes incoming traffic among them. Docker's internal DNS resolves the `api-gateway` service name to the different container IPs, and Nginx uses this to perform round-robin load balancing.
 - **Fault Tolerance**: If one of the API Gateway instances fails or becomes unresponsive, Nginx will be unable to connect to it and will automatically stop routing traffic to that instance. Requests will be seamlessly redirected to the remaining healthy instances.
@@ -859,17 +750,18 @@ This dual-layer approach completely hides the internal network topology and prev
 ### Network Segmentation Pattern Architectural Tactic: Limit Access (Resist Attack)
 
 The system employs strict network segmentation using Docker's networking features:
+
 - **Public Network**: Contains load balancer, frontend, API Gateway replicas, and K6 testing - accessible from external sources
 - **Private Network**: Contains all backend services and databases with `internal: true` flag - completely isolated from external access
 - **Cross-Network Communication**: Only the API Gateway can bridge between networks, acting as a controlled gateway
 
 This segmentation ensures that even if the frontend or API Gateway is compromised, attackers cannot directly access backend services or databases, containing the blast radius of potential breaches.
 
-### Performance Tactics Load Balancer Pattern Architectural Tactic: Maintain Multiple Copies of Computations (Manage Resources)
+### Performance Tactics Load Balancer Pattern - Architectural Tactic: Maintain Multiple Copies of Computations (Manage Resources)
 
 To manage system resources and maintain performance under heavy load, a load balancer is used to horizontally scale stateless services. By maintaining multiple copies of components like the API Gateway and distributing traffic among them, the system can handle a larger volume of concurrent computations, ensuring that response times remain low and preventing any single instance from becoming a bottleneck.
 
-## 7. Prototype Deployment
+## 10. Prototype Deployment
 
 ### Prerequisites
 
@@ -956,11 +848,11 @@ curl http://localhost:8002/health    # Cart API
 
 | Service         | External Port | Internal Port | Network  | Description |
 |:----------------|:--------------|:--------------|:---------|:------------|
-| **Load Balancer** | **80, 443**   | **80, 443**   | public   | **Nginx SSL Termination & Load Balancing** ⭐ **NEW** |
+| **Load Balancer** | **80, 443**   | **80, 443**   | public   | **Nginx SSL Termination & Load Balancing** |
 | **Frontend**    | 3000          | 3000          | public   | Next.js SSR Web Application |
-| **Mobile App**  | N/A           | N/A           | N/A      | **Native iOS/Android Application** ⭐ **NEW** |
-| **API Gateway** | N/A           | **9000**      | public, private | **Main API Gateway (4 replicas)** ⭐ **NEW** |
-| **K6 Testing**  | 6565          | 6565          | public   | **Load Testing Service** ⭐ **NEW** |
+| **Mobile App**  | N/A           | N/A           | N/A      | **Native iOS/Android Application** |
+| **API Gateway** | N/A           | **9000**      | public, private | **Main API Gateway (4 replicas)** |
+| **K6 Testing**  | 6565          | 6565          | public   | **Load Testing Service** |
 | Auth Service    | 8000*         | 8000          | private  | Authentication & Authorization |
 | Products API    | 8001*         | 8000          | private  | Product Catalog Management |
 | Cart API        | 8002*         | 8000          | private  | Shopping Cart Operations |
@@ -972,17 +864,17 @@ curl http://localhost:8002/health    # Cart API
 
 ### Access Points
 
-- **Primary Access** (Production): <https://localhost:443> (Load Balancer) ⭐ **NEW**
+- **Primary Access** (Production): <https://localhost:443> (Load Balancer)
 - **Web Application**: <http://localhost:3000>
-- **Mobile Application**: Available on iOS/Android devices ⭐ **NEW**
-- **Load Testing**: <http://localhost:6565> (K6 Dashboard) ⭐ **NEW**
+- **Mobile Application**: Available on iOS/Android devices
+- **Load Testing**: <http://localhost:6565> (K6 Dashboard)
 - **API Documentation**:
   - Gateway: <https://localhost:443/docs> (Production) or <http://localhost:9000/docs> (Development)
   - Auth Service: <http://localhost:8000/docs> (Development only)
   - Products API: <http://localhost:8001/docs> (Development only)
   - Cart API: <http://localhost:8002/docs> (Development only)
 
-## 8. Testing
+## 11. Testing
 
 ### API Testing
 
@@ -1005,7 +897,7 @@ All API endpoints are accessible through the Load Balancer and API Gateway from 
 - `POST /api/cart/add`
 - `POST /api/cart/checkout`
 
-### Load Testing with K6 ⭐ **NEW**
+### Load Testing with K6
 
 The system includes automated load testing capabilities:
 
@@ -1013,49 +905,6 @@ The system includes automated load testing capabilities:
 # Run K6 load tests
 docker-compose exec k6 k6 run /scripts/test.js
 ```
-
-
-**Description:**
-This load test exercises the `/products` endpoint through a controlled sequence of traffic patterns to validate performance, scalability, and resilience. It consists of the following seven stages (implemented in k6):
-
-1. **Warm-up** (30 s, 5 VUs)
-   Gently primes caches, JIT compilation, and connection pools.
-
-2. **Ramp-up** (1 m, 20 VUs)
-   Gradually increases load to steady state to detect any early bottlenecks.
-
-3. **Sustained Load** (3 m, 20 VUs)
-   Holds constant traffic to verify stable throughput under normal conditions.
-
-4. **Stress Test** (2 m, 50 VUs)
-   Pushes the service beyond typical load to identify breakpoints and resource exhaustion.
-
-5. **Spike Test** (1 m, 100 VUs)
-   Sudden surge to validate autoscaling, throttling, or graceful degradation.
-
-6. **Recovery** (2 m, 20 VUs)
-   Drops back to sustained load level to observe recovery time and service stabilization.
-
-7. **Cool-down** (30 s, 0 VUs)
-   Ensures connections shutdown cleanly and there are no lingering errors.
-
-During the test, we collect key metrics and enforce these thresholds:
-
-* **95th-percentile response time** must remain below 2 s.
-* **Error rate** (HTTP failures) must stay under 0.1%.
-* **Success rate** (HTTP 2xx responses) must exceed 95%.
-
-![load](load.png)
-![load1](load1.png)
-![load2](load2.png)
-
-The accompanying chart shows a 10-sample moving average of HTTP request durations, demonstrating how the endpoint’s latency evolves across each phase. This comprehensive profile uncovers potential performance regressions, validates SLAs, and ensures the products API can handle real-world traffic surges.
-
-**K6 Test Features:**
-- **Stress Testing**: Simulates high concurrent user loads
-- **Performance Metrics**: Response time, throughput, error rates
-- **Scalability Validation**: Tests system behavior under load
-- **Load Balancer Testing**: Validates traffic distribution across API Gateway replicas
 
 ### Mobile App Testing
 
@@ -1073,7 +922,7 @@ The accompanying chart shows a 10-sample moving average of HTTP request duration
 - **Mobile Connectivity**: Built-in health checks within mobile app
 - **SSL Certificate Status**: Automated certificate validation
 
-## 9. Monitoring and Troubleshooting
+## 12. Monitoring and Troubleshooting
 
 ### Application Logs
 
@@ -1175,7 +1024,7 @@ docker-compose exec products-db pg_isready -U user -d products
 docker-compose exec carts-db mongosh --eval "db.adminCommand('ping')"
 ```
 
-## 10. Project Structure
+## 13. Project Structure
 
 ```sh
 TUSSI/
@@ -1187,7 +1036,7 @@ TUSSI/
 ├── README.md                      # This documentation
 ├── scripts/                       # Utility scripts
 │   └── restore-products-db.sh     # DB restore script
-├── api-gateway/                   # ⭐ NEW - API Gateway Service
+├── api-gateway/                   # API Gateway Service
 │   ├── node_modules/
 │   │   ├── Dockerfile
 │   │   ├── package-lock.json
@@ -1211,7 +1060,7 @@ TUSSI/
 │   │   ├── tailwind.config.ts
 │   │   ├── tsconfig.json
 │   │   └── web-app-manifest-512x512.png
-│   ├── mobile-app/                   # ⭐ NEW - React Native Mobile Application
+│   ├── mobile-app/                   # React Native Mobile Application
 │   │   ├── android/                 # Android-specific files
 │   │   │   ├── app/
 │   │   │   ├── gradle/
@@ -1322,13 +1171,74 @@ TUSSI/
 - Database per service pattern clearly implemented
 - Mobile local storage for offline capabilities
 
-## 12. References
+## 14. Performance Analysis
 
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [React Native Documentation](https://reactnative.dev/docs/getting-started)
-- [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [API Gateway Pattern](https://microservices.io/patterns/apigateway.html)
-- [Microservices Patterns](https://microservices.io/patterns/index.html)
-- [React Native AsyncStorage](https://react-native-async-storage.github.io/async-storage/)
-- [Cross-Platform Development Best Practices](https://reactnative.dev/docs/platformspecific-code)
+### Test Environment Configuration
+
+The performance tests were executed in a controlled local environment with the following specifications to ensure consistent and reliable results:
+
+| Component    | Specification                |
+|:------------|:----------------------------|
+| **CPU**     | Apple M4 (10 cores)         |
+| **RAM**     | 24 GB                       |
+| **Storage** | 512 GB SSD                  |
+| **Network** | 60 Mbps bandwidth           |
+| **GPU**     | 10 cores                    |
+| **Software** | Docker Desktop, k6 v0.50.0  |
+
+The service under test was the `products-api` (FastAPI/Python) running in a Docker container, accessed directly through Docker's internal network to eliminate proxy latency.
+
+### Test Methodology
+
+#### Primary Objectives
+
+1. **Response Time Measurement** for critical operations:
+   - **Write Operations:** `POST /products/`
+   - **Read Operations:** `GET /products/?limit=500`
+2. **Concurrency Limits:** Determine maximum concurrent users before performance degradation
+3. **Bottleneck Identification:** Locate performance constraints in read/write operations
+4. **Knee Point Analysis:** Find the inflection point where response time increases disproportionately
+
+#### Test Scenarios
+
+A comprehensive k6 test script (`products-performance-test.js`) was developed to simulate various load patterns:
+
+1. **Load Testing:** Progressive VU increase to simulate organic traffic growth
+2. **Stress & Peak Testing:** Extreme load conditions and sudden spikes
+3. **Isolation Testing:** Parallel read/write scenarios for independent impact analysis
+
+### Performance Results
+
+The latest test execution demonstrated exceptional performance across all metrics:
+
+| Metric              |  Overall Result |  Read Scenario | Creation Scenario |
+| :------------------ | :-------------: | :------------: | :---------------: |
+| **Total Requests**  |      18,563     |     14,303     |       4,260       |
+| **Failed Requests** | **0.67%** (126) | **0.55%** (80) |   **1.08%** (46)  |
+| **P95 Duration**    |   **87.79 ms**  |  **77.26 ms**  |   **118.03 ms**   |
+| **Throughput**      |    30.8 req/s   |        –       |         –         |
+
+#### Key Performance Indicators
+
+- **Latency Performance:** Achieved a global P95 of only **88 ms**, significantly below the 800 ms threshold
+- **Error Rate:** Maintained below 1%, with most errors being timeouts rather than application failures
+- **Scalability:** Successfully handled up to 130 concurrent users before reaching capacity limits
+
+### System Behavior Analysis
+
+#### Load Response Characteristics
+
+The system demonstrated exceptional stability under increasing load:
+
+1. **Consistent Performance:** Maintained low latency (< 120 ms) up to 100-130 concurrent users
+2. **Graceful Degradation:** Instead of gradual performance decline, the system maintained efficiency until reaching capacity
+3. **Resource Utilization:** Showed optimal resource usage until absolute limits were reached
+
+#### Knee Point Analysis
+
+![Knee Point Graph](knee_point_graph.png)
+
+The performance curve analysis revealed:
+
+- **Flat Response Curve:** Maintained consistent performance across increasing load
+- **Timeout Behavior:** Clean failure mode through timeouts rather than degraded performance

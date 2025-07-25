@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tussi - Distributed E-commerce Platform Architecture</title>
+    <title>Tussi - Distributed E-commerce Platform</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/theme/black.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/plugin/highlight/monokai.css">
@@ -15,68 +16,46 @@
             --r-link-color: #ff69b4;
             --r-selection-background-color: #ff1493;
             --r-main-font-size: 32px;
-            --r-heading1-size: 2.2em;
-            --r-heading2-size: 1.6em;
-            --r-heading3-size: 1.2em;
         }
-        
+
         .reveal {
             font-size: 28px;
         }
-        
-        .reveal h1 {
-            font-size: 2.0em;
-            color: #ff1493;
-            text-transform: uppercase;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(255, 20, 147, 0.3);
-        }
-        
-        .reveal h2 {
-            font-size: 1.4em;
-            color: #ff1493;
-            text-transform: uppercase;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(255, 20, 147, 0.3);
-        }
-        
+
         .reveal h3 {
-            font-size: 1.1em;
+            font-size: 1.8em;
             color: #ff1493;
             text-transform: uppercase;
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(255, 20, 147, 0.3);
         }
-        
-        .reveal p, .reveal li {
+
+        .reveal p,
+        .reveal li {
             font-size: 0.85em;
             line-height: 1.3;
         }
-        
+
         .reveal .slides section .fragment {
             color: #ffffff;
         }
-        
+
         .reveal .progress {
             color: #ff1493;
         }
-        
+
         .small-text {
             font-size: 0.75em;
         }
-        
+
         .smaller-text {
             font-size: 0.65em;
         }
-        
+
         .tiny-text {
             font-size: 0.55em;
         }
-        
-        .micro-text {
-            font-size: 0.45em;
-        }
-        
+
         .team-member {
             display: inline-block;
             margin: 15px;
@@ -86,12 +65,12 @@
             background: linear-gradient(45deg, rgba(255, 20, 147, 0.1), rgba(255, 105, 180, 0.1));
             transition: transform 0.3s ease;
         }
-        
+
         .team-member:hover {
             transform: scale(1.05);
             box-shadow: 0 0 20px rgba(255, 20, 147, 0.5);
         }
-        
+
         .architecture-diagram {
             max-width: 90%;
             max-height: 70vh;
@@ -99,1317 +78,961 @@
             border-radius: 10px;
             box-shadow: 0 0 30px rgba(255, 20, 147, 0.3);
         }
-        
-        .two-column {
-            display: flex;
-            justify-content: space-between;
-            gap: 30px;
-        }
-        
-        .three-column {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-        }
-        
-        .column {
-            flex: 1;
-            margin: 0 10px;
-        }
-        
-        .component-box {
-            background: linear-gradient(135deg, rgba(255, 20, 147, 0.2), rgba(255, 105, 180, 0.1));
-            border: 2px solid #ff1493;
-            border-radius: 10px;
-            padding: 12px;
-            margin: 8px 0;
-            transition: all 0.3s ease;
-            font-size: 0.9em;
-        }
-        
-        .component-box:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(255, 20, 147, 0.3);
-        }
-        
-        .component-box h3 {
-            font-size: 1.0em;
-            margin-bottom: 8px;
-        }
-        
-        .scenario-card {
-            background: linear-gradient(45deg, rgba(255, 20, 147, 0.15), rgba(0, 0, 0, 0.8));
-            border-left: 5px solid #ff1493;
-            padding: 15px;
-            margin: 12px 0;
-            border-radius: 5px;
-            box-shadow: 0 5px 15px rgba(255, 20, 147, 0.2);
-            font-size: 0.8em;
-        }
-        
-        .pattern-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .pattern-card {
-            background: linear-gradient(135deg, rgba(255, 20, 147, 0.1), rgba(255, 105, 180, 0.05));
-            border: 2px solid #ff1493;
-            border-radius: 15px;
-            padding: 15px;
-            text-align: center;
-            transition: all 0.4s ease;
-            cursor: pointer;
-            font-size: 0.85em;
-        }
-        
-        .pattern-card:hover {
-            transform: scale(1.05) rotateY(5deg);
-            box-shadow: 0 15px 30px rgba(255, 20, 147, 0.4);
-            background: linear-gradient(135deg, rgba(255, 20, 147, 0.2), rgba(255, 105, 180, 0.1));
-        }
-        
-        .pattern-card h3 {
-            font-size: 1.0em;
-            margin-bottom: 8px;
-        }
-        
-        .pattern-card h4 {
-            font-size: 0.9em;
-            margin-bottom: 6px;
-        }
-        
-        .connector-line {
-            height: 3px;
-            background: linear-gradient(90deg, #ff1493, #ff69b4, #ff1493);
-            margin: 15px 0;
-            border-radius: 2px;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 1; }
-        }
-        
-        @keyframes slideInLeft {
-            from { transform: translateX(-100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes fadeInUp {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        @keyframes zoomIn {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        
-        .animate-left {
-            animation: slideInLeft 0.8s ease-out;
-        }
-        
-        .animate-right {
-            animation: slideInRight 0.8s ease-out;
-        }
-        
-        .animate-up {
-            animation: fadeInUp 0.8s ease-out;
-        }
-        
-        .animate-zoom {
-            animation: zoomIn 0.8s ease-out;
-        }
-        
-        .tier-table {
+
+        .data-table {
             width: 100%;
             border-collapse: collapse;
             margin: 15px 0;
             font-size: 0.8em;
         }
-        
-        .tier-table th, .tier-table td {
+
+        .data-table th,
+        .data-table td {
             border: 2px solid #ff1493;
             padding: 10px;
             text-align: left;
         }
-        
-        .tier-table th {
+
+        .data-table th {
             background: linear-gradient(135deg, rgba(255, 20, 147, 0.3), rgba(255, 105, 180, 0.2));
             font-weight: bold;
-            font-size: 0.9em;
         }
-        
-        .tier-table tr:hover {
+
+        .data-table tr:hover {
             background: rgba(255, 20, 147, 0.1);
-        }
-        
-        .security-shield {
-            font-size: 3em;
-            color: #ff1493;
-            text-shadow: 0 0 20px rgba(255, 20, 147, 0.8);
-            animation: pulse 2s infinite;
-        }
-        
-        .performance-meter {
-            width: 100%;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-        
-        .performance-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ff1493, #ff69b4, #00ff00);
-            border-radius: 10px;
-            animation: loadBar 2s ease-in-out;
-        }
-        
-        @keyframes loadBar {
-            from { width: 0%; }
-            to { width: 100%; }
-        }
-        
-        .code-block {
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #ff1493;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 12px 0;
-            box-shadow: 0 5px 15px rgba(255, 20, 147, 0.2);
-            font-size: 0.75em;
-        }
-        
-        .code-block pre {
-            margin: 0;
-            line-height: 1.4;
-        }
-        
-        .emoji-large {
-            font-size: 1.5em;
-            margin: 0 8px;
-        }
-        
-        .highlight-box {
-            background: linear-gradient(45deg, rgba(255, 20, 147, 0.2), rgba(255, 105, 180, 0.1));
-            border: 2px dashed #ff1493;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
-            font-size: 0.9em;
         }
     </style>
 </head>
+
 <body>
     <div class="reveal">
         <div class="slides">
-            <!-- Title Slide -->
-            <section data-background-color="#000000">
-                <img src="logo.png" alt="Tussi Logo" style="max-width: 300px;" class="fragment animate-zoom">
-                <h1 style="color: #ff1493;">TUSSI</h1>
-                <h2 class="fragment animate-up">Distributed E-commerce Platform</h2>
-                <p class="fragment animate-left">🏗️ <strong>Architecture Deep Dive</strong></p>
-                <p class="fragment animate-right small-text">Patterns, Tactics & Quality Scenarios</p>
-                <p class="fragment animate-up tiny-text">Team 1a - Software Architecture Project</p>
+            <!-- Title -->
+            <section>
+                <img src="logo.png" alt="Tussi Logo" style="max-width: 300px;">
+                <h3>TUSSI</h3>
+                <p>Distributed E-commerce Platform</p>
             </section>
 
-            <!-- Team Section -->
             <section>
-                <h2>Team 1a</h2>
-                <div class="team-member fragment animate-left">
-                    <h3>Xamir Ernesto Rojas Gamboa</h3>
+                <div class="team-member">
+                    <p>Xamir Ernesto Rojas Gamboa</p>
                 </div>
-                <div class="team-member fragment animate-up">
-                    <h3>Juan Sebastian Medina Pinto</h3>
+                <div class="team-member">
+                    <p>Juan Sebastian Medina Pinto</p>
                 </div>
-                <div class="team-member fragment animate-right">
-                    <h3>Juan Manuel Pérez Ordoñez</h3>
+                <div class="team-member">
+                    <p>Juan Manuel Pérez Ordoñez</p>
                 </div>
             </section>
 
-            <!-- Architecture Overview Section -->
             <section>
-                <section data-background-color="#1a1a1a">
-                    <h1>🏗️ ARCHITECTURAL STRUCTURE</h1>
-                    <p class="fragment">Four Comprehensive Views</p>
-                    <div class="fragment">
-                        <p class="small-text">Navigate with ↓ to explore each view</p>
-                    </div>
-                </section>
-                
-                <!-- Component & Connector View -->
-                <section>
-                    <h2>Component & Connector View</h2>
-                    <img src="ArchitectureC&C.png" alt="C&C Architecture" class="architecture-diagram fragment animate-zoom">
-                    <div class="fragment">
-                        <p class="small-text"><strong>System:</strong> 2 Clients + 1 Load Balancer + 4 Services + 3 Databases = 10 Components</p>
-                        <div class="connector-line"></div>
-                        <p class="small-text"><strong>Connected by:</strong> 10 Connectors (HTTPS, REST, TCP)</p>
-                    </div>
-                </section>
-
-                <!-- Components Detail -->
-                <section>
-                    <h2>Components Breakdown</h2>
-                    <div class="two-column">
-                        <div class="column">
-                            <div class="component-box fragment animate-left">
-                                <h3>🌐 Clients (2)</h3>
-                                <ul class="small-text">
-                                    <li>Web Client (Next.js/React)</li>
-                                    <li>Mobile Client (React Native)</li>
-                                </ul>
-                            </div>
-                            <div class="component-box fragment animate-left" data-fragment-index="1">
-                                <h3>⚖️ Load Balancer (1)</h3>
-                                <ul class="small-text">
-                                    <li>Nginx with SSL Termination</li>
-                                    <li>Round-robin distribution</li>
-                                </ul>
-                            </div>
-                            <div class="component-box fragment animate-left" data-fragment-index="2">
-                                <h3>🚪 Services (4)</h3>
-                                <ul class="small-text">
-                                    <li>API Gateway (Node.js)</li>
-                                    <li>Auth Service (FastAPI)</li>
-                                    <li>Products API (FastAPI)</li>
-                                    <li>Cart API (Node.js)</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="column">
-                            <div class="component-box fragment animate-right">
-                                <h3>🗄️ Databases (3)</h3>
-                                <ul class="small-text">
-                                    <li>Auth DB (PostgreSQL:5432)</li>
-                                    <li>Products DB (PostgreSQL:5433)</li>
-                                    <li>Cart DB (MongoDB:27017)</li>
-                                </ul>
-                            </div>
-                            <div class="component-box fragment animate-right" data-fragment-index="1">
-                                                                 <h3>🔗 Connectors (10)</h3>
-                                 <ul class="micro-text">
-                                     <li>c1: Web Client → Load Balancer (HTTPS)</li>
-                                     <li>c2: Mobile Client → Load Balancer (HTTPS)</li>
-                                     <li>c3: Load Balancer → API Gateway (HTTP)</li>
-                                     <li>c4: API Gateway → Auth Service (REST)</li>
-                                     <li>c5: API Gateway → Products API (REST)</li>
-                                     <li>c6: API Gateway → Cart API (REST)</li>
-                                     <li>c7: Auth Service → Auth DB (TCP)</li>
-                                     <li>c8: Products API → Products DB (TCP)</li>
-                                     <li>c9: Cart API → Cart DB (TCP)</li>
-                                     <li>c10: K6 Testing → Load Balancer (HTTP)</li>
-                                 </ul>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Layered Architecture -->
-                <section>
-                    <h2>Layered (Tier & Layer) View</h2>
-                    <table class="tier-table fragment animate-up">
-                        <tr class="fragment" data-fragment-index="1">
-                            <th>Tier 1: Presentation</th>
-                            <td>Web Client (Next.js), Mobile Client (React Native)</td>
-                        </tr>
-                        <tr class="fragment" data-fragment-index="2">
-                            <th>Tier 2: Communication</th>
-                            <td>API Gateway (Node.js/Express) - Centralized routing, JWT, rate limiting</td>
-                        </tr>
-                        <tr class="fragment" data-fragment-index="3">
-                            <th>Tier 3: Logic</th>
-                            <td>
-                                <strong>L1:</strong> Controllers (Routing) | 
-                                <strong>L2:</strong> Services (Business Logic) | 
-                                <strong>L3:</strong> Models (Data Access)
-                            </td>
-                        </tr>
-                        <tr class="fragment" data-fragment-index="4">
-                            <th>Tier 4: Data</th>
-                            <td>PostgreSQL (Auth + Products), MongoDB (Cart), Mobile Local Storage</td>
-                        </tr>
-                    </table>
-                    <div class="fragment" data-fragment-index="5">
-                        <p class="small-text">🎯 <strong>Separation of Concerns:</strong> Each tier has distinct responsibilities and interfaces</p>
-                    </div>
-                </section>
-
-                <!-- Deployment Structure -->
-                <section>
-                    <h2>Deployment Structure</h2>
-                    <img src="decomposition.png" alt="Deployment Diagram" class="architecture-diagram fragment animate-zoom">
-                    <div class="highlight-box fragment">
-                        <h3>Container Orchestration Pattern</h3>
-                        <div class="two-column small-text">
-                            <div class="column">
-                                <strong>🌐 Public Network:</strong>
-                                <ul>
-                                    <li>Load Balancer (Nginx)</li>
-                                    <li>Frontend Container</li>
-                                    <li>API Gateway (4 replicas)</li>
-                                    <li>K6 Load Testing</li>
-                                </ul>
-                            </div>
-                            <div class="column">
-                                <strong>🔒 Private Network:</strong>
-                                <ul>
-                                    <li>Auth Service Container</li>
-                                    <li>Products API Container</li>
-                                    <li>Cart API Container</li>
-                                    <li>All Database Containers</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Decomposition Structure -->
-                <section>
-                    <h2>Decomposition Structure</h2>
-                    <div class="three-column small-text">
-                        <div class="column">
-                                                         <div class="component-box fragment animate-left">
-                                 <h3>🎨 Presentation Module</h3>
-                                 <ul class="micro-text">
-                                     <li><strong>Web Client:</strong> Authentication, Product Discovery, Cart Management, Responsive UI</li>
-                                     <li><strong>Mobile Client:</strong> Authentication, Product Discovery, Cart Management, Offline Capabilities</li>
-                                 </ul>
-                             </div>
-                        </div>
-                        <div class="column">
-                                                         <div class="component-box fragment animate-up">
-                                 <h3>🚪 Gateway Module</h3>
-                                 <ul class="micro-text">
-                                     <li>Request Routing</li>
-                                     <li>Authentication Middleware</li>
-                                     <li>Rate Limiting & Security</li>
-                                     <li>Centralized Logging</li>
-                                     <li>Endpoint Aggregation</li>
-                                 </ul>
-                             </div>
-                        </div>
-                        <div class="column">
-                                                         <div class="component-box fragment animate-right">
-                                 <h3>⚙️ Business Services</h3>
-                                 <ul class="micro-text">
-                                     <li><strong>Auth Service:</strong> User Management, Session Management</li>
-                                     <li><strong>Products Service:</strong> Product Catalog, CRUD Operations</li>
-                                     <li><strong>Cart Service:</strong> Cart Operations, Item Management</li>
-                                 </ul>
-                             </div>
-                        </div>
-                    </div>
-                    <div class="fragment">
-                        <div class="component-box animate-zoom">
-                            <h3>🗄️ Data Persistence Module</h3>
-                            <p class="small-text"><strong>Polyglot Persistence:</strong> PostgreSQL (Auth + Products) + MongoDB (Cart) + Mobile Storage</p>
-                        </div>
-                    </div>
-                </section>
+                <h3>Description</h3>
+                <p>Tussi is a distributed e-commerce platform built with modern microservices architecture that provides
+                    user authentication, product catalog management, and shopping cart functionality. The system is
+                    designed to handle high traffic loads through distributed services and uses modern web technologies
+                    for optimal performance and scalability.</p>
+            </section>
+            <!-- Architectural Structure -->
+            <section>
+                <h3>3. Architectural Structure</h3>
+                <p>A comprehensive view of system architecture through multiple perspectives.</p>
             </section>
 
-            <!-- Quality Properties - Security Scenarios -->
             <section>
-                <section data-background-color="#8B0000">
-                    <div class="security-shield">🛡️</div>
-                    <h1>SECURITY SCENARIOS</h1>
-                    <p class="fragment">Four Critical Security Threats</p>
-                    <div class="fragment">
-                        <p class="small-text">Navigate with ↓ to explore each scenario</p>
-                    </div>
-                </section>
-
-                <!-- Man in the Middle Attack -->
-                <section>
-                    <h2>🕵️ Man-in-the-Middle Attack</h2>
-                    <img src="https.png" alt="HTTPS Protection" style="max-width: 50%;" class="fragment animate-zoom">
-                    <div class="scenario-card fragment animate-up">
-                        <div class="two-column tiny-text">
-                            <div class="column">
-                                <p><strong>Stimulus:</strong> Attempt to intercept data in transit</p>
-                                <p><strong>Source:</strong> External attacker on insecure network</p>
-                                <p><strong>Artifact:</strong> Communication Channel (TLS/SSL)</p>
-                            </div>
-                            <div class="column">
-                                <p><strong>Environment:</strong> User on public Wi-Fi</p>
-                                <p><strong>Response:</strong> Data travels encrypted, preventing unauthorized reading</p>
-                                <p><strong>Metric:</strong> 0% non-encrypted connections, automatic HTTPS upgrade</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- API Gateway Bypass -->
-                <section>
-                    <h2>🚫 Attempt to Bypass API Gateway</h2>
-                    <div class="scenario-card fragment animate-left">
-                        <div class="two-column tiny-text">
-                            <div class="column">
-                                <p><strong>Stimulus:</strong> Direct request to internal microservice</p>
-                                <p><strong>Source:</strong> External attacker with discovered internal IP</p>
-                                <p><strong>Artifact:</strong> Reverse Proxy (API Gateway)</p>
-                            </div>
-                            <div class="column">
-                                <p><strong>Environment:</strong> Production with private network</p>
-                                <p><strong>Response:</strong> Gateway validates and routes; client never directly accesses service</p>
-                                <p><strong>Metric:</strong> Zero directly accessible internal service endpoints</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="highlight-box fragment">
-                        <p class="small-text">🔒 <strong>Network Segmentation:</strong> Private network isolates backend services completely</p>
-                    </div>
-                </section>
-
-                <!-- Frontend Compromised -->
-                <section>
-                    <h2>💀 Frontend Compromised</h2>
-                    <div class="scenario-card fragment animate-right">
-                        <div class="two-column tiny-text">
-                            <div class="column">
-                                <p><strong>Stimulus:</strong> Attempt lateral movement to database</p>
-                                <p><strong>Source:</strong> Attacker in compromised frontend container</p>
-                                <p><strong>Artifact:</strong> Docker Networks (public and private)</p>
-                            </div>
-                            <div class="column">
-                                <p><strong>Environment:</strong> Production Docker deployment</p>
-                                <p><strong>Response:</strong> Docker network rules block traffic between isolated networks</p>
-                                <p><strong>Metric:</strong> Zero connectivity between frontend and database networks</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="highlight-box fragment">
-                        <p class="small-text">🏗️ <strong>Blast Radius Containment:</strong> Frontend compromise cannot reach databases</p>
-                    </div>
-                </section>
-
-                <!-- Product Modification for Fraud -->
-                <section>
-                    <h2>🕵️‍♂️ Product Modification for Fraud (Auditability)</h2>
-                    <div class="scenario-card fragment animate-up">
-                        <div class="two-column tiny-text">
-                            <div class="column">
-                                <p><strong>Stimulus:</strong> Secret price modification by legitimate admin</p>
-                                <p><strong>Source:</strong> Administrator with legitimate credentials</p>
-                                <p><strong>Artifact:</strong> products-api + products-db</p>
-                            </div>
-                            <div class="column">
-                                <p><strong>Environment:</strong> Production, normal business operations</p>
-                                <p><strong>Response:</strong> Immutable change log of all modifications</p>
-                                <p><strong>Metric:</strong> Complete and verifiable history with no tampering possibility</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="highlight-box fragment">
-                        <p class="small-text">📝 <strong>Audit Trail:</strong> Every price change logged with user, previous/new values, timestamp</p>
-                    </div>
-                </section>
+                <h3>Component-and-Connector View</h3>
+                <p>A system comprising two clients, a load balancer, four services, and three databases, connected
+                    by ten connectors.</p>
             </section>
 
-            <!-- Quality Properties - Performance Scenarios -->
             <section>
-                <section data-background-color="#0B4D03">
-                    <div class="emoji-large">⚡</div>
-                    <h1>PERFORMANCE SCENARIOS</h1>
-                    <p class="fragment">Four Performance Challenges</p>
-                    <div class="fragment">
-                        <p class="small-text">Navigate with ↓ to explore each scenario</p>
-                    </div>
-                </section>
-
-                <!-- API Gateway Instance Fail -->
-                <section>
-                    <h2>💥 API Gateway Instance Fail</h2>
-                    <div class="scenario-card fragment animate-left">
-                        <div class="two-column tiny-text">
-                            <div class="column">
-                                <p><strong>Stimulus:</strong> API Gateway instance crashes</p>
-                                <p><strong>Source:</strong> Internal system fault</p>
-                                <p><strong>Artifact:</strong> Load Balancer + Replicated API Gateways</p>
-                            </div>
-                            <div class="column">
-                                <p><strong>Environment:</strong> Production, high load</p>
-                                <p><strong>Response:</strong> Load balancer detects failure and redirects traffic</p>
-                                <p><strong>Metric:</strong> >99.9% Availability maintained</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="performance-meter fragment">
-                        <div class="performance-fill" style="width: 99.9%;"></div>
-                    </div>
-                    <p class="small-text fragment">🔄 <strong>Hot Spare Pattern:</strong> 4 replicas ensure zero failed requests</p>
-                </section>
-
-                <!-- Increase in Concurrent Users -->
-                <section>
-                    <h2>📈 Surge in Concurrent Users</h2>
-                    <div class="scenario-card fragment animate-right">
-                        <div class="two-column tiny-text">
-                            <div class="column">
-                                <p><strong>Stimulus:</strong> 10x traffic surge (1,000 → 10,000 users)</p>
-                                <p><strong>Source:</strong> Marketing campaign success</p>
-                                <p><strong>Artifact:</strong> Container Orchestrator + Load Balancer</p>
-                            </div>
-                            <div class="column">
-                                <p><strong>Environment:</strong> Production, flash sale event</p>
-                                <p><strong>Response:</strong> Additional service instances deployed</p>
-                                <p><strong>Metric:</strong> <500ms response time, <80% CPU utilization</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="code-block fragment">
-                        <pre><code class="bash"># Horizontal Scaling
-docker-compose up --scale api-gateway=8
-docker-compose up --scale products-api=4</code></pre>
-                    </div>
-                </section>
-
-                <!-- Denial of Service Attack -->
-                <section>
-                    <h2>🚨 Denial of Service Attack</h2>
-                    <div class="scenario-card fragment animate-up">
-                        <div class="two-column tiny-text">
-                            <div class="column">
-                                <p><strong>Stimulus:</strong> Request flood to /api/auth/login endpoint</p>
-                                <p><strong>Source:</strong> Malicious script (100+ requests/minute)</p>
-                                <p><strong>Artifact:</strong> API Gateway Rate Limiting Middleware</p>
-                            </div>
-                            <div class="column">
-                                <p><strong>Environment:</strong> Production</p>
-                                <p><strong>Response:</strong> Excessive requests blocked with HTTP 429</p>
-                                <p><strong>Metric:</strong> 100% malicious request blocking after limit</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="highlight-box fragment">
-                        <p class="small-text">⚡ <strong>Rate Limiting:</strong> 5 requests per window limit protects auth service</p>
-                    </div>
-                </section>
-
-                <!-- Database Bottleneck -->
-                <section>
-                    <h2>🗄️ Database Read/Write Bottleneck</h2>
-                    <div class="scenario-card fragment animate-zoom">
-                        <div class="two-column tiny-text">
-                            <div class="column">
-                                <p><strong>Stimulus:</strong> Concurrent massive reads + stock updates</p>
-                                <p><strong>Source:</strong> Peak usage + administrator updates</p>
-                                <p><strong>Artifact:</strong> products-api + products-db</p>
-                            </div>
-                            <div class="column">
-                                <p><strong>Environment:</strong> Production, peak hours</p>
-                                <p><strong>Response:</strong> Handle reads and writes without lockups</p>
-                                <p><strong>Metric:</strong> <350ms reads, <1.5s writes, no deadlocks</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="two-column fragment">
-                        <div class="column">
-                            <div class="performance-meter">
-                                <div class="performance-fill" style="width: 85%;"></div>
-                            </div>
-                            <p class="tiny-text">Read Performance: 350ms</p>
-                        </div>
-                        <div class="column">
-                            <div class="performance-meter">
-                                <div class="performance-fill" style="width: 70%;"></div>
-                            </div>
-                            <p class="tiny-text">Write Performance: 1.5s</p>
-                        </div>
-                    </div>
-                </section>
+                <img src="c&c-h.png" alt="C&C Architecture" class="architecture-diagram">
             </section>
 
-            <!-- Architectural Styles -->
             <section>
-                <section data-background-color="#2F4F4F">
-                    <h1>🏛️ ARCHITECTURAL STYLES</h1>
-                    <p class="fragment">Four Fundamental Architectural Approaches</p>
-                    <div class="fragment">
-                        <p class="small-text">Navigate with ↓ to explore each style</p>
-                    </div>
-                </section>
-
-                <!-- Layered N-Tier -->
-                <section>
-                    <h2>🏢 Layered (N-Tier)</h2>
-                    <div class="highlight-box fragment animate-up">
-                        <p>Clear separation of concerns across 4 distinct tiers</p>
-                    </div>
-                    <table class="tier-table fragment">
-                        <tr class="fragment" data-fragment-index="1">
-                            <th>Tier 1: Presentation</th>
-                            <td>Web (Next.js) + Mobile (React Native)</td>
-                        </tr>
-                        <tr class="fragment" data-fragment-index="2">
-                            <th>Tier 2: Communication</th>
-                            <td>API Gateway (single entry point)</td>
-                        </tr>
-                        <tr class="fragment" data-fragment-index="3">
-                            <th>Tier 3: Logic</th>
-                            <td>Controllers → Services → Models</td>
-                        </tr>
-                        <tr class="fragment" data-fragment-index="4">
-                            <th>Tier 4: Data</th>
-                            <td>PostgreSQL + MongoDB + Mobile Storage</td>
-                        </tr>
-                    </table>
-                    <p class="fragment small-text">✅ <strong>Benefits:</strong> Simplified development, testing, and maintenance</p>
-                </section>
-
-                <!-- Client-Server -->
-                <section>
-                    <h2>🌐 Client-Server</h2>
-                    <div class="two-column">
-                        <div class="column">
-                            <div class="component-box fragment animate-left">
-                                <h3>👥 CLIENTS</h3>
-                                <ul class="small-text">
-                                    <li>Web Browser (Next.js)</li>
-                                    <li>Mobile App (React Native)</li>
-                                    <li>Stateless communication</li>
-                                    <li>Independent development</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="column">
-                            <div class="component-box fragment animate-right">
-                                <h3>🖥️ SERVER</h3>
-                                <ul class="small-text">
-                                    <li>API Gateway + Microservices</li>
-                                    <li>Centralized business logic</li>
-                                    <li>Database management</li>
-                                    <li>Independent scaling</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="connector-line fragment"></div>
-                    <p class="fragment small-text">✅ <strong>Decoupling:</strong> Client and server components can be developed, deployed, and scaled independently</p>
-                </section>
-
-                <!-- Microservices -->
-                <section>
-                    <h2>🔧 Microservices</h2>
-                    <div class="three-column small-text">
-                        <div class="component-box fragment animate-left">
-                            <h3>🔐 Auth Service</h3>
-                            <ul class="tiny-text">
-                                <li>FastAPI (Python)</li>
-                                <li>PostgreSQL</li>
-                                <li>JWT Management</li>
-                                <li>Independent deployment</li>
-                            </ul>
-                        </div>
-                        <div class="component-box fragment animate-up">
-                            <h3>📦 Products Service</h3>
-                            <ul class="tiny-text">
-                                <li>FastAPI (Python)</li>
-                                <li>PostgreSQL</li>
-                                <li>Catalog Management</li>
-                                <li>Independent scaling</li>
-                            </ul>
-                        </div>
-                        <div class="component-box fragment animate-right">
-                            <h3>🛒 Cart Service</h3>
-                            <ul class="tiny-text">
-                                <li>Node.js/Express</li>
-                                <li>MongoDB</li>
-                                <li>Session Management</li>
-                                <li>Independent technology</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="highlight-box fragment">
-                        <p class="small-text">✅ <strong>Service-Based:</strong> Each service aligned with business capability, owns data, runs in separate container</p>
-                    </div>
-                </section>
-
-                <!-- Polyglot Architecture -->
-                <section>
-                    <h2>🌍 Polyglot Architecture</h2>
-                    <div class="two-column">
-                        <div class="column">
-                            <div class="component-box fragment animate-left">
-                                <h3>💻 Programming Languages</h3>
-                                <ul class="small-text">
-                                    <li>🐍 <strong>Python:</strong> FastAPI (Auth, Products)</li>
-                                    <li>🟢 <strong>Node.js:</strong> API Gateway, Cart</li>
-                                    <li>⚛️ <strong>JavaScript/TypeScript:</strong> Frontend</li>
-                                    <li>📱 <strong>React Native:</strong> Mobile</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="column">
-                            <div class="component-box fragment animate-right">
-                                <h3>🗄️ Data Persistence</h3>
-                                <ul class="small-text">
-                                    <li>🐘 <strong>PostgreSQL:</strong> Structured data (Users, Products)</li>
-                                    <li>🍃 <strong>MongoDB:</strong> Document data (Shopping Cart)</li>
-                                    <li>📱 <strong>AsyncStorage:</strong> Mobile offline data</li>
-                                    <li>🔄 <strong>Each service chooses optimal technology</strong></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="highlight-box fragment animate-zoom">
-                        <p class="small-text">✅ <strong>Technology Diversity:</strong> Right tool for the right job, enhanced flexibility and performance</p>
-                    </div>
-                </section>
+                <h3>Components</h3>
+                <table class="data-table">
+                    <tr>
+                        <th>Component</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>Web Client</td>
+                        <td>Next.js/React app in browser</td>
+                    </tr>
+                    <tr>
+                        <td>Mobile Client</td>
+                        <td>React Native on iOS/Android</td>
+                    </tr>
+                    <tr>
+                        <td>Load Balancer</td>
+                        <td>Nginx with SSL termination, round-robin distribution</td>
+                    </tr>
+                    <tr>
+                        <td>API Gateway</td>
+                        <td>JWT, rate limiting, CORS, logging and health checks (4 replicas)</td>
+                    </tr>
+                    <tr>
+                        <td>Auth Service</td>
+                        <td>FastAPI (Python) with endpoints for register, login, me</td>
+                    </tr>
+                    <tr>
+                        <td>Products API</td>
+                        <td>FastAPI (Python) with endpoints for products listing and details</td>
+                    </tr>
+                    <tr>
+                        <td>Cart API</td>
+                        <td>Node.js/Express with cart operations endpoints</td>
+                    </tr>
+                    <tr>
+                        <td>Auth Database</td>
+                        <td>PostgreSQL on port 5432 for credentials and user data</td>
+                    </tr>
+                    <tr>
+                        <td>Products Database</td>
+                        <td>PostgreSQL on port 5433 for catalog and inventory</td>
+                    </tr>
+                    <tr>
+                        <td>Cart Database</td>
+                        <td>MongoDB on port 27017 for sessions and cart data</td>
+                    </tr>
+                </table>
             </section>
 
-            <!-- Architectural Patterns -->
             <section>
-                <section data-background-color="#4B0082">
-                    <div class="emoji-large">🔧</div>
-                    <h1>ARCHITECTURAL PATTERNS & TACTICS</h1>
-                    <p class="fragment">Eight Key Patterns for Quality Attributes</p>
-                    <div class="fragment">
-                        <p class="small-text">Navigate with ↓ to explore each pattern</p>
-                    </div>
-                </section>
-
-                <!-- API Gateway Pattern -->
-                <section>
-                    <h2>🚪 API Gateway Pattern</h2>
-                    <div class="highlight-box fragment animate-up">
-                        <p><strong>Single entry point</strong> for all client requests with centralized cross-cutting concerns</p>
-                    </div>
-                    <div class="two-column small-text">
-                        <div class="column">
-                            <div class="component-box fragment animate-left">
-                                <h3>🎯 Responsibilities</h3>
-                                <ul class="tiny-text">
-                                    <li>Request routing to backend services</li>
-                                    <li>JWT-based authentication middleware</li>
-                                    <li>Rate limiting & security policies</li>
-                                    <li>Centralized logging & health checks</li>
-                                    <li>CORS handling & response aggregation</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="column">
-                            <div class="component-box fragment animate-right">
-                                <h3>✅ Benefits</h3>
-                                <ul class="tiny-text">
-                                    <li>Simplified client logic</li>
-                                    <li>Centralized security control</li>
-                                    <li>Service discovery abstraction</li>
-                                    <li>Protocol translation</li>
-                                    <li>Monitoring & analytics</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="code-block fragment">
-                        <pre><code class="javascript">// API Gateway routing example
-app.use('/api/auth', proxy('http://auth-service:8000'));
-app.use('/api/products', proxy('http://products-api:8000'));
-app.use('/api/cart', proxy('http://cart-api:8000'));</code></pre>
-                    </div>
-                </section>
-
-                <!-- Load Balancer Pattern -->
-                <section>
-                    <h2>⚖️ Load Balancer Pattern: Round Robin</h2>
-                    <div class="scenario-card fragment animate-left">
-                        <div class="two-column tiny-text">
-                            <div class="column">
-                                <p><strong>Implementation:</strong> Nginx distributes traffic across 4 API Gateway replicas</p>
-                                <p><strong>Algorithm:</strong> Round-robin with health checks</p>
-                                <p><strong>Features:</strong> SSL termination, HTTP redirect</p>
-                            </div>
-                            <div class="column">
-                                <p><strong>High Availability:</strong> Automatic failure detection</p>
-                                <p><strong>Performance:</strong> Improved response times</p>
-                                <p><strong>Scalability:</strong> Horizontal scaling support</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="performance-meter fragment">
-                        <div class="performance-fill" style="width: 95%;"></div>
-                    </div>
-                    <p class="small-text fragment">🎯 <strong>Manages Resources:</strong> Distributes load to prevent bottlenecks</p>
-                </section>
-
-                <!-- Database per Service Pattern -->
-                <section>
-                    <h2>🗄️ Database per Service Pattern</h2>
-                    <div class="three-column small-text">
-                        <div class="component-box fragment animate-left">
-                            <h3>🔐 Auth Service</h3>
-                            <ul class="tiny-text">
-                                <li>PostgreSQL Database</li>
-                                <li>Port 5432</li>
-                                <li>User credentials & profiles</li>
-                                <li>Exclusive ownership</li>
-                            </ul>
-                        </div>
-                        <div class="component-box fragment animate-up">
-                            <h3>📦 Products Service</h3>
-                            <ul class="tiny-text">
-                                <li>PostgreSQL Database</li>
-                                <li>Port 5433</li>
-                                <li>Product catalog & inventory</li>
-                                <li>Isolated schema</li>
-                            </ul>
-                        </div>
-                        <div class="component-box fragment animate-right">
-                            <h3>🛒 Cart Service</h3>
-                            <ul class="tiny-text">
-                                <li>MongoDB Database</li>
-                                <li>Port 27017</li>
-                                <li>Shopping cart sessions</li>
-                                <li>Document-based storage</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="highlight-box fragment">
-                        <p class="small-text">🎯 <strong>Data Isolation:</strong> Each service chooses optimal database technology, ensuring loose coupling</p>
-                    </div>
-                </section>
-
-                <!-- Redundancy Patterns -->
-                <section>
-                    <h2>🔄 Redundancy Patterns</h2>
-                    <div class="pattern-grid">
-                        <div class="pattern-card fragment animate-left">
-                            <h3>🔥 Active Redundancy</h3>
-                            <h4>(Hot Spare)</h4>
-                            <ul class="tiny-text">
-                                <li>4 API Gateway replicas running simultaneously</li>
-                                <li>Nginx load balances across all instances</li>
-                                <li>Immediate failover on instance failure</li>
-                                <li>Zero downtime architecture</li>
-                            </ul>
-                        </div>
-                        <div class="pattern-card fragment animate-up">
-                            <h3>🔄 Passive Redundancy</h3>
-                            <h4>(Warm Spare)</h4>
-                            <ul class="tiny-text">
-                                <li>Products database backup (products_dump.sql)</li>
-                                <li>Automated restoration script</li>
-                                <li>Ready for quick recovery</li>
-                                <li>Minimal RTO (Recovery Time Objective)</li>
-                            </ul>
-                        </div>
-                        <div class="pattern-card fragment animate-right">
-                            <h3>❄️ Cold Spare</h3>
-                            <h4>(On-Demand)</h4>
-                            <ul class="tiny-text">
-                                <li>K6 load testing service</li>
-                                <li>Activated only when needed</li>
-                                <li>Resource efficient</li>
-                                <li>Testing profile activation</li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Security Tactics -->
-                <section>
-                    <h2>🔒 Security Architectural Tactics</h2>
-                    <div class="two-column">
-                        <div class="column">
-                            <div class="component-box fragment animate-left">
-                                <h3>🛡️ Secure Channel Pattern</h3>
-                                <ul class="small-text">
-                                    <li><strong>Tactic:</strong> Encrypt Data (Resist Attack)</li>
-                                    <li><strong>Implementation:</strong> TLS/SSL for all communications</li>
-                                    <li><strong>Coverage:</strong> Client ↔ Load Balancer ↔ Services</li>
-                                    <li><strong>Result:</strong> Data confidentiality & integrity</li>
-                                </ul>
-                            </div>
-                            <div class="component-box fragment animate-left" data-fragment-index="1">
-                                <h3>🚫 Reverse Proxy Pattern</h3>
-                                <ul class="small-text">
-                                    <li><strong>Tactic:</strong> Limit Access (Resist Attack)</li>
-                                    <li><strong>Implementation:</strong> Two-tier proxy architecture</li>
-                                    <li><strong>Coverage:</strong> Load Balancer + API Gateway</li>
-                                    <li><strong>Result:</strong> Hidden internal topology</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="column">
-                            <div class="component-box fragment animate-right">
-                                <h3>🏗️ Network Segmentation</h3>
-                                <ul class="small-text">
-                                    <li><strong>Tactic:</strong> Limit Access (Resist Attack)</li>
-                                    <li><strong>Implementation:</strong> Public/Private Docker networks</li>
-                                    <li><strong>Coverage:</strong> Complete backend isolation</li>
-                                    <li><strong>Result:</strong> Contained blast radius</li>
-                                </ul>
-                            </div>
-                            <div class="component-box fragment animate-right" data-fragment-index="1">
-                                <h3>⚡ Performance Tactics</h3>
-                                <ul class="small-text">
-                                    <li><strong>Tactic:</strong> Maintain Multiple Copies</li>
-                                    <li><strong>Implementation:</strong> Load balancer + replicas</li>
-                                    <li><strong>Coverage:</strong> Horizontal scaling</li>
-                                    <li><strong>Result:</strong> Enhanced throughput</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Server-Side Rendering & Other Patterns -->
-                <section>
-                    <h2>🖥️ Additional Architectural Patterns</h2>
-                    <div class="pattern-grid">
-                        <div class="pattern-card fragment animate-zoom">
-                            <h3>🖥️ Server-Side Rendering</h3>
-                            <ul class="tiny-text">
-                                <li>Next.js SSR implementation</li>
-                                <li>Improved initial page load times</li>
-                                <li>Better SEO optimization</li>
-                                <li>Enhanced user experience</li>
-                            </ul>
-                        </div>
-                        <div class="pattern-card fragment animate-zoom" data-fragment-index="1">
-                            <h3>🌍 Polyglot Persistence</h3>
-                            <ul class="tiny-text">
-                                <li>PostgreSQL for relational data</li>
-                                <li>MongoDB for document storage</li>
-                                <li>AsyncStorage for mobile offline</li>
-                                <li>Right tool for right data</li>
-                            </ul>
-                        </div>
-                        <div class="pattern-card fragment animate-zoom" data-fragment-index="2">
-                            <h3>🐳 Container Orchestration</h3>
-                            <ul class="tiny-text">
-                                <li>Docker Compose deployment</li>
-                                <li>Service scaling capabilities</li>
-                                <li>Network isolation</li>
-                                <li>Volume persistence</li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
+                <h3>Connectors</h3>
+                <table class="data-table">
+                    <tr>
+                        <th>Connector</th>
+                        <th>Type</th>
+                        <th>From</th>
+                        <th>To</th>
+                    </tr>
+                    <tr>
+                        <td>c1</td>
+                        <td>HTTPS/HTTP</td>
+                        <td>Web Client</td>
+                        <td>Load Balancer</td>
+                    </tr>
+                    <tr>
+                        <td>c2</td>
+                        <td>HTTPS/HTTP</td>
+                        <td>Mobile Client</td>
+                        <td>Load Balancer</td>
+                    </tr>
+                    <tr>
+                        <td>c3</td>
+                        <td>HTTP (Load Balancing)</td>
+                        <td>Load Balancer</td>
+                        <td>API Gateway</td>
+                    </tr>
+                    <tr>
+                        <td>c4</td>
+                        <td>HTTP (REST)</td>
+                        <td>API Gateway</td>
+                        <td>Auth Service</td>
+                    </tr>
+                    <tr>
+                        <td>c5</td>
+                        <td>HTTP (REST)</td>
+                        <td>API Gateway</td>
+                        <td>Products API</td>
+                    </tr>
+                    <tr>
+                        <td>c6</td>
+                        <td>HTTP (REST)</td>
+                        <td>API Gateway</td>
+                        <td>Cart API</td>
+                    </tr>
+                    <tr>
+                        <td>c7</td>
+                        <td>TCP (PostgreSQL driver)</td>
+                        <td>Auth Service</td>
+                        <td>Auth Database</td>
+                    </tr>
+                    <tr>
+                        <td>c8</td>
+                        <td>TCP (PostgreSQL driver)</td>
+                        <td>Products API</td>
+                        <td>Products Database</td>
+                    </tr>
+                    <tr>
+                        <td>c9</td>
+                        <td>TCP (MongoDB driver)</td>
+                        <td>Cart API</td>
+                        <td>Cart Database</td>
+                    </tr>
+                    <tr>
+                        <td>c10</td>
+                        <td>HTTPS/HTTP (Testing)</td>
+                        <td>K6 Load Testing</td>
+                        <td>Load Balancer</td>
+                    </tr>
+                </table>
             </section>
 
-            <!-- Load Testing & Performance Validation -->
             <section>
-                <section data-background-color="#006400">
-                    <div class="emoji-large">📊</div>
-                    <h1>TESTING & VALIDATION</h1>
-                    <p class="fragment">Performance Testing with K6</p>
-                    <div class="fragment">
-                        <p class="small-text">Navigate with ↓ to explore testing strategy</p>
-                    </div>
-                </section>
-
-                <!-- K6 Load Testing -->
-                <section>
-                    <h2>📊 K6 Load Testing Strategy</h2>
-                    <img src="load.png" alt="Load Testing Results" class="architecture-diagram fragment animate-zoom">
-                    <div class="highlight-box fragment">
-                        <h3>7-Stage Performance Testing</h3>
-                        <div class="two-column tiny-text">
-                            <div class="column">
-                                <ol>
-                                    <li><strong>Warm-up</strong> (30s, 5 VUs) - Prime caches</li>
-                                    <li><strong>Ramp-up</strong> (1m, 20 VUs) - Gradual load increase</li>
-                                    <li><strong>Sustained</strong> (3m, 20 VUs) - Constant traffic</li>
-                                    <li><strong>Stress</strong> (2m, 50 VUs) - Beyond typical load</li>
-                                </ol>
-                            </div>
-                            <div class="column">
-                                <ol start="5">
-                                    <li><strong>Spike</strong> (1m, 100 VUs) - Sudden surge</li>
-                                    <li><strong>Recovery</strong> (2m, 20 VUs) - Back to sustained</li>
-                                    <li><strong>Cool-down</strong> (30s, 0 VUs) - Clean shutdown</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Performance Metrics Achieved -->
-                <section>
-                    <h2>🎯 Performance Metrics Achieved</h2>
-                    <table class="tier-table fragment">
-                        <tr class="fragment" data-fragment-index="1">
-                            <th>Metric</th>
-                            <th>Target</th>
-                            <th>Achievement</th>
-                        </tr>
-                        <tr class="fragment" data-fragment-index="2">
-                            <td>Response Time (95th percentile)</td>
-                            <td>&lt; 2s</td>
-                            <td>✅ <strong>Achieved</strong></td>
-                        </tr>
-                        <tr class="fragment" data-fragment-index="3">
-                            <td>Error Rate</td>
-                            <td>&lt; 0.1%</td>
-                            <td>✅ <strong>Achieved</strong></td>
-                        </tr>
-                        <tr class="fragment" data-fragment-index="4">
-                            <td>Success Rate</td>
-                            <td>&gt; 95%</td>
-                            <td>✅ <strong>Achieved</strong></td>
-                        </tr>
-                        <tr class="fragment" data-fragment-index="5">
-                            <td>Availability</td>
-                            <td>&gt; 99.9%</td>
-                            <td>✅ <strong>Achieved</strong></td>
-                        </tr>
-                    </table>
-                    <div class="fragment" data-fragment-index="6">
-                        <div class="performance-meter">
-                            <div class="performance-fill" style="width: 98%;"></div>
-                        </div>
-                        <p class="small-text">Overall System Performance: 98% Efficiency</p>
-                    </div>
-                </section>
-
-                <!-- Deployment Commands -->
-                <section>
-                    <h2>🐳 Container Deployment</h2>
-                    <div class="code-block fragment animate-up">
-                        <pre><code class="bash"># Complete system deployment
-docker-compose build
-docker-compose up -d
-
-# Scale for high availability
-docker-compose up -d --scale api-gateway=4
-
-# Load testing activation
-docker-compose --profile testing up -d
-
-# Health monitoring
-curl https://localhost:443/health
-curl http://localhost:9000/health</code></pre>
-                    </div>
-                    <div class="highlight-box fragment">
-                        <div class="two-column small-text">
-                            <div class="column">
-                                <strong>🌐 Public Access:</strong>
-                                <ul class="tiny-text">
-                                    <li>Load Balancer: 80/443</li>
-                                    <li>Frontend: 3000</li>
-                                    <li>K6 Testing: 6565</li>
-                                </ul>
-                            </div>
-                            <div class="column">
-                                <strong>🔒 Private Services:</strong>
-                                <ul class="tiny-text">
-                                    <li>All microservices isolated</li>
-                                    <li>Database access restricted</li>
-                                    <li>Internal network only</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                <h3>Layered (Tier & Layer) View</h3>
+                <p>A structured view showing the system's layered architecture and responsibilities.</p>
             </section>
 
-            <!-- Quality Attributes Summary -->
             <section>
-                <section data-background-color="#2F4F4F">
-                    <h1>🏆 QUALITY ATTRIBUTES ACHIEVED</h1>
-                    <p class="fragment">Security, Performance, and Scalability</p>
-                    <div class="fragment">
-                        <p class="small-text">Navigate with ↓ to see the summary</p>
-                    </div>
-                </section>
-
-                <!-- Security Achievements -->
-                <section>
-                    <h2>🛡️ Security Quality Attributes</h2>
-                    <div class="pattern-grid">
-                        <div class="component-box fragment animate-left">
-                            <h3>🔒 Confidentiality</h3>
-                            <ul class="small-text">
-                                <li>End-to-end TLS encryption</li>
-                                <li>JWT-based authentication</li>
-                                <li>0% non-encrypted connections</li>
-                                <li>Automatic HTTPS upgrade</li>
-                            </ul>
-                        </div>
-                        <div class="component-box fragment animate-up">
-                            <h3>🏗️ Integrity</h3>
-                            <ul class="small-text">
-                                <li>Network isolation (public/private)</li>
-                                <li>API Gateway as single entry point</li>
-                                <li>Zero direct service access</li>
-                                <li>Immutable audit logs</li>
-                            </ul>
-                        </div>
-                        <div class="component-box fragment animate-right">
-                            <h3>🚨 Availability</h3>
-                            <ul class="small-text">
-                                <li>Blast radius containment</li>
-                                <li>Rate limiting (5 req/window)</li>
-                                <li>DDoS protection</li>
-                                <li>Container isolation</li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Performance Achievements -->
-                <section>
-                    <h2>⚡ Performance Quality Attributes</h2>
-                    <div class="pattern-grid">
-                        <div class="component-box fragment animate-left">
-                            <h3>📈 Scalability</h3>
-                            <ul class="small-text">
-                                <li>Horizontal scaling (4+ replicas)</li>
-                                <li>Load balancing (round-robin)</li>
-                                <li>10x traffic surge handling</li>
-                                <li>Container orchestration</li>
-                            </ul>
-                        </div>
-                        <div class="component-box fragment animate-up">
-                            <h3>🔄 Reliability</h3>
-                            <ul class="small-text">
-                                <li>99.9% availability target</li>
-                                <li>Active redundancy (hot spare)</li>
-                                <li>Passive redundancy (warm spare)</li>
-                                <li>Automatic failover</li>
-                            </ul>
-                        </div>
-                        <div class="component-box fragment animate-right">
-                            <h3>⏱️ Responsiveness</h3>
-                            <ul class="small-text">
-                                <li>&lt;350ms read operations</li>
-                                <li>&lt;1.5s write operations</li>
-                                <li>&lt;2s 95th percentile response</li>
-                                <li>&lt;0.1% error rate</li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Technology Stack & Multi-Platform -->
-                <section>
-                    <h2>🌍 Multi-Platform Architecture</h2>
-                    <div class="two-column">
-                        <div class="column">
-                            <div class="component-box fragment animate-left">
-                                <h3>💻 Technology Stack</h3>
-                                <ul class="small-text">
-                                    <li>🐍 <strong>Python:</strong> FastAPI microservices</li>
-                                    <li>🟢 <strong>Node.js:</strong> API Gateway & Cart</li>
-                                    <li>⚛️ <strong>React:</strong> Web frontend</li>
-                                    <li>📱 <strong>React Native:</strong> Mobile apps</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="column">
-                            <div class="component-box fragment animate-right">
-                                <h3>🗄️ Polyglot Persistence</h3>
-                                <ul class="small-text">
-                                    <li>🐘 <strong>PostgreSQL:</strong> Relational data</li>
-                                    <li>🍃 <strong>MongoDB:</strong> Document storage</li>
-                                    <li>📱 <strong>AsyncStorage:</strong> Mobile offline</li>
-                                    <li>🔄 <strong>Optimal technology per domain</strong></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="highlight-box fragment">
-                        <p class="small-text">🎯 <strong>Cross-Platform Support:</strong> Web browsers, iOS, Android with shared API layer</p>
-                    </div>
-                </section>
+                <img src="layered-diagram.png" alt="Layered Architecture" class="architecture-diagram"
+                    style="max-width: 50%;">
             </section>
 
-            <!-- Architecture Summary -->
             <section>
-                <h2>🏗️ Architectural Excellence Summary</h2>
-                <div class="pattern-grid small-text">
-                    <div class="pattern-card fragment animate-zoom">
-                        <h3>🏛️ 4 Architectural Styles</h3>
-                        <ul class="tiny-text">
-                            <li>Layered (N-Tier)</li>
-                            <li>Client-Server</li>
-                            <li>Microservices</li>
-                            <li>Polyglot Architecture</li>
-                        </ul>
-                    </div>
-                    <div class="pattern-card fragment animate-zoom" data-fragment-index="1">
-                        <h3>🔧 8+ Architectural Patterns</h3>
-                        <ul class="tiny-text">
-                            <li>API Gateway</li>
-                            <li>Load Balancer</li>
-                            <li>Database per Service</li>
-                            <li>Active/Passive/Cold Redundancy</li>
-                        </ul>
-                    </div>
-                    <div class="pattern-card fragment animate-zoom" data-fragment-index="2">
-                        <h3>🛡️ Security Tactics</h3>
-                        <ul class="tiny-text">
-                            <li>Encrypt Data (TLS/SSL)</li>
-                            <li>Limit Access (Network Segmentation)</li>
-                            <li>Reverse Proxy</li>
-                            <li>Rate Limiting</li>
-                        </ul>
-                    </div>
-                    <div class="pattern-card fragment animate-zoom" data-fragment-index="3">
-                        <h3>⚡ Performance Tactics</h3>
-                        <ul class="tiny-text">
-                            <li>Maintain Multiple Copies</li>
-                            <li>Manage Resources</li>
-                            <li>Load Balancing</li>
-                            <li>Horizontal Scaling</li>
-                        </ul>
-                    </div>
-                </div>
+                <h3>Deployment Structure</h3>
+                <p>Container orchestration pattern with Docker Compose, network segmentation, and load balancing for
+                    high availability.</p>
             </section>
 
-            <!-- Final Conclusion -->
-            <section data-background-color="#ff1493">
-                <h1 style="color: #000;">ARCHITECTURAL EXCELLENCE</h1>
-                <div style="color: #000;">
-                    <div class="fragment">
-                        <h2>✅ Tussi demonstrates modern distributed systems architecture</h2>
-                    </div>
-                    <div class="two-column fragment" data-fragment-index="1">
-                        <div class="column">
-                            <ul style="color: #000;">
-                                <li><strong>🏗️ Comprehensive Architecture:</strong> 4 views documented</li>
-                                <li><strong>🛡️ Security-First:</strong> 4 scenarios addressed</li>
-                                <li><strong>⚡ Performance-Proven:</strong> Load tested & validated</li>
-                            </ul>
-                        </div>
-                        <div class="column">
-                            <ul style="color: #000;">
-                                <li><strong>🔧 Pattern-Rich:</strong> 8+ architectural patterns</li>
-                                <li><strong>🌍 Multi-Platform:</strong> Web + Mobile support</li>
-                                <li><strong>🚀 Production-Ready:</strong> Monitoring & testing</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+            <section>
+                <img src="deployment-diagram.png" alt="Deployment Diagram" class="architecture-diagram"
+                    style="max-width: 75%;">
+            </section>
+
+            <section>
+                <h3>Decomposition Structure</h3>
+                <p>A modular breakdown of system functionalities and their relationships.</p>
+            </section>
+
+            <section>
+                <img src="decomposition.png" alt="Decomposition View" class="architecture-diagram">
+            </section>
+
+            <section>
+                <img src="decomposition-diagram.png" alt="Functionalities vs Modules" class="architecture-diagram"
+                style="max-width: 110%;">
+            </section>
+
+            <!-- Quality Properties -->
+            <section>
+                <h3>4. Quality Properties</h3>
+                <p>Critical security and performance scenarios demonstrating system quality attributes.</p>
+            </section>
+
+            <section>
+                <h3>Security Scenarios - Man in the Middle Attack</h3>
+                <p>An attacker on an insecure network (e.g., public Wi-Fi) attempts to perform a man-in-the-middle
+                    (MITM) attack to intercept sensitive data, such as login credentials or personal information,
+                    being transmitted between a user's device and the Tussi backend.</p>
+            </section>
+
+            <section>
+                <img src="ssl.png" alt="SSL Protection" class="architecture-diagram">
+            </section>
+
+            <section>
+                <table class="data-table">
+                    <tr>
+                        <th>Part</th>
+                        <th>Detail</th>
+                    </tr>
+                    <tr>
+                        <td>Stimulus</td>
+                        <td>An attempt to intercept and read HTTP traffic between a client and the API Gateway.</td>
+                    </tr>
+                    <tr>
+                        <td>Source of stimulus</td>
+                        <td>An external attacker with access to the network path.</td>
+                    </tr>
+                    <tr>
+                        <td>Artifact</td>
+                        <td>The communication channel between the client and the Load Balancer/API Gateway, secured
+                            with TLS/SSL.</td>
+                    </tr>
+                    <tr>
+                        <td>Environment</td>
+                        <td>A user is accessing the application from an untrusted public network.</td>
+                    </tr>
+                    <tr>
+                        <td>Response</td>
+                        <td>The system enforces HTTPS-only communication. All data in transit is encrypted via TLS,
+                            rendering any intercepted traffic unreadable to the attacker.</td>
+                    </tr>
+                    <tr>
+                        <td>Response metric</td>
+                        <td>Data confidentiality and integrity are preserved. The percentage of non-encrypted
+                            connections should be 0%. Attempts to connect via HTTP are automatically rejected or
+                            upgraded.</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h3>Security Scenarios - API Gateway Bypass</h3>
+                <p>A malicious actor, having discovered the potential internal IP address of a microservice,
+                    attempts to bypass the API Gateway and communicate directly with the products-api to exploit a
+                    potential vulnerability that the gateway's security filters would otherwise block.</p>
+            </section>
+
+            <section>
+                <img src="reverse-proxy.png" alt="Reverse Proxy" class="architecture-diagram">
+            </section>
+
+            <section>
+                <table class="data-table">
+                    <tr>
+                        <th>Part</th>
+                        <th>Detail</th>
+                    </tr>
+                    <tr>
+                        <td>Stimulus</td>
+                        <td>A crafted HTTP request is sent directly to the internal IP or hostname of a backend
+                            microservice.</td>
+                    </tr>
+                    <tr>
+                        <td>Source of stimulus</td>
+                        <td>An external attacker or a compromised, non-critical external-facing service.</td>
+                    </tr>
+                    <tr>
+                        <td>Artifact</td>
+                        <td>The API Gateway, which serves as the single entry point, and the network configuration
+                            that isolates backend services.</td>
+                    </tr>
+                    <tr>
+                        <td>Environment</td>
+                        <td>Production. Backend services are running in a private network, inaccessible from the
+                            public internet.</td>
+                    </tr>
+                    <tr>
+                        <td>Response</td>
+                        <td>The request fails because the private network is not exposed. The API Gateway is the
+                            only component listening for external traffic, and it validates, authenticates, and
+                            sanitizes all requests before forwarding them.</td>
+                    </tr>
+                    <tr>
+                        <td>Response metric</td>
+                        <td>The attack surface is minimized by exposing only one entry point. The number of directly
+                            accessible internal service endpoints from an external source is zero.</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h3>Security Scenarios - Network Segmentation</h3>
+                <p>Isolation of critical components through network segmentation.</p>
+            </section>
+
+            <section>
+                <img src="networks.png" alt="Network Segmentation" class="architecture-diagram">
+            </section>
+
+            <section>
+                <table class="data-table">
+                    <tr>
+                        <th>Part</th>
+                        <th>Detail</th>
+                    </tr>
+                    <tr>
+                        <td>Stimulus</td>
+                        <td>A connection attempt is made from the compromised frontend container to the auth-db
+                            container on its internal port (5432).</td>
+                    </tr>
+                    <tr>
+                        <td>Source of stimulus</td>
+                        <td>An attacker who has gained remote code execution within the frontend container.</td>
+                    </tr>
+                    <tr>
+                        <td>Artifact</td>
+                        <td>The Docker network configuration in docker-compose.yml, which defines two distinct
+                            networks: public for external-facing services and private (with internal: true) for the
+                            backend and databases.</td>
+                    </tr>
+                    <tr>
+                        <td>Environment</td>
+                        <td>Production Docker deployment. The frontend container is connected only to the public
+                            network, while the auth-db is exclusively on the private network.</td>
+                    </tr>
+                    <tr>
+                        <td>Response</td>
+                        <td>The connection attempt from frontend to auth-db is blocked at the Docker network layer.
+                            Because the containers do not share a common network and the private network is
+                            isolated, no route exists between them.</td>
+                    </tr>
+                    <tr>
+                        <td>Response metric</td>
+                        <td>Lateral movement from the presentation tier to the data tier is prevented. The number of
+                            unauthorized network paths between the public and private networks is zero.</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h3>Security Scenarios - Event Sourcing</h3>
+                <p>Audit trail for critical data modifications.</p>
+            </section>
+
+            <section>
+                <img src="event-sourcing.png" alt="Event Sourcing" class="architecture-diagram">
+            </section>
+
+            <section>
+                <table class="data-table">
+                    <tr>
+                        <th>Part</th>
+                        <th>Detail</th>
+                    </tr>
+                    <tr>
+                        <td>Stimulus</td>
+                        <td>Price of a high-value product is changed to a very low amount and later restored.</td>
+                    </tr>
+                    <tr>
+                        <td>Source of stimulus</td>
+                        <td>Administrator with a legitimate account (no sign of compromise).</td>
+                    </tr>
+                    <tr>
+                        <td>Artifact</td>
+                        <td>products-api service and products-db database.</td>
+                    </tr>
+                    <tr>
+                        <td>Environment</td>
+                        <td>Production, normal business operations.</td>
+                    </tr>
+                    <tr>
+                        <td>Response</td>
+                        <td>The system must immutably log every price change, including user, previous value, new
+                            value, and timestamp.</td>
+                    </tr>
+                    <tr>
+                        <td>Response metric</td>
+                        <td>Ability to generate a complete change history; prove that the price changed from X to Y
+                            and then from Y to X, with no possibility of tampering.</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Performance Scenarios -->
+            <section>
+                <h3>Performance Scenarios - Replication</h3>
+                <p>Handling API Gateway instance failures through replication.</p>
+            </section>
+
+            <section>
+                <img src="replication.png" alt="Replication" class="architecture-diagram">
+            </section>
+
+            <section>
+                <table class="data-table">
+                    <tr>
+                        <th>Part</th>
+                        <th>Detail</th>
+                    </tr>
+                    <tr>
+                        <td>Stimulus</td>
+                        <td>The primary API Gateway instance fails, and the system needs to ensure uninterrupted
+                            service.</td>
+                    </tr>
+                    <tr>
+                        <td>Source of stimulus</td>
+                        <td>A hardware failure or a software bug in the primary instance.</td>
+                    </tr>
+                    <tr>
+                        <td>Artifact</td>
+                        <td>The API Gateway service, its configuration, and the load balancer's health check.</td>
+                    </tr>
+                    <tr>
+                        <td>Environment</td>
+                        <td>Production. High availability is a critical requirement.</td>
+                    </tr>
+                    <tr>
+                        <td>Response</td>
+                        <td>The system automatically detects the failure, marks the primary instance as unhealthy,
+                            and routes traffic to a healthy secondary instance. The load balancer continuously
+                            monitors the health of all API Gateway instances.</td>
+                    </tr>
+                    <tr>
+                        <td>Response metric</td>
+                        <td>Zero downtime for the API Gateway service. The percentage of failed requests to the API
+                            Gateway should be minimal.</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h3>Performance Scenarios - Load Balancer</h3>
+                <p>Managing increased concurrent users through load balancing.</p>
+            </section>
+
+            <section>
+                <img src="load-balancer.png" alt="Load Balancer" class="architecture-diagram">
+            </section>
+
+            <section>
+                <table class="data-table">
+                    <tr>
+                        <th>Part</th>
+                        <th>Detail</th>
+                    </tr>
+                    <tr>
+                        <td>Stimulus</td>
+                        <td>A sudden surge in traffic due to a marketing campaign or a popular product launch.</td>
+                    </tr>
+                    <tr>
+                        <td>Source of stimulus</td>
+                        <td>External users accessing the application simultaneously.</td>
+                    </tr>
+                    <tr>
+                        <td>Artifact</td>
+                        <td>The load balancer, its configuration, and the API Gateway's ability to handle concurrent
+                            requests.</td>
+                    </tr>
+                    <tr>
+                        <td>Environment</td>
+                        <td>Production. Scalability is a key requirement.</td>
+                    </tr>
+                    <tr>
+                        <td>Response</td>
+                        <td>The load balancer distributes incoming requests across multiple API Gateway instances,
+                            ensuring that no single instance is overwhelmed. It also manages session persistence and
+                            sticky sessions if necessary.</td>
+                    </tr>
+                    <tr>
+                        <td>Response metric</td>
+                        <td>The average response time for API Gateway requests remains stable, and no requests are
+                            dropped or timed out.</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h3>Performance Scenarios - DOS Protection</h3>
+                <p>Protection against denial of service attacks through rate limiting.</p>
+            </section>
+
+            <section>
+                <img src="dos.png" alt="DOS Protection" class="architecture-diagram">
+            </section>
+
+            <section>
+                <table class="data-table">
+                    <tr>
+                        <th>Part</th>
+                        <th>Detail</th>
+                    </tr>
+                    <tr>
+                        <td>Stimulus</td>
+                        <td>A malicious actor attempts to flood the API Gateway with a large number of requests,
+                            exceeding its capacity.</td>
+                    </tr>
+                    <tr>
+                        <td>Source of stimulus</td>
+                        <td>An external attacker using automated tools or a botnet.</td>
+                    </tr>
+                    <tr>
+                        <td>Artifact</td>
+                        <td>The API Gateway's rate limiting configuration, its ability to detect and block
+                            suspicious requests, and the load balancer's ability to route legitimate traffic.</td>
+                    </tr>
+                    <tr>
+                        <td>Environment</td>
+                        <td>Production. Availability and reliability are paramount.</td>
+                    </tr>
+                    <tr>
+                        <td>Response</td>
+                        <td>The API Gateway and load balancer work together to block the overwhelming requests. The
+                            rate limiter prevents the system from being overwhelmed by legitimate traffic, while the
+                            load balancer ensures that the remaining requests are distributed evenly.</td>
+                    </tr>
+                    <tr>
+                        <td>Response metric</td>
+                        <td>The system remains responsive and available, with minimal impact on user experience.
+                        </td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h3>Performance Scenarios - Database Bottleneck</h3>
+                <p>The product database experiences lockups when there are concurrent massive reads and simultaneous
+                    stock updates.</p>
+            </section>
+
+            <section>
+                <img src="cqrs.png" alt="CQRS" class="architecture-diagram">
+            </section>
+
+            <section>
+                <table class="data-table">
+                    <tr>
+                        <th>Part</th>
+                        <th>Detail</th>
+                    </tr>
+                    <tr>
+                        <td>Stimulus</td>
+                        <td>A high-volume read operation (e.g., fetching product details) is performed on the
+                            products-db database.</td>
+                    </tr>
+                    <tr>
+                        <td>Source of stimulus</td>
+                        <td>A user browsing the product catalog.</td>
+                    </tr>
+                    <tr>
+                        <td>Artifact</td>
+                        <td>The products-api service and products-db database, configured for read-heavy workloads.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Environment</td>
+                        <td>Production. Scalability and performance are critical.</td>
+                    </tr>
+                    <tr>
+                        <td>Response</td>
+                        <td>The read operation is routed to a dedicated read replica, which handles the majority of
+                            read requests. The primary database handles write operations and complex queries.</td>
+                    </tr>
+                    <tr>
+                        <td>Response metric</td>
+                        <td>Fast response times for read operations, with minimal impact on write performance.</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Reliability Scenarios -->
+            <section>
+                <h3>5. Reliability Scenarios</h3>
+                <p>Patterns and strategies ensuring system reliability and availability.</p>
+            </section>
+
+            <section>
+                <h3>Replication Pattern</h3>
+                <p>By default, GKE does not do "synchronous replication" of its nodes, but manages the node pools as
+                    Compute Engine's Managed Instance Groups (MIGs) and maintains the desired state using an
+                    eventual-consistent model.</p>
+            </section>
+
+            <section>
+                <h3>Active Redundancy (Hot Spare) Pattern</h3>
+                <p>Hot spare implementation for immediate failover capability.</p>
+            </section>
+
+            <section>
+                <img src="hot-spare.png" alt="Hot Spare" class="architecture-diagram">
+            </section>
+
+            <section>
+                <table class="data-table">
+                    <tr>
+                        <th>Part</th>
+                        <th>Detail</th>
+                    </tr>
+                    <tr>
+                        <td>Stimulus</td>
+                        <td>The primary pod/node serving live traffic fails its liveness probe due to a hardware or
+                            software fault.</td>
+                    </tr>
+                    <tr>
+                        <td>Source of stimulus</td>
+                        <td>An internal system event (e.g., node failure, pod crash).</td>
+                    </tr>
+                    <tr>
+                        <td>Artifact</td>
+                        <td>The Kubernetes Deployment with multiple replicas, a Service object for load balancing,
+                            and liveness/readiness probes.</td>
+                    </tr>
+                    <tr>
+                        <td>Environment</td>
+                        <td>A GKE cluster under normal operation. Replicas are running in a "hot" state, actively
+                            processing data in parallel.</td>
+                    </tr>
+                    <tr>
+                        <td>Response</td>
+                        <td>Kubernetes detects the failed probe and immediately stops sending traffic to the failed
+                            pod. The Service automatically reroutes new requests to one of the healthy "hot spare"
+                            pods, which already has the latest state. Kubernetes then initiates the process of
+                            replacing the failed pod.</td>
+                    </tr>
+                    <tr>
+                        <td>Response metric</td>
+                        <td>The failover is transparent to the client. The time to detect failure and reroute
+                            traffic is under 500ms. There is zero data loss since the spare was already
+                            synchronized.</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h3>Passive Redundancy (Warm Spare) Pattern</h3>
+                <p>Warm spare implementation for cost-effective backup capability.</p>
+            </section>
+
+            <section>
+                <img src="warm-spare.png" alt="Warm Spare" class="architecture-diagram">
+            </section>
+
+            <section>
+                <table class="data-table">
+                    <tr>
+                        <th>Part</th>
+                        <th>Detail</th>
+                    </tr>
+                    <tr>
+                        <td>Stimulus</td>
+                        <td>An external monitoring system detects that the primary service is completely unavailable
+                            (e.g., all primary pods are failing).</td>
+                    </tr>
+                    <tr>
+                        <td>Source of stimulus</td>
+                        <td>A major failure in the primary service's node pool or a critical bug affecting all
+                            primary replicas.</td>
+                    </tr>
+                    <tr>
+                        <td>Artifact</td>
+                        <td>A separate Kubernetes Deployment for the "warm spare" replica, node taints/tolerations
+                            to keep it isolated, and an operational runbook or automated script to trigger the
+                            promotion.</td>
+                    </tr>
+                    <tr>
+                        <td>Environment</td>
+                        <td>Production. The primary service is handling all traffic, while the warm spare is running
+                            but not receiving production requests.</td>
+                    </tr>
+                    <tr>
+                        <td>Response</td>
+                        <td>An operator or an automated system is alerted. The promotion process is initiated: the
+                            NoSchedule taint is removed from the standby node pool, or the Service selector is
+                            updated to include the warm spare. The spare begins receiving traffic.</td>
+                    </tr>
+                    <tr>
+                        <td>Response metric</td>
+                        <td>The Recovery Time Objective (RTO) is met (e.g., service is restored in under 2 minutes).
+                            Data loss is minimal to none, as the warm spare was synchronizing state.</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h3>Service Discovery Pattern</h3>
+                <p>In GKE's VPC-native networking, each node automatically receives an alias IP range from the
+                    secondary subnet and each pod is assigned an IP from that block. When autoscaling adds new
+                    nodes, the control plane reserves a fresh alias IP range, updates the network routes, and pods
+                    can be scheduled immediately with new IPs.</p>
+            </section>
+
+            <section>
+                <img src="service-discovery.png" alt="Service Discovery" class="architecture-diagram">
+            </section>
+
+            <section>
+                <table class="data-table">
+                    <tr>
+                        <th>Part</th>
+                        <th>Detail</th>
+                    </tr>
+                    <tr>
+                        <td>Stimulus</td>
+                        <td>The API Gateway needs to send a request to the Products service and uses its logical
+                            name, http://products-api, to establish a connection.</td>
+                    </tr>
+                    <tr>
+                        <td>Source of stimulus</td>
+                        <td>An internal application component (API Gateway) making a routine service-to-service
+                            call.</td>
+                    </tr>
+                    <tr>
+                        <td>Artifact</td>
+                        <td>The Kubernetes internal DNS service (CoreDNS), which maintains mappings between service
+                            names and their corresponding ClusterIPs.</td>
+                    </tr>
+                    <tr>
+                        <td>Environment</td>
+                        <td>A running GKE cluster where services are defined via Kubernetes Service objects.</td>
+                    </tr>
+                    <tr>
+                        <td>Response</td>
+                        <td>The API Gateway's DNS resolver queries CoreDNS. CoreDNS resolves the name products-api
+                            to its stable ClusterIP. Kubernetes then uses iptables or IPVS to forward the request to
+                            one of the healthy backend pods for the service.</td>
+                    </tr>
+                    <tr>
+                        <td>Response metric</td>
+                        <td>The service name is successfully and correctly resolved to an IP address. DNS lookup
+                            latency is negligible (e.g., <10ms). The connection to the service is established
+                                successfully.</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h3>Cluster Pattern</h3>
+                <img src="cluster-scenario.png" alt="Cluster Pattern" class="architecture-diagram">
+            </section>
+
+            <section>
+                <img src="cluster.png" alt="Cluster deploy" class="architecture-diagram">
+            </section>
+
+            <section>
+                <table class="data-table">
+                    <tr>
+                        <th>Part</th>
+                        <th>Detail</th>
+                    </tr>
+                    <tr>
+                        <td>Stimulus</td>
+                        <td>A Compute Engine VM acting as a GKE node becomes unresponsive and fails its health
+                            checks.</td>
+                    </tr>
+                    <tr>
+                        <td>Source of stimulus</td>
+                        <td>An underlying hardware failure, OS-level corruption, or other critical issue within the
+                            VM.</td>
+                    </tr>
+                    <tr>
+                        <td>Artifact</td>
+                        <td>The GKE node pool, which is backed by a Compute Engine Managed Instance Group (MIG)
+                            configured with auto-healing policies.</td>
+                    </tr>
+                    <tr>
+                        <td>Environment</td>
+                        <td>A production GKE cluster.</td>
+                    </tr>
+                    <tr>
+                        <td>Response</td>
+                        <td>The MIG's health checker detects the unhealthy node. It automatically triggers the
+                            auto-healing process: the faulty VM is terminated, and a new, identical VM is created to
+                            replace it. The new node joins the GKE cluster, and Kubernetes begins scheduling pods
+                            onto it.</td>
+                    </tr>
+                    <tr>
+                        <td>Response metric</td>
+                        <td>The cluster's capacity is automatically restored without any manual intervention. The
+                            time to provision and register the new node is within the expected range (typically a
+                            few minutes). Workload disruption is minimized as Kubernetes reschedules pods that were
+                            on the failed node.</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h3>Transaction Pattern</h3>
+                <p>Ensuring data consistency across distributed operations.</p>
+            </section>
+
+            <section>
+                <img src="transaction.png" alt="Transaction" class="architecture-diagram">
+            </section>
+
+            <section>
+                <table class="data-table">
+                    <tr>
+                        <th>Part</th>
+                        <th>Detail</th>
+                    </tr>
+                    <tr>
+                        <td>Stimulus</td>
+                        <td>A user is completing a checkout. The system successfully deducts an item from the
+                            products-api inventory, but the subsequent call to the payment processing service fails.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Source of stimulus</td>
+                        <td>A failure in a downstream service (payment processor) or a network timeout.</td>
+                    </tr>
+                    <tr>
+                        <td>Artifact</td>
+                        <td>The cart-api checkout logic, which orchestrates calls to multiple services
+                            (products-api, payment service). It must include error handling and the logic for the
+                            compensating action.</td>
+                    </tr>
+                    <tr>
+                        <td>Environment</td>
+                        <td>Production, during a multi-step, distributed transaction (Saga).</td>
+                    </tr>
+                    <tr>
+                        <td>Response</td>
+                        <td>The cart-api, upon detecting the payment failure, invokes a compensating transaction. It
+                            sends a specific request to the products-api (e.g., POST /api/products/{id}/add-stock)
+                            to add the previously deducted item back into inventory, effectively reversing the
+                            initial operation.</td>
+                    </tr>
+                    <tr>
+                        <td>Response metric</td>
+                        <td>The system's data is restored to a consistent state. The product inventory is corrected.
+                            The user is notified of the payment failure, but the system does not remain in an
+                            inconsistent state (e.g., item sold but no payment received).</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Performance Analysis -->
+            <section>
+                <h3>14. Performance Analysis</h3>
+                <p>Comprehensive analysis of system performance under various conditions.</p>
+            </section>
+
+            <section>
+                <h3>Test Environment Configuration</h3>
+                <table class="data-table">
+                    <tr>
+                        <th>Component</th>
+                        <th>Specification</th>
+                    </tr>
+                    <tr>
+                        <td>CPU</td>
+                        <td>Apple M4 (10 cores)</td>
+                    </tr>
+                    <tr>
+                        <td>RAM</td>
+                        <td>24 GB</td>
+                    </tr>
+                    <tr>
+                        <td>Storage</td>
+                        <td>512 GB SSD</td>
+                    </tr>
+                    <tr>
+                        <td>Network</td>
+                        <td>60 Mbps bandwidth</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h3>Performance Results</h3>
+                <table class="data-table">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Overall Result</th>
+                        <th>Read Scenario</th>
+                        <th>Creation Scenario</th>
+                    </tr>
+                    <tr>
+                        <td>Total Requests</td>
+                        <td>18,563</td>
+                        <td>14,303</td>
+                        <td>4,260</td>
+                    </tr>
+                    <tr>
+                        <td>Failed Requests</td>
+                        <td>0.67% (126)</td>
+                        <td>0.55% (80)</td>
+                        <td>1.08% (46)</td>
+                    </tr>
+                    <tr>
+                        <td>P95 Duration</td>
+                        <td>87.79 ms</td>
+                        <td>77.26 ms</td>
+                        <td>118.03 ms</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section>
+                <h3>System Behavior Analysis</h3>
+                <img src="knee_point_graph.png" alt="Knee Point Analysis" class="architecture-diagram">
             </section>
 
             <!-- Thank You -->
-            <section data-background-color="#000000">
-                <img src="logo.png" alt="Tussi Logo" style="max-width: 200px;" class="fragment animate-zoom">
-                <h1 style="color: #ff1493;" class="fragment animate-up">Thank You!</h1>
-                <h2 class="fragment animate-left">Questions & Discussion?</h2>
-                <div class="fragment animate-right">
-                    <p class="small-text">Team 1a - Software Architecture Deep Dive</p>
-                    <p class="tiny-text">Xamir Ernesto Rojas Gamboa | Juan Sebastian Medina Pinto | Juan Manuel Pérez Ordoñez</p>
-                </div>
-                <div class="fragment animate-up" data-fragment-index="1">
-                    <div class="connector-line"></div>
-                    <p class="tiny-text">🏗️ Architecture | 🛡️ Security | ⚡ Performance | 🔧 Patterns | 🌍 Multi-Platform</p>
+            <section>
+                <h3>Thank You</h3>
+                <div class="team-member">
+                    <p>Team 1a - Software Architecture Project</p>
+                    <p class="tiny-text">Xamir Ernesto Rojas Gamboa | Juan Sebastian Medina Pinto | Juan Manuel
+                        Pérez Ordoñez</p>
                 </div>
             </section>
+
         </div>
     </div>
 
@@ -1441,6 +1064,41 @@ curl http://localhost:9000/health</code></pre>
             autoAnimateEasing: 'ease',
             autoAnimateDuration: 1.0,
             autoAnimateUnmatched: true,
+            // Add these settings to enforce horizontal-only navigation
+            navigationMode: 'linear',
+            disableLayout: false,
+            display: 'block',
+            width: '100%',
+            height: '100%',
+            margin: 0,
+            minScale: 1,
+            maxScale: 1,
+            // Remove any vertical slides configuration
+            slideNumber: false,
+            overview: true,
+            // Force horizontal-only transitions
+            mouseWheel: false,
+            keyboard: {
+                // Disable up/down navigation
+                38: null, // up
+                40: null  // down
+            },
+            autoSlide: 0,
+            autoSlideStoppable: true,
+            autoSlideMethod: Reveal.navigateNext,
+            defaultTiming: 120,
+            totalTime: 0,
+            minimumTimePerSlide: 0,
+            hideInactiveCursor: true,
+            hideCursorTime: 5000,
+            hideAddressBar: true,
+            previewLinks: false,
+            transition: 'slide', // you can use none/fade/slide/convex/concave/zoom
+            transitionSpeed: 'default', // default/fast/slow
+            backgroundTransition: 'fade',
+            viewDistance: 3,
+            mobileViewDistance: 2,
+            display: 'block',
             autoAnimateStyles: [
                 'opacity',
                 'color',
@@ -1455,8 +1113,9 @@ curl http://localhost:9000/health</code></pre>
                 'outline',
                 'outline-offset'
             ],
-            plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
         });
     </script>
 </body>
-</html> 
+
+</html>
