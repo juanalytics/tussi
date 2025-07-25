@@ -165,31 +165,7 @@ Este sistema comprende dos clientes, un balanceador de carga, cuatro servicios y
 
 #### C&C Diagram
 
-```mermaid
-graph LR
-    WebClient[Component-1<br/>Web Client]
-    MobileClient[Component-2<br/>Mobile Client]
-    LoadBalancer[Component-3<br/>Load Balancer<br/>Nginx]
-    APIGateway[Component-4<br/>API Gateway Service<br/>4 replicas]
-    AuthService[Component-5<br/>Auth Service]
-    ProductsAPI[Component-6<br/>Products API]
-    CartAPI[Component-7<br/>Cart API]
-    AuthDB[(Component-8<br/>PostgreSQL)]
-    ProductsDB[(Component-9<br/>PostgreSQL)]
-    CartDB[(Component-10<br/>MongoDB)]
-    K6[K6 Load Testing]
-
-    WebClient -- "HTTPS c1" --> LoadBalancer
-    MobileClient -- "HTTPS c2" --> LoadBalancer
-    K6 -- "HTTP c10" --> LoadBalancer
-    LoadBalancer -- "HTTP c3" --> APIGateway
-    APIGateway -- "HTTP c4" --> AuthService
-    APIGateway -- "HTTP c5" --> ProductsAPI
-    APIGateway -- "HTTP c6" --> CartAPI
-    AuthService -- "TCP 5432 c7" --> AuthDB
-    ProductsAPI -- "TCP 5433 c8" --> ProductsDB
-    CartAPI -- "TCP 27017 c9" --> CartDB
-```
+![C&C Diagram](c&c-h.png)
 
 #### Layered (Tier & Layer) View
 
@@ -280,59 +256,7 @@ graph TB
 
 Container Orchestration Pattern with Docker Compose, network segmentation, and load balancing for high availability.
 
-```mermaid
-graph TD
-    subgraph "Docker Host"
-        subgraph "Public Network"
-            LoadBalancerContainer["Load Balancer Container<br>(Nginx, Ports 80/443)"]
-            FrontendContainer["Frontend Container<br>(Port 3000)"]
-            APIGatewayContainer["API Gateway Container<br>(4 replicas, Port 9000)"]
-            K6Container["K6 Load Testing<br>(Port 6565)"]
-        end
-
-        subgraph "Private Network (Internal Only)"
-            AuthServiceContainer["Auth Service Container<br>(Port 8000)"]
-            ProductsAPIContainer["Products API Container<br>(Port 8001)"]
-            CartAPIContainer["Cart API Container<br>(Port 8002)"]
-            AuthDBContainer["Auth DB Container<br>(PostgreSQL, Port 5432)"]
-            ProductsDBContainer["Products DB Container<br>(PostgreSQL, Port 5433)"]
-            CartDBContainer["Cart DB Container<br>(MongoDB, Port 27017)"]
-        end
-
-        LoadBalancerContainer -- "SSL Termination & Load Balancing" --> APIGatewayContainer
-        FrontendContainer -- "Depends on" --> APIGatewayContainer
-        APIGatewayContainer -- "Reverse Proxy" --> AuthServiceContainer
-        APIGatewayContainer -- "Reverse Proxy" --> ProductsAPIContainer
-        APIGatewayContainer -- "Reverse Proxy" --> CartAPIContainer
-        AuthServiceContainer -- "Depends on" --> AuthDBContainer
-        ProductsAPIContainer -- "Depends on" --> ProductsDBContainer
-        CartAPIContainer -- "Depends on" --> CartDBContainer
-        K6Container -- "Load Testing" --> LoadBalancerContainer
-    end
-
-    subgraph "Client Devices"
-        UserDevice["User Device<br>(Browser)"]
-        MobileDevice["Mobile Device<br>(iOS/Android)"]
-        TestingDevice["Testing Environment<br>(K6 Scripts)"]
-    end
-
-    UserDevice -- "HTTPS/HTTP" --> LoadBalancerContainer
-    UserDevice -- "HTTPS/HTTP" --> FrontendContainer
-    MobileDevice -- "HTTPS/HTTP" --> LoadBalancerContainer
-    TestingDevice -- "HTTP" --> K6Container
-
-    subgraph "App Stores"
-        AppStore["App Store / Google Play"]
-    end
-
-    MobileDevice -- "Installs from" --> AppStore
-
-    subgraph "SSL/TLS"
-        SSLCerts["SSL Certificates<br>(./ssl volume)"]
-    end
-
-    SSLCerts -- "Mounted to" --> LoadBalancerContainer
-```
+![Deployment](deployment-diagram.png)
 
 **Deployment Units:**
 
@@ -794,7 +718,50 @@ We implement a Warm Spare by running one “standby” replica of your service
 
 In GKE’s VPC‑native networking, each node automatically receives an alias IP range from the secondary subnet and each pod is assigned an IP from that block. When autoscaling adds new nodes, the control plane reserves a fresh alias IP range, updates the network routes, and pods can be scheduled immediately with new IPs. If a node fails, Auto Repair recreates the VM—reclaiming or reallocating its alias block—and Kubernetes transparently reschedules pods onto healthy nodes, updating their pod IPs as needed. During upgrades, GKE performs a surge upgrade by cordoning and draining old nodes, provisioning replacement nodes with new alias ranges, moving workloads over, and then removing the old nodes; throughout this process, Service ClusterIPs remain stable, ensuring uninterrupted connectivity without manual network reconfiguration.
 
-## 5. Architectural Styles
+## 6. Interoperability Analysis
+
+This analysis describes how the different components of the Tussi system communicate and work together.
+
+### Interfaces
+The system's components interact primarily through well-defined, synchronous HTTP-based APIs, following RESTful principles.
+- **External Interfaces (Client-Facing):** The Web and Mobile clients interact with the system through a single public interface exposed by the **Load Balancer** over HTTPS (port 443). This interface is, in turn, served by the **API Gateway**, which provides a unified API for all backend functionalities.
+- **Internal Interfaces (Service-to-Service):**
+    - The **API Gateway** communicates with backend microservices (`Auth`, `Products`, `Cart`) over a private network using their respective RESTful HTTP APIs.
+    - Each microservice communicates with its dedicated database using a specific TCP-based protocol via its database driver (PostgreSQL or MongoDB driver).
+- **API Endpoints:** The interfaces are defined by specific endpoints, such as `POST /api/auth/login`, `GET /api/products`, and `POST /api/cart/add`.
+
+### Context
+Communication context includes the data format, communication protocols, and security information exchanged between components.
+- **Data Format:** The payload for all RESTful API calls is **JSON**, ensuring language-agnostic data exchange between Python (FastAPI), Node.js (Express), and client-side JavaScript/TypeScript.
+- **Protocol:** Communication relies on the **HTTP/1.1** protocol. For external communication, **HTTPS (HTTP over TLS)** is enforced by the Load Balancer to ensure data confidentiality and integrity.
+- **Security Context:** For protected endpoints, a **JSON Web Token (JWT)** is required. The client sends the JWT in the `Authorization: Bearer <token>` header, which is validated by the API Gateway before forwarding the request to the appropriate backend service.
+
+### Exposition
+Interfaces are exposed through network listeners, with a clear separation between public and private networks.
+- **Public Exposition:** The **Load Balancer** is the only component exposed to the public internet, listening on ports **80** (for HTTP to HTTPS redirection) and **443** (for HTTPS). The **Frontend** web application is also publicly accessible on port **3000**.
+- **Private Exposition:** All backend microservices (`Auth`, `Products`, `Cart`) and databases are deployed in a **private network**, completely isolated from external access. They expose their services on internal ports (`8000`, `8001`, `8002`, etc.), accessible only to other components within the Docker network, primarily the API Gateway. This is a direct application of the **Reverse Proxy** pattern to limit access.
+
+### Consumption
+Components consume interfaces based on a client-server model.
+- **Client Consumption:** The **Web Client** (Next.js) and **Mobile Client** (React Native) are the primary consumers of the public-facing API exposed by the API Gateway. They make HTTP requests to fetch data, authenticate users, and manage shopping carts.
+- **Gateway Consumption:** The **API Gateway** acts as a client to the backend microservices. It consumes their individual REST APIs and aggregates the responses if needed. For example, it calls the `Auth Service` to verify credentials or the `Products Service` to fetch product data.
+- **Service Consumption:** Each microservice consumes its own database interface to persist and retrieve data (e.g., the `Cart Service` consumes the MongoDB driver interface to interact with the `Cart DB`).
+
+### Discovery
+Service discovery is handled differently for external clients and internal services.
+- **Client-Side Discovery:** The Web and Mobile clients discover the backend through a **statically configured URL** in their environment variables (e.g., `NEXT_PUBLIC_API_GATEWAY_URL`). This URL points to the public address of the Load Balancer.
+- **Server-Side Discovery:** For internal service-to-service communication, the system relies on **Docker's built-in DNS service**. The API Gateway and other services use the service names defined in `docker-compose.yml` (e.g., `http://auth-service:8000`, `http://products-api:8001`) to resolve the IP addresses of the microservice containers. The Load Balancer also uses this mechanism to discover and route traffic to the replicated API Gateway instances.
+
+### Handling of the response
+The system is designed to handle responses, including errors and failures, gracefully to ensure reliability and provide clear feedback.
+- **Standard HTTP Status Codes:** The APIs use standard HTTP status codes to indicate the outcome of a request (e.g., `200 OK`, `201 Created`, `400 Bad Request`, `401 Unauthorized`, `404 Not Found`).
+- **Error Payloads:** Failed requests are accompanied by a JSON payload containing a descriptive error message to aid in debugging on the client side.
+- **Fault Tolerance:**
+    - The **Load Balancer** continuously monitors the health of the API Gateway instances. If an instance becomes unresponsive, it is automatically removed from the routing pool, and traffic is redirected to healthy instances (**Active Redundancy** pattern).
+    - The **API Gateway** includes **rate-limiting** middleware, which responds with an **HTTP 429 "Too Many Requests"** status to protect backend services from denial-of-service attacks or traffic spikes.
+- **Health Checks:** All microservices expose a `/health` endpoint that can be used by monitoring systems (and the load balancer) to verify their operational status.
+
+## 7. Architectural Styles
 
 ### Layered (N Tier)
 
@@ -812,7 +779,7 @@ The backend is decomposed into a set of independently deployable microservices. 
 
 Tussi embraces a polyglot approach for both programming languages and data persistence. Services are built with the technology best suited for their function: Python with FastAPI for the Auth and Products services, and Node.js for the API Gateway and Cart service. Similarly, the data architecture uses both PostgreSQL for structured, relational data (Users, Products) and MongoDB for flexible, document-based data (Shopping Cart).
 
-## 6. Architectural Patterns
+## 8. Architectural Patterns
 
 ### API Gateway Pattern
 
@@ -869,7 +836,7 @@ This segmentation ensures that even if the frontend or API Gateway is compromise
 
 To manage system resources and maintain performance under heavy load, a load balancer is used to horizontally scale stateless services. By maintaining multiple copies of components like the API Gateway and distributing traffic among them, the system can handle a larger volume of concurrent computations, ensuring that response times remain low and preventing any single instance from becoming a bottleneck.
 
-## 7. Prototype Deployment
+## 9. Prototype Deployment
 
 ### Prerequisites
 
@@ -982,7 +949,7 @@ curl http://localhost:8002/health    # Cart API
   - Products API: <http://localhost:8001/docs> (Development only)
   - Cart API: <http://localhost:8002/docs> (Development only)
 
-## 8. Testing
+## 10. Testing
 
 ### API Testing
 
@@ -1073,7 +1040,7 @@ The accompanying chart shows a 10-sample moving average of HTTP request duration
 - **Mobile Connectivity**: Built-in health checks within mobile app
 - **SSL Certificate Status**: Automated certificate validation
 
-## 9. Monitoring and Troubleshooting
+## 11. Monitoring and Troubleshooting
 
 ### Application Logs
 
@@ -1175,7 +1142,7 @@ docker-compose exec products-db pg_isready -U user -d products
 docker-compose exec carts-db mongosh --eval "db.adminCommand('ping')"
 ```
 
-## 10. Project Structure
+## 12. Project Structure
 
 ```sh
 TUSSI/
@@ -1322,7 +1289,7 @@ TUSSI/
 - Database per service pattern clearly implemented
 - Mobile local storage for offline capabilities
 
-## 12. References
+## 13. References
 
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Next.js Documentation](https://nextjs.org/docs)
