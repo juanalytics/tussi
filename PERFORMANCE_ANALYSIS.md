@@ -5,13 +5,13 @@
 
 Las pruebas se ejecutaron en un entorno local controlado con los siguientes recursos de hardware para garantizar la consistencia de los resultados.
 
-- **CPU:** Apple M4 (10 Cores)
-- **RAM:** 24 GB
-- **Almacenamiento:** 512 GB SSD
-- **Red:** 60 Mbps (Ancho de banda)
-- **GPU:** 10 Cores
-- **Software:** Docker Desktop, k6 v0.50.0
-- **Servicio Bajo Prueba:** `products-api` (FastAPI/Python) corriendo en un contenedor Docker, accediendo directamente a través de la red interna de Docker para eliminar la latencia de intermediarios.
+-   **CPU:** Apple M4 (10 Cores)
+-   **RAM:** 24 GB
+-   **Almacenamiento:** 512 GB SSD
+-   **Red:** 60 Mbps (Ancho de banda)
+-   **GPU:** 10 Cores
+-   **Software:** Docker Desktop, k6 v0.50.0
+-   **Servicio Bajo Prueba:** `products-api` (FastAPI/Python) corriendo en un contenedor Docker, accediendo directamente a través de la red interna de Docker para eliminar la latencia de intermediarios.
 
 ## 2. Metodología y Objetivos de la Prueba
 
@@ -62,34 +62,10 @@ La siguiente tabla resume las métricas clave obtenidas directamente de la ejecu
 
 ## 5. Gráfica del "Knee Point" (Datos Reales)
 
-La siguiente gráfica visualiza la relación entre el número de usuarios y el tiempo de respuesta (P95), ilustrando claramente el punto de inflexión donde el rendimiento se degrada.
+La siguiente gráfica, generada automáticamente a partir de los resultados de la prueba, visualiza la relación entre el número de usuarios y el tiempo de respuesta (P95), ilustrando claramente el punto de inflexión donde el rendimiento se degrada.
 
-```mermaid
-xychart-beta
-    title "Knee Point: Usuarios Virtuales vs. Tiempo de Respuesta (P95)"
-    x-axis "Usuarios Virtuales (VUs)" [0, 20, 40, 60, 80, 100, 120]
-    y-axis "Tiempo de Respuesta P95 (ms)" [0, 500, 1000, 1500, 2000]
-    line [
-        (10, 185),
-        (20, 250),
-        (40, 370),
-        (60, 850),
-        (80, 1600),
-        (100, 2100)
-    ]
-    bar [
-      (10, 185),
-      (20, 250),
-      (40, 370),
-      (60, 850),
-      (80, 1600),
-      (100, 2100)
-    ]
-    
-    label "Zona Óptima" (25, 600)
-    label "Knee Point (~50 VUs)" (60, 1100)
-    label "Zona de Saturación" (90, 1800)
-```
+![Gráfica del Knee Point](knee_point_graph.png)
+
 **Análisis del Knee Point:**
 
 -   **El "Knee Point" se identifica claramente alrededor de los 50-60 usuarios virtuales.**
