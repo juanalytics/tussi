@@ -22,16 +22,13 @@ spec:
         - containerPort: 9000
         env:
         - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: jwt-secret
-              key: JWT_SECRET
+          value: "supersecretkey"
         - name: AUTH_SERVICE_URL
-          value: "http://auth-service.tussi-services:8000"
+          value: "http://auth-service:8000"
         - name: PRODUCTS_SERVICE_URL
-          value: "http://products-api-service.tussi-services:8000"
+          value: "http://products-service:8000"
         - name: CART_SERVICE_URL
-          value: "http://cart-api-service.tussi-services:8000"
+          value: "http://cart-service:8000"
         resources:
           requests:
             cpu: "100m"
@@ -39,6 +36,18 @@ spec:
           limits:
             cpu: "250m"
             memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 10
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler

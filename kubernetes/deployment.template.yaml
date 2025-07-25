@@ -29,8 +29,20 @@ spec:
               memory: "1Gi"
           env:
             - name: NEXT_PUBLIC_AUTH_API_URL
-              value: "http://auth-service"
+              value: "http://api-gateway-service:80/api/auth"
             - name: NEXT_PUBLIC_PRODUCTS_API_URL
-              value: "http://products-service"
+              value: "http://api-gateway-service:80/api/products"
             - name: NEXT_PUBLIC_CART_API_URL
-              value: "http://cart-service" 
+              value: "http://api-gateway-service:80/api/cart"
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10 
