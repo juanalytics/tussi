@@ -951,6 +951,10 @@ Tussi embraces a polyglot approach for both programming languages and data persi
 
 The API Gateway serves as a single, unified entry point for all client requests. It is responsible for routing traffic to the appropriate downstream microservice and centralizing cross-cutting concerns like JWT-based authentication, rate limiting, CORS policies, and centralized logging. This simplifies client logic and provides a robust control plane for the backend.
 
+### Microservices Pattern
+
+The backend is decomposed into a set of independently deployable microservices. Each service (e.g., Authentication, Products, Cart) is aligned with a specific business capability, manages its own database, and runs in a separate Docker container. This pattern enhances scalability, fault isolation, and technological flexibility, as each service can be developed and updated without impacting others.
+
 ### Load Balancer Pattern: Round Robin Implementation
 
 To ensure high availability and performance, the system employs a load balancer (Nginx) to distribute incoming traffic across multiple replicated instances of services like the API Gateway. It uses a round-robin strategy to balance the load, and by monitoring the health of each instance, it can automatically route traffic away from failed instances, thus preventing downtime.
@@ -959,7 +963,7 @@ To ensure high availability and performance, the system employs a load balancer 
 
 Each microservice has exclusive ownership of its own database, which is kept private and is not directly accessible by other services. The Auth and Products services each connect to a dedicated PostgreSQL instance, while the Cart Service uses its own MongoDB instance. This pattern guarantees loose coupling and allows each service to choose the most appropriate data model and technology.
 
-### Server side rendering
+### Server-Side Rendering Pattern
 
 The web application is built with Next.js and leverages Server-Side Rendering (SSR). When a user requests a page, it is rendered on the server into full HTML and then sent to the client. This pattern improves initial page load times and provides a better user experience, while also being highly beneficial for Search Engine Optimization (SEO).
 
@@ -1003,6 +1007,26 @@ This segmentation ensures that even if the frontend or API Gateway is compromise
 ### Performance Tactics Load Balancer Pattern - Architectural Tactic: Maintain Multiple Copies of Computations (Manage Resources)
 
 To manage system resources and maintain performance under heavy load, a load balancer is used to horizontally scale stateless services. By maintaining multiple copies of components like the API Gateway and distributing traffic among them, the system can handle a larger volume of concurrent computations, ensuring that response times remain low and preventing any single instance from becoming a bottleneck.
+
+### Event Sourcing Pattern
+
+To maintain a complete and verifiable history of critical changes, particularly for sensitive operations like product price modifications, the system can implement an Event Sourcing pattern. Instead of merely storing the current state, all changes to application state are captured as a sequence of immutable events. This provides an audit trail and allows for reconstructing past states.
+
+### CQRS Pattern
+
+To optimize for scenarios with high read and write loads, particularly for the product database, the system can adopt the Command Query Responsibility Segregation (CQRS) pattern. This involves separating the model for updating information (Command side) from the model for reading information (Query side). This allows for independent scaling and optimization of read and write operations, preventing bottlenecks caused by concurrent access patterns.
+
+### Service Discovery Pattern
+
+For internal service-to-service communication within the containerized environment, a Service Discovery Pattern is employed. This allows services to find and communicate with each other without hardcoding network locations. In a Kubernetes environment, this is typically handled by the built-in DNS service, enabling services to resolve logical names (e.g., `products-api`) to dynamic IP addresses of running instances.
+
+### Cluster Pattern
+
+The system leverages a Cluster Pattern, where multiple nodes and instances work together as a single, unified computing resource to provide high availability and scalability. In a GKE environment, this is managed through node pools and Managed Instance Groups (MIGs) that automatically handle node recreation and workload rescheduling in case of failures, ensuring continuous operation.
+
+### Compensating Transaction Pattern
+
+To ensure data consistency in distributed transactions, especially when an operation in a multi-step process fails, the Compensating Transaction Pattern is utilized. This involves designing a reverse action for each step in a distributed transaction. If a subsequent step fails, compensating transactions are executed to undo the effects of previously completed steps, effectively rolling back the entire logical transaction and restoring the system to a consistent state. This prevents partial updates and ensures data integrity in complex workflows like a checkout process where stock might be deducted before payment confirmation.
 
 ## 10. Prototype Deployment
 
