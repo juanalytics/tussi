@@ -334,7 +334,7 @@ Container Orchestration Pattern with Docker Compose, network segmentation, and l
 
 **Infrastructure:**
 
-- **Network Segmentation**: 
+- **Network Segmentation**:
   - **Public Network**: Load balancer, frontend, API Gateway, K6 testing
   - **Private Network**: All backend services and databases (internal=true, no external access)
 - **Storage**: Docker volumes for database persistence
@@ -699,12 +699,13 @@ Create and Mantain copies (repliclas) of data or services across multiple compon
 
 By default, GKE does not do "synchronous replication" of its nodes, but manages the node pools as Compute Engine's **Managed Instance Groups (MIGs)** and maintains the desired state using an **eventual-consistent model**:
 
-* **Asynchronous and periodic**: the MIG controller continuously inspects (in periodic loops) how many VMs there should be based on your configuration and creates or deletes instances to bring the actual state closer to the desired state, without blocking requests or waiting for responses from all nodes at once.
-* **Kubernetes control loops**: Similarly, Kubernetes (including cluster-autoscaler) works with "controllers" that read the desired state from the API, compare with the actual state and act asynchronously to reconcile differences, repeating this process at regular intervals ([Kubernetes]
+- **Asynchronous and periodic**: the MIG controller continuously inspects (in periodic loops) how many VMs there should be based on your configuration and creates or deletes instances to bring the actual state closer to the desired state, without blocking requests or waiting for responses from all nodes at once.
+- **Kubernetes control loops**: Similarly, Kubernetes (including cluster-autoscaler) works with "controllers" that read the desired state from the API, compare with the actual state and act asynchronously to reconcile differences, repeating this process at regular intervals ([Kubernetes]
 
 Therefore, **node replication** (incorporation, repair or scaling) in GKE is **asynchronous** and is performed by **periodic reconciliation**, providing eventual consistency behavior.
 
 #### Active Redundancy (Hot Spare) Pattern
+
 ```mermaid
 graph LR
     A["<b>Stimulus Source:</b><br/>Internal Component"] --> B["<b>Stimulus:</b><br/>Primary instance fails health check"]
@@ -719,7 +720,7 @@ graph LR
     
     D --> E["<b>Metric:</b><br/>Failover time < 500ms, Zero data loss"]
 ```
-On GKE, we implement an Active Redundancy (Hot Spare) pattern by running your service as at least two pod replicas—ideally spread across separate node pools or zones—that each ingest the same input stream (for example, by subscribing to the same Pub/Sub topic) and checkpoint state continuously to a shared, highly-available datastore (Cloud Spanner or a regional Cloud SQL instance with synchronous replication). Both pods are kept "hot" and ready behind a single Kubernetes Service, so even though one is effectively "active" at any moment, its spare sibling has already processed all the same events and holds an up-to-date view of the state. If the primary pod or its node fails (detected instantly via liveness/readiness probes), Kubernetes immediately routes traffic to the surviving pod—which already has the latest state—ensuring failover with zero data loss and no disruption to your workload.
+
 | Part                   | Detail                                                                                                                                                                                                                                                                    |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Stimulus**           | The primary pod/node serving live traffic fails its liveness probe due to a hardware or software fault.                                                                                                                                                                   |
@@ -729,7 +730,10 @@ On GKE, we implement an Active Redundancy (Hot Spare) pattern by running your se
 | **Response**           | Kubernetes detects the failed probe and immediately stops sending traffic to the failed pod. The Service automatically reroutes new requests to one of the healthy "hot spare" pods, which already has the latest state. Kubernetes then initiates the process of replacing the failed pod. |
 | **Response metric**    | The failover is transparent to the client. The time to detect failure and reroute traffic is under 500ms. There is zero data loss since the spare was already synchronized.                                                                                                 |
 
+On GKE, we implement an Active Redundancy (Hot Spare) pattern by running your service as at least two pod replicas—ideally spread across separate node pools or zones—that each ingest the same input stream (for example, by subscribing to the same Pub/Sub topic) and checkpoint state continuously to a shared, highly-available datastore (Cloud Spanner or a regional Cloud SQL instance with synchronous replication). Both pods are kept "hot" and ready behind a single Kubernetes Service, so even though one is effectively "active" at any moment, its spare sibling has already processed all the same events and holds an up-to-date view of the state. If the primary pod or its node fails (detected instantly via liveness/readiness probes), Kubernetes immediately routes traffic to the surviving pod—which already has the latest state—ensuring failover with zero data loss and no disruption to your workload.
+
 #### Passive Redundancy (Warm Spare) Pattern
+
 ```mermaid
 graph LR
     A["<b>Stimulus Source:</b><br/>Monitoring System"] --> B["<b>Stimulus:</b><br/>Primary service becomes unresponsive"]
@@ -744,7 +748,7 @@ graph LR
     
     D --> E["<b>Metric:</b><br/>Recovery Time Objective (RTO) < 2 minutes"]
 ```
-We implement a Warm Spare by running one "standby" replica of your service on a dedicated node pool tainted with NoSchedule so it never accepts production traffic, but it still stays "warm" by subscribing to the same event streams or database change feeds and keeping its in-memory state or cache up-to-date. The primary Deployment—with multiple replicas—is the only one selected by your Kubernetes Service, so it handles all live requests. If a health check or external monitor detects the primary is down, you simply remove the taint (or patch the Service's selector) to promote the standby pod into the Service, instantly routing traffic to it. Because that pod has already been synchronizing state in the background, it can begin serving without data loss and with only a minimal hand-off delay.
+
 | Part                   | Detail                                                                                                                                                                                                                                           |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Stimulus**           | An external monitoring system detects that the primary service is completely unavailable (e.g., all primary pods are failing).                                                                                                                   |
@@ -754,7 +758,10 @@ We implement a Warm Spare by running one "standby" replica of your service on a 
 | **Response**           | An operator or an automated system is alerted. The promotion process is initiated: the `NoSchedule` taint is removed from the standby node pool, or the Service selector is updated to include the warm spare. The spare begins receiving traffic. |
 | **Response metric**    | The Recovery Time Objective (RTO) is met (e.g., service is restored in under 2 minutes). Data loss is minimal to none, as the warm spare was synchronizing state.                                                                              |
 
+We implement a Warm Spare by running one "standby" replica of your service on a dedicated node pool tainted with NoSchedule so it never accepts production traffic, but it still stays "warm" by subscribing to the same event streams or database change feeds and keeping its in-memory state or cache up-to-date. The primary Deployment—with multiple replicas—is the only one selected by your Kubernetes Service, so it handles all live requests. If a health check or external monitor detects the primary is down, you simply remove the taint (or patch the Service's selector) to promote the standby pod into the Service, instantly routing traffic to it. Because that pod has already been synchronizing state in the background, it can begin serving without data loss and with only a minimal hand-off delay.
+
 ### Service Discovery Pattern
+
 ```mermaid
 graph LR
     A["<b>Stimulus Source:</b><br/>API Gateway"] --> B["<b>Stimulus:</b><br/>Request to 'products-api'"]
@@ -769,7 +776,7 @@ graph LR
     
     D --> E["<b>Metric:</b><br/>Successful name resolution < 10ms"]
 ```
-In GKE's VPC-native networking, each node automatically receives an alias IP range from the secondary subnet and each pod is assigned an IP from that block. When autoscaling adds new nodes, the control plane reserves a fresh alias IP range, updates the network routes, and pods can be scheduled immediately with new IPs. If a node fails, Auto Repair recreates the VM—reclaiming or reallocating its alias block—and Kubernetes transparently reschedules pods onto healthy nodes, updating their pod IPs as needed. During upgrades, GKE performs a surge upgrade by cordoning and draining old nodes, provisioning replacement nodes with new alias ranges, moving workloads over, and then removing the old nodes; throughout this process, Service ClusterIPs remain stable, ensuring uninterrupted connectivity without manual network reconfiguration.
+
 | Part                   | Detail                                                                                                                                  |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | **Stimulus**           | The API Gateway needs to send a request to the Products service and uses its logical name, `http://products-api`, to establish a connection. |
@@ -778,7 +785,11 @@ In GKE's VPC-native networking, each node automatically receives an alias IP ran
 | **Environment**        | A running GKE cluster where services are defined via Kubernetes Service objects.                                                        |
 | **Response**           | The API Gateway's DNS resolver queries CoreDNS. CoreDNS resolves the name `products-api` to its stable ClusterIP. Kubernetes then uses `iptables` or IPVS to forward the request to one of the healthy backend pods for the service. |
 | **Response metric**    | The service name is successfully and correctly resolved to an IP address. DNS lookup latency is negligible (e.g., <10ms). The connection to the service is established successfully. |
+
+In GKE's VPC-native networking, each node automatically receives an alias IP range from the secondary subnet and each pod is assigned an IP from that block. When autoscaling adds new nodes, the control plane reserves a fresh alias IP range, updates the network routes, and pods can be scheduled immediately with new IPs. If a node fails, Auto Repair recreates the VM—reclaiming or reallocating its alias block—and Kubernetes transparently reschedules pods onto healthy nodes, updating their pod IPs as needed. During upgrades, GKE performs a surge upgrade by cordoning and draining old nodes, provisioning replacement nodes with new alias ranges, moving workloads over, and then removing the old nodes; throughout this process, Service ClusterIPs remain stable, ensuring uninterrupted connectivity without manual network reconfiguration.
+
 ### Cluster Pattern
+
 ```mermaid
 graph LR
     A["<b>Stimulus Source:</b><br/>GKE Node Pool"] --> B["<b>Stimulus:</b><br/>Node failure detected"]
@@ -793,7 +804,7 @@ graph LR
     
     D --> E["<b>Metric:</b><br/>Node recovery within minutes, zero manual intervention"]
 ```
-![Cluster in GKE](cluster.png)
+
 | Part                   | Detail                                                                                                                             |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | **Stimulus**           | A Compute Engine VM acting as a GKE node becomes unresponsive and fails its health checks.                                         |
@@ -803,7 +814,9 @@ graph LR
 | **Response**           | The MIG's health checker detects the unhealthy node. It automatically triggers the auto-healing process: the faulty VM is terminated, and a new, identical VM is created to replace it. The new node joins the GKE cluster, and Kubernetes begins scheduling pods onto it. |
 | **Response metric**    | The cluster's capacity is automatically restored without any manual intervention. The time to provision and register the new node is within the expected range (typically a few minutes). Workload disruption is minimized as Kubernetes reschedules pods that were on the failed node. |
 
+
 ### Transaction Pattern
+
 ```mermaid
 graph LR
     A["<b>Stimulus Source:</b><br/>Cart Service"] --> B["<b>Stimulus:</b><br/>Payment fails after stock deduction"]
@@ -818,7 +831,9 @@ graph LR
     
     D --> E["<b>Metric:</b><br/>Data consistency restored, no resource locks"]
 ```
+
 Compensating Transaction Provides a mechanism to recover from failures by reversing the effects of previously applied actions. This pattern addresses malfunctions in critical workload paths by using compensation actions, which can involve processes like directly rolling back data changes, breaking transaction locks, or even executing native system behavior to reverse the effect.
+
 | Part                   | Detail                                                                                                                                                                                               |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Stimulus**           | A user is completing a checkout. The system successfully deducts an item from the `products-api` inventory, but the subsequent call to the payment processing service fails.                             |
@@ -827,48 +842,60 @@ Compensating Transaction Provides a mechanism to recover from failures by revers
 | **Environment**        | Production, during a multi-step, distributed transaction (Saga).                                                                                                                                     |
 | **Response**           | The `cart-api`, upon detecting the payment failure, invokes a compensating transaction. It sends a specific request to the `products-api` (e.g., `POST /api/products/{id}/add-stock`) to add the previously deducted item back into inventory, effectively reversing the initial operation. |
 | **Response metric**    | The system's data is restored to a consistent state. The product inventory is corrected. The user is notified of the payment failure, but the system does not remain in an inconsistent state (e.g., item sold but no payment received). |
+
 ## 6. Interoperability Analysis
 
 This analysis describes how the different components of the Tussi system communicate and work together.
 
 ### Interfaces
+
 The system's components interact primarily through well-defined, synchronous HTTP-based APIs, following RESTful principles.
 
 - **External Interfaces (Client-Facing):** The Web and Mobile clients interact with the system through a single public interface exposed by the **Load Balancer** over HTTPS (port 443). This interface is, in turn, served by the **API Gateway**, which provides a unified API for all backend functionalities.
 - **Internal Interfaces (Service-to-Service):**
-    - The **API Gateway** communicates with backend microservices (`Auth`, `Products`, `Cart`) over a private network using their respective RESTful HTTP APIs.
-    - Each microservice communicates with its dedicated database using a specific TCP-based protocol via its database driver (PostgreSQL or MongoDB driver).
+  - The **API Gateway** communicates with backend microservices (`Auth`, `Products`, `Cart`) over a private network using their respective RESTful HTTP APIs.
+  - Each microservice communicates with its dedicated database using a specific TCP-based protocol via its database driver (PostgreSQL or MongoDB driver).
 - **API Endpoints:** The interfaces are defined by specific endpoints, such as `POST /api/auth/login`, `GET /api/products`, and `POST /api/cart/add`.
 
 ### Context
+
 Communication context includes the data format, communication protocols, and security information exchanged between components.
+
 - **Data Format:** The payload for all RESTful API calls is **JSON**, ensuring language-agnostic data exchange between Python (FastAPI), Node.js (Express), and client-side JavaScript/TypeScript.
 - **Protocol:** Communication relies on the **HTTP/1.1** protocol. For external communication, **HTTPS (HTTP over TLS)** is enforced by the Load Balancer to ensure data confidentiality and integrity.
 - **Security Context:** For protected endpoints, a **JSON Web Token (JWT)** is required. The client sends the JWT in the `Authorization: Bearer <token>` header, which is validated by the API Gateway before forwarding the request to the appropriate backend service.
 
 ### Exposition
+
 Interfaces are exposed through network listeners, with a clear separation between public and private networks.
+
 - **Public Exposition:** The **Load Balancer** is the only component exposed to the public internet, listening on ports **80** (for HTTP to HTTPS redirection) and **443** (for HTTPS). The **Frontend** web application is also publicly accessible on port **3000**.
 - **Private Exposition:** All backend microservices (`Auth`, `Products`, `Cart`) and databases are deployed in a **private network**, completely isolated from external access. They expose their services on internal ports (`8000`, `8001`, `8002`, etc.), accessible only to other components within the Docker network, primarily the API Gateway. This is a direct application of the **Reverse Proxy** pattern to limit access.
 
 ### Consumption
+
 Components consume interfaces based on a client-server model.
+
 - **Client Consumption:** The **Web Client** (Next.js) and **Mobile Client** (React Native) are the primary consumers of the public-facing API exposed by the API Gateway. They make HTTP requests to fetch data, authenticate users, and manage shopping carts.
 - **Gateway Consumption:** The **API Gateway** acts as a client to the backend microservices. It consumes their individual REST APIs and aggregates the responses if needed. For example, it calls the `Auth Service` to verify credentials or the `Products Service` to fetch product data.
 - **Service Consumption:** Each microservice consumes its own database interface to persist and retrieve data (e.g., the `Cart Service` consumes the MongoDB driver interface to interact with the `Cart DB`).
 
 ### Discovery
+
 Service discovery is handled differently for external clients and internal services.
+
 - **Client-Side Discovery:** The Web and Mobile clients discover the backend through a **statically configured URL** in their environment variables (e.g., `NEXT_PUBLIC_API_GATEWAY_URL`). This URL points to the public address of the Load Balancer.
 - **Server-Side Discovery:** For internal service-to-service communication, the system relies on **Docker's built-in DNS service**. The API Gateway and other services use the service names defined in `docker-compose.yml` (e.g., `http://auth-service:8000`, `http://products-api:8001`) to resolve the IP addresses of the microservice containers. The Load Balancer also uses this mechanism to discover and route traffic to the replicated API Gateway instances.
 
 ### Handling of the response
+
 The system is designed to handle responses, including errors and failures, gracefully to ensure reliability and provide clear feedback.
+
 - **Standard HTTP Status Codes:** The APIs use standard HTTP status codes to indicate the outcome of a request (e.g., `200 OK`, `201 Created`, `400 Bad Request`, `401 Unauthorized`, `404 Not Found`).
 - **Error Payloads:** Failed requests are accompanied by a JSON payload containing a descriptive error message to aid in debugging on the client side.
 - **Fault Tolerance:**
-    - The **Load Balancer** continuously monitors the health of the API Gateway instances. If an instance becomes unresponsive, it is automatically removed from the routing pool, and traffic is redirected to healthy instances (**Active Redundancy** pattern).
-    - The **API Gateway** includes **rate-limiting** middleware, which responds with an **HTTP 429 "Too Many Requests"** status to protect backend services from denial-of-service attacks or traffic spikes.
+  - The **Load Balancer** continuously monitors the health of the API Gateway instances. If an instance becomes unresponsive, it is automatically removed from the routing pool, and traffic is redirected to healthy instances (**Active Redundancy** pattern).
+  - The **API Gateway** includes **rate-limiting** middleware, which responds with an **HTTP 429 "Too Many Requests"** status to protect backend services from denial-of-service attacks or traffic spikes.
 - **Health Checks:** All microservices expose a `/health` endpoint that can be used by monitoring systems (and the load balancer) to verify their operational status.
 
 ## 7. Interoperability Scenario: White-Labeling via Reverse Proxy
@@ -938,6 +965,7 @@ The web application is built with Next.js and leverages Server-Side Rendering (S
 ### Active Redundancy (Hot Spare) Pattern
 
 The system ensures high availability for the API Gateway using an active redundancy pattern with hot spares.
+
 - **Replication**: The `api-gateway` service can be horizontally scaled to run multiple instances. To run 4 instances, for example, use the command: `docker-compose up -d --scale api-gateway=4`. All instances are active and running simultaneously.
 - **Load Balancing**: An Nginx load balancer sits in front of the API Gateway replicas and distributes incoming traffic among them. Docker's internal DNS resolves the `api-gateway` service name to the different container IPs, and Nginx uses this to perform round-robin load balancing.
 - **Fault Tolerance**: If one of the API Gateway instances fails or becomes unresponsive, Nginx will be unable to connect to it and will automatically stop routing traffic to that instance. Requests will be seamlessly redirected to the remaining healthy instances.
@@ -964,6 +992,7 @@ This dual-layer approach completely hides the internal network topology and prev
 ### Network Segmentation Pattern Architectural Tactic: Limit Access (Resist Attack)
 
 The system employs strict network segmentation using Docker's networking features:
+
 - **Public Network**: Contains load balancer, frontend, API Gateway replicas, and K6 testing - accessible from external sources
 - **Private Network**: Contains all backend services and databases with `internal: true` flag - completely isolated from external access
 - **Cross-Network Communication**: Only the API Gateway can bridge between networks, acting as a controlled gateway
@@ -1119,7 +1148,6 @@ The system includes automated load testing capabilities:
 docker-compose exec k6 k6 run /scripts/test.js
 ```
 
-
 **Description:**
 This load test exercises the `/products` endpoint through a controlled sequence of traffic patterns to validate performance, scalability, and resilience. It consists of the following seven stages (implemented in k6):
 
@@ -1146,9 +1174,9 @@ This load test exercises the `/products` endpoint through a controlled sequence 
 
 During the test, we collect key metrics and enforce these thresholds:
 
-* **95th-percentile response time** must remain below 2 s.
-* **Error rate** (HTTP failures) must stay under 0.1%.
-* **Success rate** (HTTP 2xx responses) must exceed 95%.
+- **95th-percentile response time** must remain below 2 s.
+- **Error rate** (HTTP failures) must stay under 0.1%.
+- **Success rate** (HTTP 2xx responses) must exceed 95%.
 
 ![load](load.png)
 ![load1](load1.png)
@@ -1157,6 +1185,7 @@ During the test, we collect key metrics and enforce these thresholds:
 The accompanying chart shows a 10-sample moving average of HTTP request durations, demonstrating how the endpoint's latency evolves across each phase. This comprehensive profile uncovers potential performance regressions, validates SLAs, and ensures the products API can handle real-world traffic surges.
 
 **K6 Test Features:**
+
 - **Stress Testing**: Simulates high concurrent user loads
 - **Performance Metrics**: Response time, throughput, error rates
 - **Scalability Validation**: Tests system behavior under load
